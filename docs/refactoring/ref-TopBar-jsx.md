@@ -1,67 +1,14 @@
-// =============================================================================
+# TopBar.jsx Reference
+
+Paste the full file below:
+
+```jsx
+
+```
+[text](../../../../../my-stuff/numeneon/frontend/src/components/layout/TopBar/TopBar.jsx)
+
 // 🔵 PABLO - UI Architect
 // TopBar.jsx - Top navigation bar component
-// =============================================================================
-//
-// TODO: Build the top navigation bar with icons and modals
-//
-// IMPORTS:
-// - useState from react
-// - useNavigate from react-router-dom
-// - TopBar.scss (PROVIDED - don't modify)
-// - Child components: MessageModal, SearchModal, NotificationModal
-// - ThemeToggle from @components/ui/ThemeToggle
-// - Contexts: useMessages, useAuth, useFriends, useSearch, useSideNav
-// - Icons: TargetReticleIcon, MessageBubbleIcon, BroadcastIcon, LogoutIcon, LoginIcon, HamburgerIcon, CloseIcon
-//
-// STRUCTURE:
-// ┌────────────────────────────────────────────────────────────────────────┐
-// │ ☰ [NUMENEON logo]                  🌓 🔍 💬 🔔 🚪                      │
-// │ (mobile)                          Theme Search Msgs Notif Logout       │
-// └────────────────────────────────────────────────────────────────────────┘
-//
-// HOOKS NEEDED:
-// - useMessages() → { isMessageModalOpen, openMessages, closeMessages }
-// - useAuth() → { logout, user }
-// - useFriends() → { pendingRequests } (for notification badge count)
-// - useSearch() → { isSearchModalOpen, openSearch, closeSearch }
-// - useSideNav() → { isOpen, toggleNav, isMobile } (for hamburger menu)
-// - useNavigate() for routing
-//
-// LOCAL STATE:
-// - isNotificationsOpen: Boolean for notification modal
-//
-// RENDER LOGIC:
-// 0. Hamburger button (mobile only):
-//    - If isMobile: show hamburger button
-//    - onClick → toggleNav()
-//    - Show CloseIcon if isSideNavOpen, else HamburgerIcon
-//    - aria-label for accessibility
-// 1. Logo: Clickable, navigates to '/'
-// 2. Icon bar (right side):
-//    - ThemeToggle component
-//    - Search icon → opens search modal
-//    - Messages icon → opens message modal  
-//    - If user logged in:
-//      - Notification icon → opens notification modal
-//        - Show badge with pendingRequests.length if > 0
-//      - Logout icon → calls logout() and navigates to /login
-//    - If user NOT logged in:
-//      - Login icon → navigates to /login
-//
-// 3. Modals (conditional rendering below TopBar):
-//    - MessageModal when isMessageModalOpen
-//    - SearchModal with isOpen/onClose props
-//    - NotificationModal with isOpen/onClose props
-//
-// SCSS class names (already in TopBar.scss):
-// - .top-bar
-// - .hamburger-btn (mobile only)
-// - .top-bar-logo
-// - .top-bar-icons
-// - .icon-placeholder, .icon-search, .icon-messages, etc.
-// - .notification-badge
-// =============================================================================
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -89,6 +36,7 @@ function TopBar() {
   const { isOpen: isSideNavOpen, toggleNav, isMobile } = useSideNav();
   const navigate = useNavigate();
   
+  // 🔵 Local state for notification modal
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   const handleLogout = () => {
@@ -99,7 +47,7 @@ function TopBar() {
   return (
     <>
       <div className="top-bar">
-        {/* Hamburger menu button - mobile only */}
+        {/* 🔵 Hamburger menu button - mobile only */}
         {isMobile && (
           <button 
             className="hamburger-btn"
@@ -158,6 +106,7 @@ function TopBar() {
               </div>
             </>
           )}
+          {/* Always show login link if not logged in */}
           {!user && (
             <div 
               className="icon-placeholder icon-login" 
@@ -171,15 +120,18 @@ function TopBar() {
         </div>
       </div>
 
+      {/* Message Modal */}
       {isMessageModalOpen && (
         <MessageModal onClose={closeMessages} />
       )}
       
+      {/* Search Modal */}
       <SearchModal 
         isOpen={isSearchModalOpen} 
         onClose={closeSearch} 
       />
       
+      {/* Notification Modal */}
       <NotificationModal
         isOpen={isNotificationsOpen}
         onClose={() => setIsNotificationsOpen(false)}
