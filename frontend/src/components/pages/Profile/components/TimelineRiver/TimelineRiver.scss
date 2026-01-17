@@ -1,6 +1,10 @@
 /* TimelineRiver Component Styles */
 @use '../ComposerModal/ComposerModal.scss';
 
+/* Import shared thread and composer styles from Home */
+@import '../../../Home/components/TimelineRiverRow/styles/_thread';
+@import '../../../Home/components/TimelineRiverRow/styles/_composer';
+
 .timeline-river {
   width: 100%;
   max-width: 1400px;

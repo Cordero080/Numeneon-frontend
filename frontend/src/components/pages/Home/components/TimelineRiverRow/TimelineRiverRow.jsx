@@ -12,7 +12,8 @@ import './TimelineRiverRow.scss';
 import MediaLightbox from '../MediaLightbox/MediaLightbox';
 import DeleteConfirmModal from '../DeleteConfirmModal/DeleteConfirmModal';
 import { useAuth, usePosts, useMessages } from '@contexts';
-import { ChevronLeftIcon, ChevronRightIcon } from '@assets/icons';
+import { ChevronLeftIcon, ChevronRightIcon, EditIcon, CheckIcon, CloseIcon } from '@assets/icons';
+import { createPortal } from 'react-dom';
 
 // Extracted components
 import { PostCard, SmartDeck, MobileTabNav } from './components';
@@ -69,9 +70,10 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
   
   const mostRecentType = getMostRecentType();
   
-  // State for edit mode
+  // State for edit mode (dedicated edit modal, separate from comment composer)
   const [editingPostId, setEditingPostId] = useState(null);
-  const [isSaving] = useState(false);
+  const [editingPostContent, setEditingPostContent] = useState('');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   
   // State for delete modal
   const [deleteModalPostId, setDeleteModalPostId] = useState(null);
@@ -207,13 +209,25 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
     setShowAllReplies(prev => ({ ...prev, [postId]: !prev[postId] }));
   };
   
-  // Handle edit post
+  // Handle edit post - opens dedicated edit modal (separate from comment composer)
   const handleEditPost = (post) => {
     setEditingPostId(post.id);
+    setEditingPostContent(post.content);
+  };
+
+  // Handle card click - opens expanded view with comments
+  const handleCardClick = async (post) => {
     setActiveCommentPostId(post.id);
-    setCommentText(post.content);
-    setIsEditMode(true);
     setIsComposerFullPage(true);
+    // Fetch replies if not already loaded
+    if (!threadReplies[post.id]) {
+      setLoadingThread(post.id);
+      const result = await fetchReplies(post.id);
+      if (result.success) {
+        setThreadReplies(prev => ({ ...prev, [post.id]: result.data }));
+      }
+      setLoadingThread(null);
+    }
   };
   
   // Render a post card with all necessary props
@@ -245,6 +259,7 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
         onEdit={handleEditPost}
         onDelete={(id) => setDeleteModalPostId(id)}
         onExpandMedia={handleExpandMedia}
+        onCardClick={handleCardClick}
         // Thread props
         onToggleThread={toggleThread}
         expandedThreadId={expandedThreadId}
@@ -263,12 +278,7 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
 
         isComposerFullPage={isComposerFullPage}
         setIsComposerFullPage={setIsComposerFullPage}
-        isEditMode={isEditMode}
-        setIsEditMode={setIsEditMode}
-        editingPostId={editingPostId}
-        setEditingPostId={setEditingPostId}
-        onUpdatePost={onUpdatePost}
-        isSaving={isSaving}
+        isSaving={false}
       />
     );
   };

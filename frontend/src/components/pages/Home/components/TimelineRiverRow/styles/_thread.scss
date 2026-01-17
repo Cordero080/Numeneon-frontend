@@ -157,6 +157,19 @@
   font-weight: 600;
   font-size: var(--font-size-sm);
   color: var(--color-white);
+  
+  /* Type-based colors for comment authors */
+  &--thoughts {
+    color: #1ce0e0; /* cyan/blue */
+  }
+  
+  &--media {
+    color: #ad7afe; /* purple */
+  }
+  
+  &--milestones {
+    color: #30c87ff9; /* green */
+  }
 }
 
 .reply-time {
@@ -265,6 +278,26 @@
   
   &:hover {
     color: #ff4444;
+    transform: scale(1.15);
+  }
+}
+
+.reply-edit-expand {
+  background: transparent;
+  border: none;
+  padding: var(--space-sm) var(--space-md);
+  min-width: 32px;
+  min-height: 32px;
+  color: rgba(26, 115, 231, 0.6);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    color: var(--blue-primary);
+    filter: drop-shadow(0 0 8px rgba(26, 115, 231, 0.6));
     transform: scale(1.15);
   }
 }

@@ -227,7 +227,22 @@ function RiverFeedView({
   renderPostActions,
   renderCommentSection,
   formatDate,
+  onCardClick,
 }) {
+  // Card click handler - excludes interactive elements
+  const handleCardClick = (e, post) => {
+    if (
+      e.target.closest('button') ||
+      e.target.closest('.river-post-actions') ||
+      e.target.closest('.river-card-media') ||
+      e.target.closest('.inline-comment-composer') ||
+      e.target.closest('.thread-view') ||
+      e.target.closest('.river-card-author')
+    ) {
+      return;
+    }
+    onCardClick?.(post);
+  };
   // TODO: Pre-process friends to chunk their posts into rows
   // const friendsWithRows = friendsGrouped.map(friend => ({...}));
   

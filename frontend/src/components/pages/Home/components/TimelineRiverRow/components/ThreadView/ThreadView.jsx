@@ -2,18 +2,21 @@
 // ThreadView.jsx - Twitter-style inline replies thread
 
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { formatRelativeTime } from '@components/pages/Home/utils/timeFormatters';
 import {
   UserIcon,
   EditIcon,
   TrashIcon,
   CheckIcon,
-  CloseIcon
+  CloseIcon,
+  MaximizeIcon
 } from '@assets/icons';
 import './ThreadView.scss';
 
 function ThreadView({
   postId,
+  postType = 'thoughts',
   replies,
   isLoading,
   currentUser,
@@ -23,10 +26,15 @@ function ThreadView({
   showAllReplies,
   onToggleShowAll
 }) {
+  // Color based on post type
+  const authorColorClass = `reply-author--${postType}`;
   // Local state for inline editing
   const [editingReplyId, setEditingReplyId] = useState(null);
   const [editContent, setEditContent] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  // State for expanded edit modal
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingReply, setEditingReply] = useState(null);
 
   const allReplies = replies || [];
   const visibleReplies = showAllReplies ? allReplies : allReplies.slice(0, 3);
@@ -35,11 +43,14 @@ function ThreadView({
   const handleStartEdit = (reply) => {
     setEditingReplyId(reply.id);
     setEditContent(reply.content);
+    setEditingReply(reply);
   };
 
   const handleCancelEdit = () => {
     setEditingReplyId(null);
     setEditContent('');
+    setIsEditModalOpen(false);
+    setEditingReply(null);
   };
 
   const handleSaveEdit = async (replyId) => {
@@ -50,8 +61,14 @@ function ThreadView({
     if (success) {
       setEditingReplyId(null);
       setEditContent('');
+      setIsEditModalOpen(false);
+      setEditingReply(null);
     }
     setIsSaving(false);
+  };
+
+  const handleExpandEdit = () => {
+    setIsEditModalOpen(true);
   };
 
   return (
@@ -77,7 +94,7 @@ function ThreadView({
                   <div className="reply-avatar">
                     <UserIcon size={14} />
                   </div>
-                  <span className="reply-author">{reply.author?.username || 'User'}</span>
+                  <span className={`reply-author ${authorColorClass}`}>{reply.author?.username || 'User'}</span>
                   <span className="reply-time">{formatRelativeTime(reply.created_at)}</span>
                   
                   {/* Edit/Delete for owner */}
@@ -133,6 +150,13 @@ function ThreadView({
                       >
                         <CloseIcon size={16} />
                       </button>
+                      <button
+                        className="reply-edit-expand"
+                        onClick={handleExpandEdit}
+                        title="Expand to modal"
+                      >
+                        <MaximizeIcon size={16} />
+                      </button>
                       <button 
                         className="reply-edit-save"
                         disabled={!editContent.trim() || isSaving}
@@ -171,6 +195,39 @@ function ThreadView({
             <div className="no-replies">No replies yet</div>
           )}
         </div>
+      )}
+
+      {/* Edit Modal */}
+      {isEditModalOpen && editingReply && createPortal(
+        <div className="edit-modal-overlay" onClick={handleCancelEdit}>
+          <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="edit-modal-header">
+              <h3>Edit Reply</h3>
+              <button className="edit-modal-close" onClick={handleCancelEdit}>
+                <CloseIcon size={20} />
+              </button>
+            </div>
+            <textarea
+              className="edit-modal-textarea"
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              autoFocus
+            />
+            <div className="edit-modal-actions">
+              <button className="edit-modal-cancel" onClick={handleCancelEdit}>
+                Cancel
+              </button>
+              <button
+                className="edit-modal-save"
+                disabled={!editContent.trim() || isSaving}
+                onClick={() => handleSaveEdit(editingReply.id)}
+              >
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

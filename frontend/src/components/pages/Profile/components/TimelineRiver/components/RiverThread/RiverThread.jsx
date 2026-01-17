@@ -50,13 +50,17 @@
 // - onEditSave: (replyId, postId) => void - save edit
 // - onEditCancel: () => void - cancel editing
 // - onDelete: (replyId, postId) => void - delete reply
+// - postType: 'thoughts' | 'media' | 'milestones' - for author color
 //
 // =============================================================================
 
-import { UserIcon, EditIcon, TrashIcon } from '@assets/icons';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
+import { UserIcon, EditIcon, TrashIcon, CheckIcon, CloseIcon, MaximizeIcon } from '@assets/icons';
 
 const RiverThread = ({
   post,
+  postType = 'thoughts',
   isExpanded,
   replies = [],
   isLoading,
@@ -73,6 +77,38 @@ const RiverThread = ({
   onEditCancel,
   onDelete,
 }) => {
+  // ─────────────────────────────────────────────────────────────────────────
+  // LOCAL STATE: Expand Edit Modal
+  // ─────────────────────────────────────────────────────────────────────────
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingReply, setEditingReply] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Color based on post type
+  const authorColorClass = `reply-author--${postType}`;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // HANDLERS: Expand Edit Modal
+  // ─────────────────────────────────────────────────────────────────────────
+  const handleExpandEdit = (reply) => {
+    setEditingReply(reply);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsEditModalOpen(false);
+    setEditingReply(null);
+    onEditCancel?.();
+  };
+
+  const handleModalSave = async () => {
+    if (!editingReplyContent?.trim() || !editingReply) return;
+    setIsSaving(true);
+    await onEditSave?.(editingReply.id, post.id);
+    setIsSaving(false);
+    handleCloseModal();
+  };
+
   // ─────────────────────────────────────────────────────────────────────────
   // EARLY RETURN
   // ─────────────────────────────────────────────────────────────────────────
@@ -135,7 +171,7 @@ const RiverThread = ({
             <div className="reply-card">
               <div className="reply-header">
                 <div className="reply-avatar"><UserIcon size={14} /></div>
-                <span className="reply-author">{reply.author?.username || 'User'}</span>
+                <span className={`reply-author ${authorColorClass}`}>{reply.author?.username || 'User'}</span>
                 <span className="reply-time">{formatRelativeTime?.(reply.created_at)}</span>
                 
                 // Edit/Delete buttons (only if currentUserId matches reply.author.id)
@@ -153,16 +189,31 @@ const RiverThread = ({
                 )}
               </div>
               
-              // Reply content - either edit form or display
+              // Reply content - either edit form (with icon buttons) or display
               {editingReplyId === reply.id ? (
                 <div className="reply-edit-form">
                   <textarea className="reply-edit-input" value={editingReplyContent}
-                    onChange={(e) => onEditChange?.(e.target.value)} autoFocus />
+                    onChange={(e) => onEditChange?.(e.target.value)} autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') onEditCancel?.();
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        onEditSave?.(reply.id, post.id);
+                      }
+                    }} />
                   <div className="reply-edit-actions">
-                    <button className="reply-edit-btn reply-edit-btn--cancel" onClick={onEditCancel}>Cancel</button>
-                    <button className="reply-edit-btn reply-edit-btn--save"
+                    <button className="reply-edit-cancel" onClick={onEditCancel} title="Cancel">
+                      <CloseIcon size={16} />
+                    </button>
+                    <button className="reply-edit-expand" onClick={() => handleExpandEdit(reply)} title="Expand to modal">
+                      <MaximizeIcon size={16} />
+                    </button>
+                    <button className="reply-edit-save"
                       onClick={() => onEditSave?.(reply.id, post.id)}
-                      disabled={!editingReplyContent?.trim()}>Save</button>
+                      disabled={!editingReplyContent?.trim()}
+                      title="Save">
+                      <CheckIcon size={20} strokeWidth="2.5" />
+                    </button>
                   </div>
                 </div>
               ) : (
@@ -178,6 +229,41 @@ const RiverThread = ({
             </button>
           )}
       */}
+
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* EDIT MODAL                                                          */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {isEditModalOpen && editingReply && createPortal(
+        <div className="edit-modal-overlay" onClick={handleCloseModal}>
+          <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="edit-modal-header">
+              <h3>Edit Reply</h3>
+              <button className="edit-modal-close" onClick={handleCloseModal}>
+                <CloseIcon size={20} />
+              </button>
+            </div>
+            <textarea
+              className="edit-modal-textarea"
+              value={editingReplyContent}
+              onChange={(e) => onEditChange?.(e.target.value)}
+              autoFocus
+            />
+            <div className="edit-modal-actions">
+              <button className="edit-modal-cancel" onClick={handleCloseModal}>
+                Cancel
+              </button>
+              <button
+                className="edit-modal-save"
+                disabled={!editingReplyContent?.trim() || isSaving}
+                onClick={handleModalSave}
+              >
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

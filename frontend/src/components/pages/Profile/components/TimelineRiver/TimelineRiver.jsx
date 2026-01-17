@@ -211,6 +211,24 @@ function TimelineRiver({
   };
 
   // ─────────────────────────────────────────────────────────────────────────
+  // HANDLERS: Card Click → Open Full-Page View
+  // ─────────────────────────────────────────────────────────────────────────
+  const handleCardClick = async (post) => {
+    setActiveCommentPostId(post.id);
+    setIsComposerFullPage(true);
+    setIsEditMode(false);
+    // Fetch replies if not already loaded
+    if (!threadReplies[post.id]) {
+      setLoadingThread(post.id);
+      const result = await fetchReplies(post.id);
+      if (result.success) {
+        setThreadReplies(prev => ({ ...prev, [post.id]: result.data }));
+      }
+      setLoadingThread(null);
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────
   // RENDER
   // ─────────────────────────────────────────────────────────────────────────
   return (
@@ -235,6 +253,7 @@ function TimelineRiver({
           handleEdit={handleEdit}
           handleDelete={handleDelete}
           toggleThread={toggleThread}
+          onCardClick={handleCardClick}
           // State
           animatingHeartId={animatingHeartId}
           activeCommentPostId={activeCommentPostId}
@@ -265,6 +284,7 @@ function TimelineRiver({
           handleLike={handleLike}
           handleCommentClick={handleCommentClick}
           toggleThread={toggleThread}
+          onCardClick={handleCardClick}
           // State
           animatingHeartId={animatingHeartId}
           activeCommentPostId={activeCommentPostId}

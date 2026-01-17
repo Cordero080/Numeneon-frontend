@@ -223,7 +223,21 @@ function RiverTimelineView({
   renderPostActions,
   renderCommentSection,
   formatDate,
+  onCardClick,
 }) {
+  // Card click handler - excludes interactive elements
+  const handleCardClick = (e, post) => {
+    if (
+      e.target.closest('button') ||
+      e.target.closest('.river-post-actions') ||
+      e.target.closest('.river-card-media') ||
+      e.target.closest('.inline-comment-composer') ||
+      e.target.closest('.thread-view')
+    ) {
+      return;
+    }
+    onCardClick?.(post);
+  };
   // TODO: Chunk posts into rows using chunkPostsIntoRows
   // const textRows = chunkPostsIntoRows(textPosts);
   // const mediaRows = chunkPostsIntoRows(mediaPosts);

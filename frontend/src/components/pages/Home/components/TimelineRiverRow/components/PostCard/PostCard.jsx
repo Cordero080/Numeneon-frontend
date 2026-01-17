@@ -42,6 +42,7 @@ function PostCard({
   onEdit,
   onDelete,
   onExpandMedia,
+  onCardClick,
   // Thread props
   onToggleThread,
   expandedThreadId,
@@ -59,11 +60,6 @@ function PostCard({
   setActiveCommentPostId,
   isComposerFullPage,
   setIsComposerFullPage,
-  isEditMode,
-  setIsEditMode,
-  editingPostId,
-  setEditingPostId,
-  onUpdatePost,
   isSaving
 }) {
   // Heart animation state
@@ -79,11 +75,28 @@ function PostCard({
     milestones: '#0ce77dff'   // green
   };
   const heartColor = heartColors[type] || '#2fcefaff';
+
+  // Handle card click - opens expanded view
+  const handleCardClick = (e) => {
+    // Don't trigger if clicking on interactive elements
+    if (e.target.closest('button') || 
+        e.target.closest('.river-avatar') || 
+        e.target.closest('.river-author') ||
+        e.target.closest('.river-post-actions') ||
+        e.target.closest('.river-post-media') ||
+        e.target.closest('.inline-comment-composer') ||
+        e.target.closest('.thread-view')) {
+      return;
+    }
+    onCardClick?.(post);
+  };
   
   return (
     <>
     <div 
       className={`river-post-card post--${type} ${isSinglePost ? 'post--single' : ''} ${isShortPost ? 'post--compact' : ''} fade-in`}
+      onClick={handleCardClick}
+      style={{ cursor: 'pointer' }}
     >
       {/* Header: Avatar + Name + Type Badge */}
       <div className="river-post-header">
