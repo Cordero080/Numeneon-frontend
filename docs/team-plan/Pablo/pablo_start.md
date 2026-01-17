@@ -1,63 +1,70 @@
+NEXT 5:
 
-NEXT 5: 
+Last done:
+P-011 – Mobile category tab bar with sticky positioning
+P-012 – Repost modal with copy link functionality
+P-013 – Fullscreen media lightbox with zoom/swipe
+P-014 – Delete confirmation dialog
+P-015 – Post grouping utility for river timeline
 
-#P-011 - MobileTabNav Category Tabs
-As a mobile user, I want category tabs, so that I can filter content types.
-Acceptance Criteria:
-✅
-Tab bar component
-Category options (All, Following, etc.)
-Active state styling
-Sticky positioning
-✅
-Files: src/components/MobileTabNav/
-Est. Hours: 2h
-
-#P-012 - RepostModal Share Options
-As a user, I want to repost content, so that I can share posts with my followers.
+#P-016 - timeFormatters.js Utility
+As a user, I want relative timestamps, so that I know how recent posts are.
 Acceptance Criteria:
 
-Modal with share options
-Repost with/without comment
-Copy link option
-Share to external (stretch)
+Relative time ("2h ago", "yesterday")
+Absolute fallback for old posts
+Consistent formatting
 
-Files: src/components/RepostModal/
-Est. Hours: 2h
-✅
+Files: src/utils/timeFormatters.js
+Est. Hours: 0.5h
 
-#P-013 - MediaLightbox Image Viewer
-As a user, I want to view images fullscreen, so that I can see media in detail.
+👤 PROFILE PAGE SYSTEM
+#P-017 - Profile.jsx Main Page
+As a user, I want to view profiles, so that I can see user info and their posts.
 Acceptance Criteria:
 
-Fullscreen overlay
-Zoom controls
-Swipe between images
-Close button/escape key
+Page container with layout
+Fetches user profile data
+Contains ProfileCard and TimelineRiver
+Loading and error states
 
-Files: src/components/MediaLightbox/
+Files: src/pages/Profile/
+Dependencies: Natalia's AuthContext
+Est. Hours: 4h
+
+#P-018 - ProfileCard Container
+As a user, I want a flippable profile card, so that I can see info and stats.
+Acceptance Criteria:
+
+Container for front/back cards
+Flip trigger button
+Maintains flip state
+Smooth 3D transition
+
+Files: src/components/ProfileCard/ProfileCard.jsx
 Est. Hours: 3h
-✅
 
-#P-014 - DeleteConfirmModal
-As a user, I want a confirmation before deleting, so that I don't accidentally remove content.
+#P-019 - ProfileCardFront
+As a user, I want to see basic profile info, so that I know who the user is.
 Acceptance Criteria:
 
-Confirmation dialog
-Cancel/confirm buttons
-Clear warning message
+Avatar display
+Display name and username
+Bio text
+Stats (posts, followers, following)
+Follow/edit button
 
-Files: src/components/DeleteConfirmModal/
-Est. Hours: 1h
-✅
-#P-015 - groupPosts.js Utility
-As a developer, I want posts grouped by author, so that the river timeline displays correctly.
+Files: src/components/ProfileCard/ProfileCardFront.jsx
+Est. Hours: 4h
+
+#P-020 - ProfileCardBack + Flip Animation
+As a user, I want to see detailed stats on card back, so that I can view activity data.
 Acceptance Criteria:
 
-Groups posts array by author ID
-Maintains chronological order within groups
-Returns format ready for TimelineRiverFeed
+3D CSS flip animation
+Back card content
+Activity charts container
+Flip back button
 
-Files: src/utils/groupPosts.js
-Est. Hours: 2h
-✅
+Files: src/components/ProfileCard/ProfileCardBack.jsx
+Est. Hours: 5h

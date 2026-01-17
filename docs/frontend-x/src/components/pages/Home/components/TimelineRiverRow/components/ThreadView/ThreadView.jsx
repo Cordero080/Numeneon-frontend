@@ -125,23 +125,32 @@ function ThreadView({
                 </div>
                 
                 {/* Reply content - show edit form if editing this reply */}
-                {editingReplyId === reply.id ? (
+                {editingReplyId === reply.id && !isEditModalOpen ? (
                   <div className="reply-edit-form">
-                    <textarea
-                      className="reply-edit-input"
-                      value={editContent}
-                      onChange={(e) => setEditContent(e.target.value)}
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === 'Escape') {
-                          handleCancelEdit();
-                        }
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSaveEdit(reply.id);
-                        }
-                      }}
-                    />
+                    <div className="reply-edit-input-wrapper">
+                      <textarea
+                        className="reply-edit-input"
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') {
+                            handleCancelEdit();
+                          }
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSaveEdit(reply.id);
+                          }
+                        }}
+                      />
+                      <button 
+                        className="expand-edit-btn"
+                        onClick={handleExpandEdit}
+                        title="Expand editor"
+                      >
+                        <MaximizeIcon size={12} strokeWidth="2.5" />
+                      </button>
+                    </div>
                     <div className="reply-edit-actions">
                       <button 
                         className="reply-edit-cancel"
@@ -149,13 +158,6 @@ function ThreadView({
                         title="Cancel"
                       >
                         <CloseIcon size={16} />
-                      </button>
-                      <button
-                        className="reply-edit-expand"
-                        onClick={handleExpandEdit}
-                        title="Expand to modal"
-                      >
-                        <MaximizeIcon size={16} />
                       </button>
                       <button 
                         className="reply-edit-save"
@@ -197,32 +199,48 @@ function ThreadView({
         </div>
       )}
 
-      {/* Edit Modal */}
+      {/* Expanded Edit Modal */}
       {isEditModalOpen && editingReply && createPortal(
-        <div className="edit-modal-overlay" onClick={handleCancelEdit}>
-          <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="edit-modal-header">
-              <h3>Edit Reply</h3>
-              <button className="edit-modal-close" onClick={handleCancelEdit}>
-                <CloseIcon size={20} />
+        <div className="expanded-composer-overlay" onClick={handleCancelEdit}>
+          <div className="expanded-composer-modal edit-mode" onClick={(e) => e.stopPropagation()}>
+            <div className="expanded-composer-header">
+              <h3>
+                <EditIcon size={20} />
+                Edit Comment
+              </h3>
+              <button 
+                className="close-btn-glow"
+                onClick={handleCancelEdit}
+              >
+                <CloseIcon size={24} />
               </button>
             </div>
-            <textarea
-              className="edit-modal-textarea"
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              autoFocus
-            />
-            <div className="edit-modal-actions">
-              <button className="edit-modal-cancel" onClick={handleCancelEdit}>
-                Cancel
-              </button>
-              <button
-                className="edit-modal-save"
+            <div className="expanded-composer-body">
+              <textarea
+                className="composer-textarea"
+                placeholder="Edit your comment..."
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    handleCancelEdit();
+                  }
+                }}
+              />
+            </div>
+            <div className="expanded-composer-footer">
+              <button 
+                className="submit-btn icon-btn"
                 disabled={!editContent.trim() || isSaving}
-                onClick={() => handleSaveEdit(editingReply.id)}
+                onClick={() => handleSaveEdit(editingReplyId)}
+                title="Save"
               >
-                {isSaving ? 'Saving...' : 'Save Changes'}
+                {isSaving ? (
+                  <span className="saving-dots">...</span>
+                ) : (
+                  <CheckIcon size={24} strokeWidth="2.5" />
+                )}
               </button>
             </div>
           </div>
