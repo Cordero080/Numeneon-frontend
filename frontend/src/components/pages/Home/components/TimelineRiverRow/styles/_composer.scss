@@ -508,3 +508,142 @@
   background: rgba(26, 231, 132, 0.1);
   filter: drop-shadow(0 0 6px rgba(26, 231, 132, 0.4));
 }
+
+/* ============================================
+   EDIT MODAL - Full screen edit overlay
+   ============================================ */
+
+.edit-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.edit-modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  max-width: 500px;
+  width: 90%;
+  animation: slideUp 0.2s ease;
+}
+
+.edit-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+  
+  h3 {
+    font-family: var(--font-title);
+    font-size: var(--font-size-lg);
+    color: var(--text-primary);
+    margin: 0;
+  }
+}
+
+.edit-modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: var(--space-xs);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  
+  &:hover {
+    color: var(--text-primary);
+    background: var(--bg-glass);
+  }
+}
+
+.edit-modal-textarea {
+  width: 100%;
+  min-height: 120px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  font-family: var(--font-main);
+  font-size: var(--font-size-md);
+  color: var(--text-primary);
+  resize: vertical;
+  margin-bottom: var(--space-md);
+  
+  &:focus {
+    outline: none;
+    border-color: var(--cyan);
+    box-shadow: 0 0 10px rgba(79, 255, 255, 0.2);
+  }
+  
+  &::placeholder {
+    color: var(--text-muted);
+  }
+}
+
+.edit-modal-actions {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: flex-end;
+}
+
+.edit-modal-cancel,
+.edit-modal-save {
+  font-family: var(--font-title);
+  font-size: var(--font-size-sm);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-modal-cancel {
+  background: transparent;
+  border-color: var(--border-default);
+  color: var(--text-muted);
+  
+  &:hover {
+    border-color: var(--border-strong);
+    color: var(--text-primary);
+  }
+}
+
+.edit-modal-save {
+  background: rgba(79, 255, 255, 0.15);
+  border-color: rgba(79, 255, 255, 0.5);
+  color: var(--cyan);
+  
+  &:hover:not(:disabled) {
+    background: rgba(79, 255, 255, 0.25);
+    border-color: rgba(79, 255, 255, 0.8);
+    box-shadow: 0 0 15px rgba(79, 255, 255, 0.3);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* Animations */
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
