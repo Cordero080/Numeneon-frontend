@@ -1,10 +1,6 @@
 // 🔵 PABLO - UI Architect
 // TimelineRiverRow.jsx - Single row in timeline showing one user's posts across 3 columns
 // Refactored: Components extracted to ./components/
-//
-// This is the main orchestrator component for displaying a user's posts in the Home/Feed.
-// It handles both MOBILE (tab-based navigation) and DESKTOP (3-column Smart Deck) views.
-// Refactored: Components extracted to ./components/
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -12,11 +8,12 @@ import './TimelineRiverRow.scss';
 import MediaLightbox from '../MediaLightbox/MediaLightbox';
 import DeleteConfirmModal from '../DeleteConfirmModal/DeleteConfirmModal';
 import { useAuth, usePosts, useMessages } from '@contexts';
-import { ChevronLeftIcon, ChevronRightIcon, EditIcon, CheckIcon, CloseIcon } from '@assets/icons';
+import { ChevronLeftIcon, ChevronRightIcon, EditIcon, CheckIcon, CloseIcon, ThoughtBubbleIcon, ImageIcon, StarIcon, UserIcon } from '@assets/icons';
 import { createPortal } from 'react-dom';
 
 // Extracted components
-import { PostCard, SmartDeck, MobileTabNav } from './components';
+import { PostCard, MobileTabNav } from './components';
+import SmartDeck, { SmartDeckContent } from './components/SmartDeck/SmartDeck';
 
 function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commentText, setCommentText, setActiveCommentPostId, onDeletePost, onUpdatePost }) {
   // 🔵 Extract data from props
@@ -88,7 +85,7 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
   
   // Mobile state
   const [isMobile, setIsMobile] = useState(false);
-  const [mobileActiveTab, setMobileActiveTab] = useState('thoughts');
+  const [mobileActiveTab, setMobileActiveTab] = useState(mostRecentType || 'thoughts');
   const [mobileCardIndex, setMobileCardIndex] = useState({ thoughts: 0, media: 0, milestones: 0 });
   
   // Desktop state
@@ -104,6 +101,9 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
     media: 0,
     milestones: 0
   });
+  
+  // Collapsed decks state (pill collapse system)
+  const [collapsedDecks, setCollapsedDecks] = useState(new Set());
   
   // Deck navigation
   const nextCard = (type, totalCards) => {
@@ -122,6 +122,19 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
   
   const selectCard = (type, index) => {
     setDeckIndex(prev => ({ ...prev, [type]: index }));
+  };
+  
+  // Collapse/expand deck handlers
+  const handleCollapseDeck = (type) => {
+    setCollapsedDecks(prev => new Set([...prev, type]));
+  };
+  
+  const handleExpandDeck = (type) => {
+    setCollapsedDecks(prev => {
+      const next = new Set(prev);
+      next.delete(type);
+      return next;
+    });
   };
   
   // Check if mobile on mount and resize
@@ -158,7 +171,8 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
         [postId]: [...(prev[postId] || []), result.data]
       }));
       setCommentText('');
-      setActiveCommentPostId(null);
+      // Don't close the expanded view - user should see their new reply
+      // setActiveCommentPostId(null);
       setExpandedThreadId(postId);
       return true;
     }
@@ -217,6 +231,7 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
 
   // Handle card click - opens expanded view with comments
   const handleCardClick = async (post) => {
+    // Set active comment post to show full-page composer
     setActiveCommentPostId(post.id);
     setIsComposerFullPage(true);
     // Fetch replies if not already loaded
@@ -275,7 +290,6 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
         commentText={commentText}
         setCommentText={setCommentText}
         setActiveCommentPostId={setActiveCommentPostId}
-
         isComposerFullPage={isComposerFullPage}
         setIsComposerFullPage={setIsComposerFullPage}
         isSaving={false}
@@ -396,45 +410,118 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
     );
   }
 
-  // 🟢 DESKTOP: 3 Columns Side-by-Side with Smart Decks
+  // Calculate how many decks are currently expanded
+  const expandedCount = [
+    hasThoughts && !collapsedDecks.has('thoughts'),
+    hasMedia && !collapsedDecks.has('media'),
+    hasMilestones && !collapsedDecks.has('milestones')
+  ].filter(Boolean).length;
+  
+  // Collapse all decks
+  const handleCollapseAll = () => {
+    const allTypes = [];
+    if (hasThoughts) allTypes.push('thoughts');
+    if (hasMedia) allTypes.push('media');
+    if (hasMilestones) allTypes.push('milestones');
+    setCollapsedDecks(new Set(allTypes));
+  };
+
+  // 🟢 DESKTOP: Tabs in header row, content below - like mobile tabs
+  const allCollapsed = expandedCount === 0;
+  
   return (
-    <div className={`timeline-river-row timeline-river-row--${columnCount}-col`}>
-      {hasThoughts && (
-        <SmartDeck
-          posts={thoughts}
-          type="thoughts"
-          currentIndex={deckIndex.thoughts}
-          onNextCard={nextCard}
-          onPrevCard={prevCard}
-          onSelectCard={selectCard}
-          isRecentType={mostRecentType === 'thoughts'}
-          renderPostCard={renderPostCard}
-        />
+    <div className={`timeline-river-row timeline-river-row--expanded-${expandedCount}`}>
+      {/* User info header - only when ALL tabs collapsed */}
+      {allCollapsed && (
+        <div className="timeline-river-row__user-header">
+          <div 
+            className="river-avatar clickable-user"
+            onClick={(e) => handleUserClick(e, user.id, user.username)}
+          >
+            <UserIcon size={24} />
+          </div>
+          <span 
+            className="river-author clickable-user"
+            onClick={(e) => handleUserClick(e, user.id, user.username)}
+          >
+            {user.display_name || user.name || user.username}
+          </span>
+        </div>
       )}
-      {hasMedia && (
-        <SmartDeck
-          posts={media}
-          type="media"
-          currentIndex={deckIndex.media}
-          onNextCard={nextCard}
-          onPrevCard={prevCard}
-          onSelectCard={selectCard}
-          isRecentType={mostRecentType === 'media'}
-          renderPostCard={renderPostCard}
-        />
-      )}
-      {hasMilestones && (
-        <SmartDeck
-          posts={milestones}
-          type="milestones"
-          currentIndex={deckIndex.milestones}
-          onNextCard={nextCard}
-          onPrevCard={prevCard}
-          onSelectCard={selectCard}
-          isRecentType={mostRecentType === 'milestones'}
-          renderPostCard={renderPostCard}
-        />
-      )}
+      
+      {/* Tabs row - all tabs same size, collapsed ones greyed out, non-recent dimmed */}
+      <div className="timeline-river-row__tabs">
+        {hasThoughts && (
+          <button 
+            className={`deck-tab deck-tab--thoughts${collapsedDecks.has('thoughts') ? ' deck-tab--collapsed' : ''}${mostRecentType && mostRecentType !== 'thoughts' ? ' deck-tab--not-recent' : ''}`}
+            onClick={() => collapsedDecks.has('thoughts') ? handleExpandDeck('thoughts') : handleCollapseDeck('thoughts')}
+          >
+            <span className="deck-tab__icon"><ThoughtBubbleIcon className="smart-deck-icon-svg" /></span>
+            <span className="deck-tab__label">Thoughts</span>
+            <span className="deck-tab__count">{thoughts.length}</span>
+            <span className="deck-tab__collapse">{collapsedDecks.has('thoughts') ? '+' : '−'}</span>
+          </button>
+        )}
+        {hasMedia && (
+          <button 
+            className={`deck-tab deck-tab--media${collapsedDecks.has('media') ? ' deck-tab--collapsed' : ''}${mostRecentType && mostRecentType !== 'media' ? ' deck-tab--not-recent' : ''}`}
+            onClick={() => collapsedDecks.has('media') ? handleExpandDeck('media') : handleCollapseDeck('media')}
+          >
+            <span className="deck-tab__icon"><ImageIcon className="smart-deck-icon-svg" /></span>
+            <span className="deck-tab__label">Media</span>
+            <span className="deck-tab__count">{media.length}</span>
+            <span className="deck-tab__collapse">{collapsedDecks.has('media') ? '+' : '−'}</span>
+          </button>
+        )}
+        {hasMilestones && (
+          <button 
+            className={`deck-tab deck-tab--milestones${collapsedDecks.has('milestones') ? ' deck-tab--collapsed' : ''}${mostRecentType && mostRecentType !== 'milestones' ? ' deck-tab--not-recent' : ''}`}
+            onClick={() => collapsedDecks.has('milestones') ? handleExpandDeck('milestones') : handleCollapseDeck('milestones')}
+          >
+            <span className="deck-tab__icon"><StarIcon className="smart-deck-icon-svg" /></span>
+            <span className="deck-tab__label">Milestones</span>
+            <span className="deck-tab__count">{milestones.length}</span>
+            <span className="deck-tab__collapse">{collapsedDecks.has('milestones') ? '+' : '−'}</span>
+          </button>
+        )}
+      </div>
+      
+      {/* Content row - only expanded decks */}
+      <div className="timeline-river-row__content">
+        {hasThoughts && !collapsedDecks.has('thoughts') && (
+          <SmartDeckContent
+            posts={thoughts}
+            type="thoughts"
+            currentIndex={deckIndex.thoughts}
+            onNextCard={nextCard}
+            onPrevCard={prevCard}
+            onSelectCard={selectCard}
+            renderPostCard={renderPostCard}
+          />
+        )}
+        {hasMedia && !collapsedDecks.has('media') && (
+          <SmartDeckContent
+            posts={media}
+            type="media"
+            currentIndex={deckIndex.media}
+            onNextCard={nextCard}
+            onPrevCard={prevCard}
+            onSelectCard={selectCard}
+            renderPostCard={renderPostCard}
+          />
+        )}
+        {hasMilestones && !collapsedDecks.has('milestones') && (
+          <SmartDeckContent
+            posts={milestones}
+            type="milestones"
+            currentIndex={deckIndex.milestones}
+            onNextCard={nextCard}
+            onPrevCard={prevCard}
+            onSelectCard={selectCard}
+            renderPostCard={renderPostCard}
+          />
+        )}
+      </div>
       
       {/* Desktop navigation controls */}
       {columnCount === 3 && activeColumnType && (
@@ -499,6 +586,65 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
         }}
         isDeleting={isDeleting}
       />
+
+      {/* Edit Modal - Dedicated editor (same as Profile page) */}
+      {editingPostId && createPortal(
+        <div className="expanded-composer-overlay" onClick={() => {
+          setEditingPostId(null);
+          setEditingPostContent('');
+        }}>
+          <div className="expanded-composer-modal edit-mode" onClick={(e) => e.stopPropagation()}>
+            <div className="expanded-composer-header">
+              <h3>
+                <EditIcon size={20} />
+                Edit Post
+              </h3>
+              <button 
+                className="close-btn-glow"
+                onClick={() => {
+                  setEditingPostId(null);
+                  setEditingPostContent('');
+                }}
+              >
+                <CloseIcon size={24} />
+              </button>
+            </div>
+            <div className="expanded-composer-body">
+              <textarea
+                className="composer-textarea"
+                placeholder="Edit your post..."
+                value={editingPostContent}
+                onChange={(e) => setEditingPostContent(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className="expanded-composer-footer">
+              <button 
+                className="submit-btn icon-btn"
+                disabled={!editingPostContent.trim() || isSavingEdit}
+                onClick={async () => {
+                  if (editingPostContent.trim() && editingPostId && onUpdatePost) {
+                    setIsSavingEdit(true);
+                    try {
+                      await onUpdatePost(editingPostId, { content: editingPostContent.trim() });
+                      setEditingPostId(null);
+                      setEditingPostContent('');
+                    } catch (error) {
+                      console.error('Failed to update post:', error);
+                    } finally {
+                      setIsSavingEdit(false);
+                    }
+                  }
+                }}
+                title="Save"
+              >
+                <CheckIcon size={24} strokeWidth="2.5" />
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
