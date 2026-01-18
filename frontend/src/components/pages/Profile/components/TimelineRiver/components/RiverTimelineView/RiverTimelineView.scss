@@ -100,6 +100,42 @@
 }
 
 /* ============================================
+   CARD AVATAR HEADER
+   ============================================ */
+
+.river-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.river-avatar {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border-default);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  svg {
+    color: var(--cyan);
+  }
+}
+
+.river-author {
+  font-family: var(--font-title);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* ============================================
    CARD MEDIA & BADGES
    ============================================ */
 

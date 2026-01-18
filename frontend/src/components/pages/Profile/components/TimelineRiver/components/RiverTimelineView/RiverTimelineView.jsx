@@ -11,6 +11,7 @@ import {
   ImageIcon,
   ExpandIcon,
   MilestoneIcon,
+  UserIcon,
 } from '@assets/icons';
 import RiverSmartDeck from '../RiverSmartDeck';
 import './RiverTimelineView.scss';
@@ -161,6 +162,13 @@ function RiverTimelineView({
           onClick={(e) => handleCardClick(e, currentPost)}
           style={{ cursor: 'pointer' }}
         >
+          {/* Avatar header */}
+          <div className="river-card-header">
+            <div className="river-avatar">
+              <UserIcon size={20} />
+            </div>
+            <span className="river-author">{profileUser?.username || 'Me'}</span>
+          </div>
           <div className="river-card-content">
             <p className="river-post-text">{currentPost?.content}</p>
             <span className="river-timestamp">{formatDate(currentPost?.created_at)}</span>
@@ -197,6 +205,13 @@ function RiverTimelineView({
           onClick={(e) => handleCardClick(e, currentPost)}
           style={{ cursor: 'pointer' }}
         >
+          {/* Avatar header */}
+          <div className="river-card-header">
+            <div className="river-avatar">
+              <UserIcon size={20} />
+            </div>
+            <span className="river-author">{profileUser?.username || 'Me'}</span>
+          </div>
           <div 
             className="river-card-media" 
             onClick={() => setExpandedMediaPost(currentPost)}
@@ -251,6 +266,13 @@ function RiverTimelineView({
           onClick={(e) => handleCardClick(e, currentPost)}
           style={{ cursor: 'pointer' }}
         >
+          {/* Avatar header */}
+          <div className="river-card-header">
+            <div className="river-avatar">
+              <UserIcon size={20} />
+            </div>
+            <span className="river-author">{profileUser?.username || 'Me'}</span>
+          </div>
           <div className="achievement-badge">
             <MilestoneIcon size={24} />
           </div>
