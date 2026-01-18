@@ -8,10 +8,25 @@
   flex-direction: column;
   gap: 0;
   position: relative;
-  align-self: start; /* Prevent stretching to match sibling height in grid */
+  min-width: 0;
+  box-sizing: border-box;
+  flex: 1 1 0;
+  width: 100%;
+  align-items: stretch;
 }
 
-/* Header with type icon and count */
+/* Smart Deck Content - card + nav without header */
+.smart-deck-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  width: 100%;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Header with type icon and count - clickable to collapse */
 .smart-deck-header {
   display: flex;
   align-items: center;
@@ -22,8 +37,21 @@
   background: var(--bg-glass);
   border-radius: 8px;
   border: 1px solid var(--border-subtle);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  position: relative; /* For absolute positioning of position indicator */
+  transition: all 0.3s ease;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  width: 100%;
+  position: relative;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* Standalone header in headers row (not inside .smart-deck) */
+.timeline-river-row__headers .smart-deck-header {
+  margin-bottom: 0;
 }
 
 /* Icon container */
@@ -44,7 +72,7 @@
   filter: drop-shadow(0 0 4px currentColor);
 }
 
-/* Type-specific header border colors */
+/* Type-specific header border colors - for nested headers */
 .smart-deck--thoughts .smart-deck-header {
   border-color: rgba(79, 255, 255, 0.4);
   box-shadow: 0 0 8px rgba(79, 255, 255, 0.15);
@@ -58,6 +86,63 @@
 .smart-deck--milestones .smart-deck-header {
   border-color: rgba(26, 231, 132, 0.4);
   box-shadow: 0 0 8px rgba(26, 231, 132, 0.15);
+}
+
+/* Type-specific standalone header styles (used in headers row) */
+.smart-deck-header--thoughts {
+  border-color: rgba(79, 255, 255, 0.4);
+  box-shadow: 0 0 8px rgba(79, 255, 255, 0.15);
+  
+  .smart-deck-icon-svg { color: var(--cyan); filter: drop-shadow(0 0 6px rgba(79, 255, 255, 0.6)); }
+  .smart-deck-label { color: var(--cyan); opacity: 0.6; text-shadow: 0 0 4px rgba(79, 255, 255, 0.3); }
+  .smart-deck-count { color: var(--cyan); }
+}
+
+.smart-deck-header--media {
+  border-color: rgba(167, 131, 255, 0.4);
+  box-shadow: 0 0 8px rgba(167, 131, 255, 0.15);
+  
+  .smart-deck-icon-svg { color: var(--post-media-badge); filter: drop-shadow(0 0 6px rgba(167, 131, 255, 0.6)); }
+  .smart-deck-label { color: var(--post-media-badge); opacity: 0.6; text-shadow: 0 0 4px rgba(201, 168, 255, 0.3); }
+  .smart-deck-count { color: var(--post-media-badge); }
+}
+
+.smart-deck-header--milestones {
+  border-color: rgba(26, 231, 132, 0.4);
+  box-shadow: 0 0 8px rgba(26, 231, 132, 0.15);
+  
+  .smart-deck-icon-svg { color: var(--accent); filter: drop-shadow(0 0 6px rgba(26, 231, 132, 0.6)); }
+  .smart-deck-label { color: var(--accent); opacity: 0.6; text-shadow: 0 0 4px rgba(26, 231, 132, 0.3); }
+  .smart-deck-count { color: var(--accent); }
+}
+
+/* Recent type - brighter standalone headers */
+.smart-deck-header--recent.smart-deck-header--thoughts {
+  border-color: rgba(79, 255, 255, 0.8);
+  box-shadow: 0 0 12px rgba(79, 255, 255, 0.4), 0 0 20px rgba(79, 255, 255, 0.2);
+  .smart-deck-label { opacity: 1; text-shadow: 0 0 12px rgba(79, 255, 255, 0.9), 0 0 20px rgba(79, 255, 255, 0.6); }
+}
+
+.smart-deck-header--recent.smart-deck-header--media {
+  border-color: rgba(167, 131, 255, 0.8);
+  box-shadow: 0 0 12px rgba(167, 131, 255, 0.4), 0 0 20px rgba(167, 131, 255, 0.2);
+  .smart-deck-label { opacity: 1; text-shadow: 0 0 12px rgba(201, 168, 255, 0.9), 0 0 20px rgba(201, 168, 255, 0.6); }
+}
+
+.smart-deck-header--recent.smart-deck-header--milestones {
+  border-color: rgba(26, 231, 132, 0.8);
+  box-shadow: 0 0 12px rgba(26, 231, 132, 0.4), 0 0 20px rgba(26, 231, 132, 0.2);
+  .smart-deck-label { opacity: 1; text-shadow: 0 0 12px rgba(26, 231, 132, 0.9), 0 0 20px rgba(26, 231, 132, 0.6); }
+}
+
+/* Collapsed header state - greyed out */
+.smart-deck-header--collapsed {
+  opacity: 0.35;
+  
+  &:hover {
+    opacity: 0.6;
+    background: rgba(255, 255, 255, 0.03);
+  }
 }
 
 /* Type-specific icon colors */
@@ -204,6 +289,7 @@
 /* Card container */
 .smart-deck-card-container {
   position: relative;
+  width: 100%;
 }
 
 /* Navigation controls - transparent wrapper, just for layout */
@@ -326,7 +412,8 @@
 }
 
 /* ===== THOUGHTS TYPE (Cyan) ===== */
-.smart-deck--thoughts .smart-deck-nav-btn {
+.smart-deck--thoughts .smart-deck-nav-btn,
+.smart-deck-content--thoughts .smart-deck-nav-btn {
   color: rgba(79, 255, 255, 0.4);
   
   &::before {
@@ -348,7 +435,8 @@
   }
 }
 
-.smart-deck--thoughts .smart-deck-dot {
+.smart-deck--thoughts .smart-deck-dot,
+.smart-deck-content--thoughts .smart-deck-dot {
   border-color: rgba(79, 255, 255, 0.3);
   
   &:hover {
@@ -357,7 +445,8 @@
   }
 }
 
-.smart-deck--thoughts .smart-deck-dot--active {
+.smart-deck--thoughts .smart-deck-dot--active,
+.smart-deck-content--thoughts .smart-deck-dot--active {
   background: linear-gradient(90deg, rgba(79, 255, 255, 0.9), rgba(77, 171, 247, 0.9));
   border-color: rgba(79, 255, 255, 0.6);
   box-shadow: 0 0 12px rgba(79, 255, 255, 0.6),
@@ -365,7 +454,8 @@
 }
 
 /* ===== MEDIA TYPE (Purple/Magenta) ===== */
-.smart-deck--media .smart-deck-nav-btn {
+.smart-deck--media .smart-deck-nav-btn,
+.smart-deck-content--media .smart-deck-nav-btn {
   color: rgba(201, 168, 255, 0.4);
   
   &::before {
@@ -387,7 +477,8 @@
   }
 }
 
-.smart-deck--media .smart-deck-dot {
+.smart-deck--media .smart-deck-dot,
+.smart-deck-content--media .smart-deck-dot {
   border-color: rgba(201, 168, 255, 0.3);
   
   &:hover {
@@ -396,7 +487,8 @@
   }
 }
 
-.smart-deck--media .smart-deck-dot--active {
+.smart-deck--media .smart-deck-dot--active,
+.smart-deck-content--media .smart-deck-dot--active {
   background: linear-gradient(90deg, rgba(233, 78, 200, 0.9), rgba(201, 168, 255, 0.9));
   border-color: rgba(201, 168, 255, 0.6);
   box-shadow: 0 0 12px rgba(201, 168, 255, 0.6),
@@ -404,7 +496,8 @@
 }
 
 /* ===== MILESTONES TYPE (Green) ===== */
-.smart-deck--milestones .smart-deck-nav-btn {
+.smart-deck--milestones .smart-deck-nav-btn,
+.smart-deck-content--milestones .smart-deck-nav-btn {
   color: rgba(26, 231, 132, 0.4);
   
   &::before {
@@ -426,7 +519,8 @@
   }
 }
 
-.smart-deck--milestones .smart-deck-dot {
+.smart-deck--milestones .smart-deck-dot,
+.smart-deck-content--milestones .smart-deck-dot {
   border-color: rgba(26, 231, 132, 0.3);
   
   &:hover {
@@ -435,7 +529,8 @@
   }
 }
 
-.smart-deck--milestones .smart-deck-dot--active {
+.smart-deck--milestones .smart-deck-dot--active,
+.smart-deck-content--milestones .smart-deck-dot--active {
   background: linear-gradient(90deg, rgba(26, 231, 132, 0.9), rgba(255, 215, 0, 0.9));
   border-color: rgba(26, 231, 132, 0.6);
   box-shadow: 0 0 12px rgba(26, 231, 132, 0.6),
@@ -463,14 +558,276 @@
   flex-wrap: wrap;
 }
 
-.smart-deck--thoughts .smart-deck-nav-position {
+/* Type-specific position indicator colors */
+.smart-deck--thoughts .smart-deck-nav-position,
+.smart-deck-content--thoughts .smart-deck-nav-position {
   color: rgba(79, 255, 255, 0.9);
 }
 
-.smart-deck--media .smart-deck-nav-position {
+.smart-deck--media .smart-deck-nav-position,
+.smart-deck-content--media .smart-deck-nav-position {
   color: rgba(201, 168, 255, 0.9);
 }
 
-.smart-deck--milestones .smart-deck-nav-position {
+.smart-deck--milestones .smart-deck-nav-position,
+.smart-deck-content--milestones .smart-deck-nav-position {
   color: rgba(26, 231, 132, 0.9);
+}
+
+/* ============================================
+   COLLAPSIBLE DECK - Pill Collapse System
+   Collapse decks to pills for space management
+   ============================================ */
+
+/* Collapse icon in header (minus sign) */
+.smart-deck-collapse-icon {
+  position: absolute;
+  right: 10px;
+  font-size: 18px;
+  font-weight: 300;
+  line-height: 1;
+  opacity: 0.4;
+  transition: all 0.2s ease;
+}
+
+.smart-deck-header:hover .smart-deck-collapse-icon {
+  opacity: 1;
+}
+
+/* Type-specific collapse icon hover colors */
+.smart-deck--thoughts .smart-deck-header:hover .smart-deck-collapse-icon {
+  color: var(--cyan);
+}
+
+.smart-deck--media .smart-deck-header:hover .smart-deck-collapse-icon {
+  color: var(--post-media-badge);
+}
+
+.smart-deck--milestones .smart-deck-header:hover .smart-deck-collapse-icon {
+  color: var(--accent);
+}
+
+/* Collapsed pill */
+.smart-deck-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: var(--font-title);
+  
+  &:hover {
+    transform: scale(1.02);
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.smart-deck-pill-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  
+  .smart-deck-icon-svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.smart-deck-pill-label {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.smart-deck-pill-count {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.smart-deck-pill-user {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-primary);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Type-specific pill colors */
+.smart-deck-pill--thoughts {
+  border-color: rgba(79, 255, 255, 0.4);
+  
+  &:hover {
+    border-color: rgba(79, 255, 255, 0.7);
+    box-shadow: 0 0 12px rgba(79, 255, 255, 0.3);
+  }
+  
+  .smart-deck-icon-svg {
+    color: var(--cyan);
+    filter: drop-shadow(0 0 4px rgba(79, 255, 255, 0.5));
+  }
+  
+  .smart-deck-pill-label,
+  .smart-deck-pill-count {
+    color: var(--cyan);
+  }
+}
+
+.smart-deck-pill--media {
+  border-color: rgba(167, 131, 255, 0.4);
+  
+  &:hover {
+    border-color: rgba(167, 131, 255, 0.7);
+    box-shadow: 0 0 12px rgba(167, 131, 255, 0.3);
+  }
+  
+  .smart-deck-icon-svg {
+    color: var(--post-media-badge);
+    filter: drop-shadow(0 0 4px rgba(167, 131, 255, 0.5));
+  }
+  
+  .smart-deck-pill-label,
+  .smart-deck-pill-count {
+    color: var(--post-media-badge);
+  }
+}
+
+.smart-deck-pill--milestones {
+  border-color: rgba(26, 231, 132, 0.4);
+  
+  &:hover {
+    border-color: rgba(26, 231, 132, 0.7);
+    box-shadow: 0 0 12px rgba(26, 231, 132, 0.3);
+  }
+  
+  .smart-deck-icon-svg {
+    color: var(--accent);
+    filter: drop-shadow(0 0 4px rgba(26, 231, 132, 0.5));
+  }
+  
+  .smart-deck-pill-label,
+  .smart-deck-pill-count {
+    color: var(--accent);
+  }
+}
+
+/* Mobile: Always show collapse button */
+@media (max-width: 768px) {
+  .smart-deck-collapse-btn {
+    opacity: 0.7;
+  }
+}
+
+/* ============================================
+   COLLAPSED STATE - Icon-only button on the right
+   Shrinks to make room for expanded cards
+   ============================================ */
+
+.smart-deck-collapsed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 6px;
+  background: var(--bg-glass);
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  opacity: 0.4;
+  transition: all 0.3s ease;
+  min-width: 36px;
+  
+  &:hover {
+    opacity: 0.7;
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.smart-deck-collapsed-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  
+  .smart-deck-icon-svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.smart-deck-collapsed-count {
+  font-family: var(--font-title);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+/* Type-specific collapsed button styles */
+.smart-deck-collapsed--thoughts {
+  border-color: rgba(79, 255, 255, 0.3);
+  
+  .smart-deck-icon-svg {
+    color: var(--cyan);
+    filter: drop-shadow(0 0 4px rgba(79, 255, 255, 0.4));
+  }
+  
+  .smart-deck-collapsed-count {
+    color: var(--cyan);
+  }
+  
+  &:hover {
+    border-color: rgba(79, 255, 255, 0.5);
+    box-shadow: 0 0 8px rgba(79, 255, 255, 0.2);
+  }
+}
+
+.smart-deck-collapsed--media {
+  border-color: rgba(167, 131, 255, 0.3);
+  
+  .smart-deck-icon-svg {
+    color: var(--post-media-badge);
+    filter: drop-shadow(0 0 4px rgba(167, 131, 255, 0.4));
+  }
+  
+  .smart-deck-collapsed-count {
+    color: var(--post-media-badge);
+  }
+  
+  &:hover {
+    border-color: rgba(167, 131, 255, 0.5);
+    box-shadow: 0 0 8px rgba(167, 131, 255, 0.2);
+  }
+}
+
+.smart-deck-collapsed--milestones {
+  border-color: rgba(26, 231, 132, 0.3);
+  
+  .smart-deck-icon-svg {
+    color: var(--accent);
+    filter: drop-shadow(0 0 4px rgba(26, 231, 132, 0.4));
+  }
+  
+  .smart-deck-collapsed-count {
+    color: var(--accent);
+  }
+  
+  &:hover {
+    border-color: rgba(26, 231, 132, 0.5);
+    box-shadow: 0 0 8px rgba(26, 231, 132, 0.2);
+  }
 }

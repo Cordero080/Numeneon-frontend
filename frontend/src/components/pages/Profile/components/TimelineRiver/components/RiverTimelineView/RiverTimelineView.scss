@@ -13,6 +13,9 @@
   transition: all 0.3s ease;
   position: relative;
   overflow: visible;
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box;
   /* Cyberpunk cut corners - matching feed posts */
   clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
   /* Thick left border accent for 3D depth */
