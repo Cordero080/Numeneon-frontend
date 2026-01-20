@@ -1,7 +1,5 @@
 NEXT 5:
 
-
-
 #P-016 - timeFormatters.js Utility
 As a user, I want relative timestamps, so that I know how recent posts are.
 Acceptance Criteria:
