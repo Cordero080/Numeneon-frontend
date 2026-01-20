@@ -55,6 +55,56 @@ const API_BASE_URL = "http://localhost:8000/api";
 // Hint: On success, retry original request
 // Hint: On failure, clear tokens and redirect to /login
 
-// Your code here
+// Create axios instance
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: { "Content-Type": "application/json" },
+});
+// Add request interceptor - attach JWT token to the outgoing package
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      // django SimpleJWT expects Bearer <token>
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
+// Add response interceptor: handle the expired keys (401 errors)
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    // check if error is 401 and we haven't tried refreshing yet
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true; // mark to prevent infinite loops
+
+      try {
+        const refreshToken = localStorage.getItem("refreshToken");
+        // using stnadard axios to avoid interceptor loop
+        const response = await axios.post(
+          `${API_BASE_URL}/auth/token/refresh/`,
+          {
+            refresh: refreshToken,
+          },
+        );
+        if (response.status === 200) {
+          localStorage.setItem("accessToken", response.data.access);
+          // updatting the header and retrying original request
+          originalRequest.headers.Authorization = `Bearer ${response.data.access}`;
+          return apiClient(originalRequest);
+        }
+      } catch (refreshError) {
+        // if refresh fails, the user must log in again
+        localStorage.clear();
+        window.location.href = "/login";
+      }
+    }
+    // if not a 401 or already retried, reject the promise
+    return Promise.reject(error);
+  },
+);
 
 export default apiClient;
