@@ -65,7 +65,7 @@ apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("accessToken");
     if (token) {
-      // django SimpleJWT expects Bearer <token>
+      // attach JWT token to every request so Django knows who we are
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -77,13 +77,14 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    // check if error is 401 and we haven't tried refreshing yet
+    // if server says 401 (Unauthorized) the access token likely expired
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true; // mark to prevent infinite loops
 
       try {
         const refreshToken = localStorage.getItem("refreshToken");
-        // using stnadard axios to avoid interceptor loop
+
+        // using standard axios to avoid interceptor loop
         const response = await axios.post(
           `${API_BASE_URL}/auth/token/refresh/`,
           {
@@ -91,13 +92,14 @@ apiClient.interceptors.response.use(
           },
         );
         if (response.status === 200) {
+          // save the new access token and swap it into the failed request
           localStorage.setItem("accessToken", response.data.access);
-          // updatting the header and retrying original request
+          // updating the header and retrying original request
           originalRequest.headers.Authorization = `Bearer ${response.data.access}`;
-          return apiClient(originalRequest);
+          return apiClient(originalRequest); // retry original request with the new token
         }
       } catch (refreshError) {
-        // if refresh fails, the user must log in again
+        // if refresh token is also expired, user needs to login again
         localStorage.clear();
         window.location.href = "/login";
       }
