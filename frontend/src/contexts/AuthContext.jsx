@@ -45,68 +45,111 @@
 // Hint: Always return { success, error } from async functions
 // =============================================================================
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import apiClient from '@services/apiClient';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import apiClient from "@services/apiClient";
+import authService from "@services/authService";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   // TODO: Set up state
-  // const [user, setUser] = useState(null);
-  // const [isLoading, setIsLoading] = useState(true);
-  // const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // TODO: Check for existing auth on mount
-  // useEffect(() => {
-  //   const checkAuth = async () => {
-  //     const token = localStorage.getItem('accessToken');
-  //     if (token) {
-  //       try {
-  //         const response = await apiClient.get('/auth/me/');
-  //         setUser(response.data);
-  //         setIsAuthenticated(true);
-  //       } catch (error) {
-  //         // Token invalid - clear it
-  //         localStorage.removeItem('accessToken');
-  //         localStorage.removeItem('refreshToken');
-  //       }
-  //     }
-  //     setIsLoading(false);
-  //   };
-  //   checkAuth();
-  // }, []);
+  // TODO: Check for existing auth on mount (if user is already logged in ex page refresh)
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem("accessToken");
+      if (token) {
+        try {
+          // Use service to see if the existing token is still valid
+          const userData = await authService.getCurrentUser();
+          setUser(userData);
+          setIsAuthenticated(true);
+        } catch (error) {
+          // if the token is invalid/expired, clear it out
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+        }
+      }
+      setIsLoading(false); // Auth check complete
+    };
+    checkAuth();
+  }, []);
 
   // TODO: Implement login function
-  // const login = async (email, password) => {
-  //   try {
-  //     const response = await apiClient.post('/auth/login/', { email, password });
-  //     localStorage.setItem('accessToken', response.data.access);
-  //     localStorage.setItem('refreshToken', response.data.refresh);
-  //     const userResponse = await apiClient.get('/auth/me/');
-  //     setUser(userResponse.data);
-  //     setIsAuthenticated(true);
-  //     return { success: true };
-  //   } catch (error) {
-  //     return { success: false, error: error.response?.data?.detail || 'Login failed' };
-  //   }
-  // };
+  const login = async (email, password) => {
+    try {
+      // call service to handle API call and token storage
+      await authService.login(email, password);
+      // call service to get the full user object
+      const userData = await authService.getCurrentUser();
+      setUser(userData);
+      setIsAuthenticated(true);
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.detail || "Invalid credentials",
+      };
+    }
+  };
 
   // TODO: Implement signup function
-  // const signup = async (username, email, password) => { ... };
+  const signup = async (username, email, password) => {
+    try {
+      await authService.signup(username, email, password);
+      // user signed up successfully, now use the login function to log them in
+      return await login(email, password);
+    } catch (error) {
+      return { success: false, error: error.response?.data || "Signup failed" };
+    }
+  };
 
   // TODO: Implement logout function
-  // const logout = () => { ... };
+  const logout = () => {
+    authService.logout(); // clear tokens from localStorage
+    setUser(null); // clear user state
+    setIsAuthenticated(false);
+    window.location.href = "/login"; // force redirect to login page - clean state
+  };
 
   // TODO: Implement updateProfile function
-  // const updateProfile = async (profileData) => { ... };
+  const updateProfile = async (profileData) => {
+    try {
+      // tell the backend to update database
+      const updatedUser = await authService.updateProfile(user.id, profileData);
+      setUser(updatedUser);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.response?.data || "Update failed" };
+    }
+  };
 
-  // TODO: Return provider with all values and functions
-  // Your code here
+  const value = {
+    user,
+    isLoading,
+    isAuthenticated,
+    login,
+    signup,
+    logout,
+    updateProfile,
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {/* Don't render the app until we know if the user is logged in or not */}
+      {!isLoading && children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
   // TODO: Return useContext(AuthContext) with error check
-  // Your code here
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+  return context;
 };
 
 export default AuthContext;
