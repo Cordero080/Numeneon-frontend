@@ -12,6 +12,7 @@
 // - posts: Array of post objects
 // - isLoading: Boolean, true while fetching
 // - error: Error message string or null
+// - collapsedDecks: Set of collapsed category types ('thoughts', 'media', 'milestones')
 //
 // FUNCTIONS TO PROVIDE:
 // - fetchPosts(): Get all posts from API
@@ -23,6 +24,8 @@
 // - createReply(parentId, content): Reply to a post
 // - likePost(id): Toggle like on a post
 // - sharePost(id): Increment share count
+// - collapseDeck(type): Collapse a deck category
+// - expandDeck(type): Expand a deck category
 //
 // FETCH ON AUTH:
 // - useEffect that watches AuthContext's user state
@@ -56,6 +59,54 @@
 //
 // Hint: const { user, isLoading: authLoading } = useAuth();
 // Hint: useEffect dependency array includes [user, authLoading]
+// =============================================================================
+//
+// =============================================================================
+// 🔵 PABLO ADDED - COLLAPSIBLE DECKS FEATURE (for Colin to implement)
+// =============================================================================
+//
+// TODO (COLIN): Add collapsedDecks state with localStorage persistence
+// This allows Home and Profile pages to share collapsed deck state
+//
+// STATE TO ADD:
+// const [collapsedDecks, setCollapsedDecks] = useState(() => {
+//   try {
+//     const saved = localStorage.getItem('collapsedDecks');
+//     return saved ? new Set(JSON.parse(saved)) : new Set();
+//   } catch {
+//     return new Set();
+//   }
+// });
+//
+// USEEFFECT TO ADD (save to localStorage):
+// useEffect(() => {
+//   localStorage.setItem('collapsedDecks', JSON.stringify([...collapsedDecks]));
+// }, [collapsedDecks]);
+//
+// FUNCTIONS TO ADD:
+// const collapseDeck = (type) => {
+//   setCollapsedDecks(prev => new Set([...prev, type]));
+// };
+//
+// const expandDeck = (type) => {
+//   setCollapsedDecks(prev => {
+//     const next = new Set(prev);
+//     next.delete(type);
+//     return next;
+//   });
+// };
+//
+// IN createPost - AUTO-EXPAND THE POSTED CATEGORY:
+// const postType = postData.type || newPost.type;
+// if (postType) {
+//   expandDeck(postType);
+// }
+//
+// ADD TO PROVIDER VALUE:
+// collapsedDecks,
+// collapseDeck,
+// expandDeck,
+//
 // =============================================================================
 
 import React, { createContext, useContext, useState, useEffect } from 'react';

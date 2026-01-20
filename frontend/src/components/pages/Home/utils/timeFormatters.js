@@ -29,8 +29,6 @@ export const formatRelativeTime = (dateString) => {
 
 /**
  * Format a date for display in headers (e.g., "Jan 4")
- * @param {string} dateString - ISO date string or Date object
- * @returns {string} Formatted date string
  */
 export const formatShortDate = (dateString) => {
   if (!dateString) return "";

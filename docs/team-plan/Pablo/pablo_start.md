@@ -1,12 +1,5 @@
 NEXT 5:
 
-Last done:
-P-011 – Mobile category tab bar with sticky positioning
-P-012 – Repost modal with copy link functionality
-P-013 – Fullscreen media lightbox with zoom/swipe
-P-014 – Delete confirmation dialog
-P-015 – Post grouping utility for river timeline
-
 #P-016 - timeFormatters.js Utility
 As a user, I want relative timestamps, so that I know how recent posts are.
 Acceptance Criteria:
