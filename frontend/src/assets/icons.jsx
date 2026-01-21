@@ -1,12 +1,12 @@
 /**
  * Numeneon Icon Library
- * 
+ *
  * DEPRECATED: This file re-exports from the modular icons/ directory.
  * For new code, import directly from icons/index.js or specific category files:
- * 
+ *
  *   import { HeartIcon } from '../../assets/icons'
  *   import { HeartIcon } from '../../assets/icons/engagement'
- * 
+ *
  * Icons are organized by category:
  *   - navigation: TargetReticleIcon, ChevronLeftIcon, BackIcon, FlipIcon, etc.
  *   - user: UserIcon, GlobeIcon, LockIcon, FriendsIcon, HexProfileIcon
@@ -21,4 +21,4 @@
  *   - misc: MusicIcon, MapPinIcon, PostTriangleIcon
  */
 
-export * from './icons/index';
+export * from "./icons/index";

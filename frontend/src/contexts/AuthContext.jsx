@@ -55,8 +55,9 @@
  * =============================================================================
  */
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import apiClient from '@services/apiClient';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import apiClient from "@services/apiClient";
+import authService from "@services/authService";
 
 const AuthContext = createContext(null);
 

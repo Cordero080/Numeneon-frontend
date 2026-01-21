@@ -137,7 +137,7 @@ You're building the Friends system - connections between users. You handle frien
 **Why:** Easy viewing/management during development
 
 **Acceptance Criteria:**
-
+ 
 - [ ] Friendship model registered
 - [ ] List display shows user1, user2, status, created_at
 - [ ] Can filter by status
