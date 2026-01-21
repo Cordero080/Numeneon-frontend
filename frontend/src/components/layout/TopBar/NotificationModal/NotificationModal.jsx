@@ -21,15 +21,17 @@
 //
 // =============================================================================
 
-import { useFriends } from '@contexts';
-import { BellIcon, CloseIcon, CheckCircleIcon, CloseCircleIcon } from '@assets/icons';
-import './NotificationModal.scss';
+import { useFriends } from "@contexts";
+import { CloseIcon, CheckIcon } from "@assets/icons";
+
+import "./NotificationModal.scss";
 
 function NotificationModal({ isOpen, onClose }) {
   // ─────────────────────────────────────────────────────────────────────────
   // CONTEXT
   // ─────────────────────────────────────────────────────────────────────────
-  const { friendRequests, acceptFriendRequest, declineFriendRequest } = useFriends();
+  const { friendRequests, acceptFriendRequest, declineFriendRequest } =
+    useFriends();
 
   // ─────────────────────────────────────────────────────────────────────────
   // HANDLERS
@@ -52,7 +54,6 @@ function NotificationModal({ isOpen, onClose }) {
   return (
     <div className="notification-modal-overlay" onClick={onClose}>
       <div className="notification-modal" onClick={(e) => e.stopPropagation()}>
-        
         {/* ═══════════════════════════════════════════════════════════════════ */}
         {/* HEADER                                                              */}
         {/* ═══════════════════════════════════════════════════════════════════ */}
@@ -82,7 +83,7 @@ function NotificationModal({ isOpen, onClose }) {
                     <span className="request-text">wants to be friends</span>
                   </div>
                   <div className="request-actions">
-                    <button 
+                    <button
                       className="action-btn accept"
                       onClick={() => handleAccept(request.id)}
                       title="Accept"
@@ -90,7 +91,7 @@ function NotificationModal({ isOpen, onClose }) {
                       <CheckCircleIcon size={18} />
                       <span>Accept</span>
                     </button>
-                    <button 
+                    <button
                       className="action-btn decline"
                       onClick={() => handleDecline(request.id)}
                       title="Decline"
