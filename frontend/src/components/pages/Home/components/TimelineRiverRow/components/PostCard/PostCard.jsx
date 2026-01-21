@@ -1,14 +1,16 @@
 // 🔵 PABLO - UI Component
 // PostCard.jsx - Individual post card with actions
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { formatRelativeTime } from '@components/pages/Home/utils/timeFormatters';
 import ThreadView from '../ThreadView';
 import RepostModal from '../RepostModal/RepostModal';
+import ReactionPicker from '../ReactionPicker';
 import {
   UserIcon,
   HeartDynamicIcon,
+  BoltDynamicIcon,
   MessageBubbleIcon,
   RepostIcon,
   BookmarkIcon,
@@ -25,7 +27,8 @@ import {
 } from '@assets/icons';
 import './PostCard.scss';
 
-function PostCard({
+function PostCard({ 
+  // Props
   post,
   type,
   user,
@@ -41,6 +44,7 @@ function PostCard({
   onEdit,
   onDelete,
   onExpandMedia,
+  onCardClick,
   // Thread props
   onToggleThread,
   expandedThreadId,
@@ -58,11 +62,6 @@ function PostCard({
   setActiveCommentPostId,
   isComposerFullPage,
   setIsComposerFullPage,
-  isEditMode,
-  setIsEditMode,
-  editingPostId,
-  setEditingPostId,
-  onUpdatePost,
   isSaving
 }) {
   // Heart animation state
@@ -71,18 +70,91 @@ function PostCard({
   // Repost modal state
   const [showRepostModal, setShowRepostModal] = useState(false);
   
+  // Reaction picker state (long-press)
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [reactionType, setReactionType] = useState(post.reaction_type || 'like'); // 'like' or 'emphasis'
+  const longPressTimer = useRef(null);
+  const LONG_PRESS_DURATION = 400; // ms
+  
   // Type-based heart colors
   const heartColors = {
-    thoughts: '#4fffff',    // cyan/blue
-    media: '#c9a8ff',       // purple  
-    milestones: '#1ae784'   // green
+    thoughts: '#31fcfcff',    // cyan/blue
+    media: '#ad7afeff',       // purple  
+    milestones: '#0ce77dff'   // green
   };
-  const heartColor = heartColors[type] || '#4fffff';
+  const heartColor = heartColors[type] || '#2fcefaff';
+  
+  // Long-press handlers for reaction picker
+  const handleReactionMouseDown = (e) => {
+    e.stopPropagation();
+    longPressTimer.current = setTimeout(() => {
+      setShowReactionPicker(true);
+    }, LONG_PRESS_DURATION);
+  };
+  
+  const handleReactionMouseUp = async (e) => {
+    e.stopPropagation();
+    // If timer still running, it was a quick tap - do regular like
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+      
+      // Only trigger like if picker isn't showing
+      if (!showReactionPicker) {
+        setIsHeartAnimating(true);
+        setTimeout(() => setIsHeartAnimating(false), 300);
+        await onLike(post.id);
+      }
+    }
+  };
+  
+  const handleReactionMouseLeave = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+  
+  const handleReactionSelect = async (selectedReaction) => {
+    setShowReactionPicker(false);
+    setReactionType(selectedReaction); // Update which icon to show
+    setIsHeartAnimating(true);
+    setTimeout(() => setIsHeartAnimating(false), 300);
+    
+    // Only call onLike if not already liked (to add the reaction)
+    // If already liked with same reaction, this will unlike
+    // If already liked with different reaction, just change the icon (don't toggle)
+    if (!post.is_liked) {
+      await onLike(post.id);
+    }
+    // TODO: When backend supports reaction types, pass selectedReaction to API
+    console.log('Reaction:', selectedReaction, 'on post:', post.id);
+  };
+  
+  // Determine current reaction state
+  const currentReaction = post.is_liked ? reactionType : null;
+
+  // Handle card click - opens expanded view
+  const handleCardClick = (e) => {
+    // Don't trigger if clicking on interactive elements
+    if (e.target.closest('button') || 
+        e.target.closest('.river-avatar') || 
+        e.target.closest('.river-author') ||
+        e.target.closest('.river-post-actions') ||
+        e.target.closest('.river-post-media') ||
+        e.target.closest('.inline-comment-composer') ||
+        e.target.closest('.thread-view')) {
+      return;
+    }
+    onCardClick?.(post);
+  };
   
   return (
     <>
     <div 
       className={`river-post-card post--${type} ${isSinglePost ? 'post--single' : ''} ${isShortPost ? 'post--compact' : ''} fade-in`}
+      onClick={handleCardClick}
+      style={{ cursor: 'pointer' }}
     >
       {/* Header: Avatar + Name + Type Badge */}
       <div className="river-post-header">
@@ -126,21 +198,34 @@ function PostCard({
       <p className="river-post-content">{post.content}</p>
 
       {/* Post Actions */} 
-      <div className="river-post-actions">
-        {/* Likes */}
+      <div className={`river-post-actions ${showReactionPicker ? 'picker-open' : ''}`}>
+        {/* Likes - with long-press reaction picker */}
         <div 
           className={`river-post-likes ${post.is_liked ? 'is-liked' : ''} ${isHeartAnimating ? 'heart-pulse' : ''}`}
-          onClick={async (e) => {
-            e.stopPropagation();
-            setIsHeartAnimating(true);
-            setTimeout(() => setIsHeartAnimating(false), 300);
-            await onLike(post.id);
-          }}
-          title={post.is_liked ? 'Unlike' : 'Like'}
-          style={{ cursor: 'pointer', '--heart-color': heartColor }}
+          onMouseDown={handleReactionMouseDown}
+          onMouseUp={handleReactionMouseUp}
+          onMouseLeave={handleReactionMouseLeave}
+          onTouchStart={handleReactionMouseDown}
+          onTouchEnd={handleReactionMouseUp}
+          title={post.is_liked ? 'Unlike (hold for more)' : 'Like (hold for more)'}
+          style={{ cursor: 'pointer', '--heart-color': heartColor, position: 'relative' }}
         >
-          <HeartDynamicIcon size={18} filled={post.is_liked} />
+          {/* Show heart or bolt based on reaction type */}
+          {reactionType === 'emphasis' ? (
+            <BoltDynamicIcon size={18} filled={post.is_liked} fillColor={heartColor} />
+          ) : (
+            <HeartDynamicIcon size={18} filled={post.is_liked} />
+          )}
           {post.likes_count || 0}
+          
+          {/* Reaction Picker Popup - shows to the right */}
+          <ReactionPicker
+            isOpen={showReactionPicker}
+            onSelect={handleReactionSelect}
+            onClose={() => setShowReactionPicker(false)}
+            reactionColor={heartColor}
+            currentReaction={currentReaction}
+          />
         </div>
         
         {/* Comment */}
@@ -284,6 +369,7 @@ function PostCard({
       {expandedThreadId === post.id && (
         <ThreadView
           postId={post.id}
+          postType={type}
           replies={threadReplies[post.id]}
           isLoading={loadingThread === post.id}
           currentUser={currentUser}
@@ -306,7 +392,6 @@ function PostCard({
                 className="close-btn-glow"
                 onClick={() => {
                   setIsComposerFullPage(false);
-                  setIsEditMode(false);
                   setActiveCommentPostId(null);
                   setCommentText('');
                 }}
@@ -319,62 +404,30 @@ function PostCard({
             {/* Scrollable content area */}
             <div className="full-page-content">
               {/* Original Post Context */}
-              {!isEditMode && (
-                <div className="reply-context">
-                  <div className="reply-context-header">
-                    <div className="reply-context-avatar">
-                      <UserIcon size={20} />
-                    </div>
-                    <span className="reply-context-name">{user.name}</span>
-                    <span className="reply-context-handle">@{user.username}</span>
-                    <span className="reply-context-dot">·</span>
-                    <span className="reply-context-time">{formatRelativeTime(post.created_at || post.createdAt)}</span>
+              <div className="reply-context">
+                <div className="reply-context-header">
+                  <div className="reply-context-avatar">
+                    <UserIcon size={20} />
                   </div>
-                  <p className="reply-context-content">{post.content}</p>
+                  <span className="reply-context-name">{user.name}</span>
+                  <span className="reply-context-handle">@{user.username}</span>
+                  <span className="reply-context-dot">·</span>
+                  <span className="reply-context-time">{formatRelativeTime(post.created_at || post.createdAt)}</span>
+                </div>
+                <p className="reply-context-content">{post.content}</p>
                   {type === 'media' && post.media_url && (
                     <div className="reply-context-media">
                       <img src={post.media_url} alt="Post media" />
                     </div>
                   )}
-                  
-                  {/* Post Actions in expanded view */}
-                  <div className="reply-context-actions">
-                    {/* Like */}
-                    <div 
-                      className={`reply-action-btn ${post.is_liked ? 'is-liked' : ''}`}
-                      onClick={async () => await onLike(post.id)}
-                      style={{ cursor: 'pointer', '--heart-color': heartColor }}
-                    >
-                      <HeartDynamicIcon size={18} filled={post.is_liked} />
-                      <span>{post.likes_count || 0}</span>
-                    </div>
-                    {/* Comment count */}
-                    <div className="reply-action-btn">
-                      <MessageBubbleIcon size={18} stroke="rgba(201,168,255,0.5)" strokeWidth="1.5" />
-                      <span>{post.reply_count || 0}</span>
-                    </div>
-                    {/* Share */}
-                    <div 
-                      className="reply-action-btn"
-                      onClick={() => setShowRepostModal(true)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <RepostIcon size={18} stroke="rgba(79,255,255,0.5)" strokeWidth="1.5" />
-                      <span>{post.shares_count || 0}</span>
-                    </div>
-                    {/* Bookmark */}
-                    <div className="reply-action-btn" style={{ cursor: 'pointer' }}>
-                      <BookmarkIcon size={18} stroke="rgba(201,168,255,0.5)" strokeWidth="1.5" />
-                    </div>
-                  </div>
                 </div>
-              )}
 
               {/* Thread View - show existing replies */}
               {threadReplies[post.id] && threadReplies[post.id].length > 0 && (
                 <div className="full-page-thread">
                   <ThreadView
                     postId={post.id}
+                    postType={type}
                     replies={threadReplies[post.id]}
                     isLoading={loadingThread === post.id}
                     currentUser={currentUser}
@@ -388,12 +441,44 @@ function PostCard({
               )}
             </div>
 
-            {/* Fixed Composer at Bottom */}
+            {/* Fixed Bottom Area - Actions + Composer */}
             <div className="full-page-composer-fixed">
+              {/* Post Actions */}
+              <div className="full-page-actions">
+                {/* Like */}
+                <div 
+                  className={`reply-action-btn ${post.is_liked ? 'is-liked' : ''}`}
+                  onClick={async () => await onLike(post.id)}
+                  style={{ cursor: 'pointer', '--heart-color': heartColor }}
+                >
+                  <HeartDynamicIcon size={20} filled={post.is_liked} />
+                  <span>{post.likes_count || 0}</span>
+                </div>
+                {/* Comment count */}
+                <div className="reply-action-btn">
+                  <MessageBubbleIcon size={20} stroke="rgba(201,168,255,0.5)" strokeWidth="1.5" />
+                  <span>{post.reply_count || 0}</span>
+                </div>
+                {/* Share */}
+                <div 
+                  className="reply-action-btn"
+                  onClick={() => setShowRepostModal(true)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <RepostIcon size={20} stroke="rgba(79,255,255,0.5)" strokeWidth="1.5" />
+                  <span>{post.shares_count || 0}</span>
+                </div>
+                {/* Bookmark */}
+                <div className="reply-action-btn" style={{ cursor: 'pointer' }}>
+                  <BookmarkIcon size={20} stroke="rgba(201,168,255,0.5)" strokeWidth="1.5" />
+                </div>
+              </div>
+
+              {/* Composer */}
               <div className="comment-input-wrapper">
                 <textarea
                   className="comment-input"
-                  placeholder={isEditMode ? "Edit your post..." : "Share your thoughts..."}
+                  placeholder="Share your thoughts..."
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   rows={3}
@@ -402,56 +487,37 @@ function PostCard({
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
                       if (commentText.trim()) {
-                        if (isEditMode) {
-                          onUpdatePost(editingPostId, { content: commentText.trim() });
-                          setEditingPostId(null);
-                          setIsEditMode(false);
-                        } else {
-                          onReplySubmit(post.id, commentText);
-                        }
+                        onReplySubmit(post.id, commentText);
                         setCommentText('');
                       }
                     }
                     if (e.key === 'Escape') {
                       setIsComposerFullPage(false);
-                      setIsEditMode(false);
                     }
                   }}
                 />
                 
                 {/* Action buttons inside textarea */}
                 <div className="composer-actions">
-                  {!isEditMode && (
-                    <button 
-                      className="comment-media-btn"
-                      title="Add media"
-                      onClick={() => console.log('Media upload clicked')}
-                    >
-                      <ImageIcon size={18} stroke="rgba(220, 8, 188, 0.5)" strokeWidth="1.5" />
-                    </button>
-                  )}
+                  <button 
+                    className="comment-media-btn"
+                    title="Add media"
+                    onClick={() => console.log('Media upload clicked')}
+                  >
+                    <ImageIcon size={18} stroke="rgba(220, 8, 188, 0.5)" strokeWidth="1.5" />
+                  </button>
                   
                   <button 
-                    className={`comment-submit-btn ${isEditMode ? 'edit-submit-btn' : ''}`}
+                    className="comment-submit-btn"
                     disabled={!commentText.trim() || isSaving}
                     onClick={async () => {
                       if (commentText.trim()) {
-                        if (isEditMode) {
-                          await onUpdatePost(editingPostId, { content: commentText.trim() });
-                          setEditingPostId(null);
-                          setIsEditMode(false);
-                        } else {
-                          await onReplySubmit(post.id, commentText);
-                        }
+                        await onReplySubmit(post.id, commentText);
                         setCommentText('');
                       }
                     }}
                   >
-                    {isEditMode ? (
-                      <CheckIcon size={20} stroke="rgba(255, 193, 7, 0.5)" strokeWidth="2" />
-                    ) : (
-                      <ChevronRightIcon size={20} stroke="rgba(26, 231, 132, 0.5)" strokeWidth="2" />
-                    )}
+                    <ChevronRightIcon size={20} stroke="rgba(26, 231, 132, 0.5)" strokeWidth="2" />
                   </button>
                 </div>
               </div>

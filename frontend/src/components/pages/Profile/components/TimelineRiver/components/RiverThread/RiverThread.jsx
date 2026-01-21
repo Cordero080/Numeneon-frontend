@@ -1,62 +1,22 @@
-// =============================================================================
-// 🔵 PABLO - UI Architect
-// RiverThread.jsx - Displays replies/comments for a post
-// =============================================================================
-//
-// TWO STATES:
-//
-// ┌─────────────────────────────────────────────────────────────────────────────┐
-// │  STATE 1: COLLAPSED (thread not expanded, but has replies)                  │
-// │  ┌─────────────────────────────────────────────────────────────────────┐   │
-// │  │  ─── View 5 replies                                                 │   │
-// │  └─────────────────────────────────────────────────────────────────────┘   │
-// └─────────────────────────────────────────────────────────────────────────────┘
-//
-// ┌─────────────────────────────────────────────────────────────────────────────┐
-// │  STATE 2: EXPANDED (showing replies)                                        │
-// │  ┌─────────────────────────────────────────────────────────────────────┐   │
-// │  │  [Hide replies]                                                     │   │
-// │  │                                                                     │   │
-// │  │  │── [avatar] @user1 · 2h ─────────────────────────── [✏️] [🗑️]   │   │
-// │  │  │   Reply content here...                                          │   │
-// │  │  │                                                                   │   │
-// │  │  │── [avatar] @user2 · 1h ─────────────────────────── [✏️] [🗑️]   │   │
-// │  │  │   Another reply...                                               │   │
-// │  │  │                                                                   │   │
-// │  │  │── [avatar] @user3 · 30m ────────────────────────── [✏️] [🗑️]   │   │
-// │  │      ┌─────────────────────────────────────────────┐                │   │
-// │  │      │ Edit textarea (when editing this reply)     │                │   │
-// │  │      │ [Cancel] [Save]                             │                │   │
-// │  │      └─────────────────────────────────────────────┘                │   │
-// │  │                                                                     │   │
-// │  │  [Show 2 more replies]                                              │   │
-// │  └─────────────────────────────────────────────────────────────────────┘   │
-// └─────────────────────────────────────────────────────────────────────────────┘
-//
-// PROPS:
-// - post: Parent post object (has reply_count)
-// - isExpanded: Boolean - whether thread is expanded
-// - replies: Array of reply objects
-// - isLoading: Boolean - loading state while fetching replies
-// - showAllReplies: Boolean - show all vs first 3
-// - currentUserId: Number - logged in user's ID (for edit/delete permissions)
-// - editingReplyId: Number|null - which reply is being edited
-// - editingReplyContent: String - content of reply being edited
-// - formatRelativeTime: (dateString) => string
-// - onToggleThread: (postId) => void - expand/collapse
-// - onShowMore: (postId) => void - show all replies
-// - onEditStart: (replyId, content, postId) => void - start editing
-// - onEditChange: (newContent) => void - update edit content
-// - onEditSave: (replyId, postId) => void - save edit
-// - onEditCancel: () => void - cancel editing
-// - onDelete: (replyId, postId) => void - delete reply
-//
-// =============================================================================
-
-import { UserIcon, EditIcon, TrashIcon } from '@assets/icons';
+/**
+ * RiverThread - Displays replies/comments for a post
+ * 
+ * Features:
+ * - "View X replies" collapsed state
+ * - Expandable reply list (shows 3, then "show more")
+ * - Edit/delete for reply owner
+ * - Inline edit form with expand to modal option
+ * - Post-type colored author names
+ * 
+ * 🔗 CONNECTION: Used by TimelineRiver.jsx for thread display
+ */
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
+import { UserIcon, EditIcon, TrashIcon, CheckIcon, CloseIcon, MaximizeIcon } from '@assets/icons';
 
 const RiverThread = ({
   post,
+  postType = 'thoughts',
   isExpanded,
   replies = [],
   isLoading,
@@ -73,111 +33,215 @@ const RiverThread = ({
   onEditCancel,
   onDelete,
 }) => {
-  // ─────────────────────────────────────────────────────────────────────────
-  // EARLY RETURN
-  // ─────────────────────────────────────────────────────────────────────────
-  // TODO: Return null if !post
+  // Color based on post type
+  const authorColorClass = `reply-author--${postType}`;
+  
+  // State for expanded edit modal
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingReply, setEditingReply] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // DERIVED VALUES
-  // ─────────────────────────────────────────────────────────────────────────
-  // TODO: Get replyCount from post.reply_count || 0
+  if (!post) return null;
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // STATE 1: COLLAPSED - "View X replies" button
-  // ═══════════════════════════════════════════════════════════════════════════
-  // TODO: If !isExpanded && replyCount > 0, return:
-  // <button className="view-thread-btn" onClick={() => onToggleThread?.(post.id)}>
-  //   <span className="thread-line" />
-  //   View {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
-  // </button>
+  const replyCount = post.reply_count || 0;
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // NOT EXPANDED AND NO REPLIES - Return null
-  // ═══════════════════════════════════════════════════════════════════════════
-  // TODO: If !isExpanded, return null
+  // Handle expand to modal
+  const handleExpandEdit = (reply) => {
+    setEditingReply(reply);
+    setIsEditModalOpen(true);
+  };
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // DERIVED VALUES FOR EXPANDED STATE
-  // ─────────────────────────────────────────────────────────────────────────
-  // TODO: Calculate visibleReplies
-  // - If showAllReplies: show all replies
-  // - Else: show only first 3 (replies.slice(0, 3))
-  // TODO: Calculate hasMore = replies.length > 3 && !showAllReplies
+  // Handle modal close
+  const handleCloseModal = () => {
+    setIsEditModalOpen(false);
+    setEditingReply(null);
+    onEditCancel?.();
+  };
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // STATE 2: EXPANDED - Show replies
-  // ═══════════════════════════════════════════════════════════════════════════
+  // Handle save from modal
+  const handleModalSave = async () => {
+    if (!editingReplyContent?.trim() || !editingReply) return;
+    setIsSaving(true);
+    await onEditSave?.(editingReply.id, post.id);
+    setIsSaving(false);
+    setIsEditModalOpen(false);
+    setEditingReply(null);
+  };
+
+  // === COLLAPSED STATE: "View X replies" button ===
+  if (!isExpanded && replyCount > 0) {
+    return (
+      <button className="view-thread-btn" onClick={() => onToggleThread?.(post.id)}>
+        <span className="thread-line" />
+        View {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
+      </button>
+    );
+  }
+
+  // === EXPANDED STATE: Show replies ===
+  if (!isExpanded) return null;
+
+  const visibleReplies = showAllReplies ? replies : replies.slice(0, 3);
+  const hasMore = replies.length > 3 && !showAllReplies;
+
   return (
     <div className="thread-view">
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* COLLAPSE BUTTON                                                     */}
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* TODO: button className="collapse-thread-btn"
-          - onClick={() => onToggleThread?.(post.id)}
-          - Text: "Hide replies" */}
+      <button className="collapse-thread-btn" onClick={() => onToggleThread?.(post.id)}>
+        Hide replies
+      </button>
 
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* LOADING STATE                                                       */}
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* TODO: If isLoading, show <div className="thread-loading">Loading replies...</div> */}
-
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* REPLIES LIST                                                        */}
-      {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* TODO: If not loading, render div className="thread-replies"
-          Map through visibleReplies, for each reply render:
-          
-          <div key={reply.id} className="thread-reply">
-            <div className="thread-connector">
-              <div className="thread-line-vertical" />
-            </div>
-            <div className="reply-card">
-              <div className="reply-header">
-                <div className="reply-avatar"><UserIcon size={14} /></div>
-                <span className="reply-author">{reply.author?.username || 'User'}</span>
-                <span className="reply-time">{formatRelativeTime?.(reply.created_at)}</span>
-                
-                // Edit/Delete buttons (only if currentUserId matches reply.author.id)
-                {currentUserId && reply.author?.id === currentUserId && (
-                  <div className="reply-actions">
-                    <button className="reply-action-btn" title="Edit"
-                      onClick={(e) => { e.stopPropagation(); onEditStart?.(reply.id, reply.content, post.id); }}>
-                      <EditIcon size={14} />
-                    </button>
-                    <button className="reply-action-btn reply-action-btn--delete" title="Delete"
-                      onClick={(e) => { e.stopPropagation(); onDelete?.(reply.id, post.id); }}>
-                      <TrashIcon size={14} />
-                    </button>
+      {isLoading ? (
+        <div className="thread-loading">Loading replies...</div>
+      ) : (
+        <div className="thread-replies">
+          {visibleReplies.map((reply) => (
+            <div key={reply.id} className="thread-reply">
+              <div className="thread-connector">
+                <div className="thread-line-vertical" />
+              </div>
+              <div className="reply-card">
+                <div className="reply-header">
+                  <div className="reply-avatar">
+                    <UserIcon size={14} />
                   </div>
+                  <span className={`reply-author ${authorColorClass}`}>{reply.author?.username || 'User'}</span>
+                  <span className="reply-time">{formatRelativeTime?.(reply.created_at)}</span>
+
+                  {/* Edit/Delete for reply owner */}
+                  {currentUserId && reply.author?.id === currentUserId && (
+                    <div className="reply-actions">
+                      <button
+                        className="reply-action-btn"
+                        title="Edit"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditStart?.(reply.id, reply.content, post.id);
+                        }}
+                      >
+                        <EditIcon size={14} />
+                      </button>
+                      <button
+                        className="reply-action-btn reply-action-btn--delete"
+                        title="Delete"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete?.(reply.id, post.id);
+                        }}
+                      >
+                        <TrashIcon size={14} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Reply content - edit mode or display */}
+                {editingReplyId === reply.id && !isEditModalOpen ? (
+                  <div className="reply-edit-form">
+                    <div className="reply-edit-input-wrapper">
+                      <textarea
+                        className="reply-edit-input"
+                        value={editingReplyContent}
+                        onChange={(e) => onEditChange?.(e.target.value)}
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') {
+                            onEditCancel?.();
+                          }
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            onEditSave?.(reply.id, post.id);
+                          }
+                        }}
+                      />
+                      <button 
+                        className="expand-edit-btn"
+                        onClick={() => handleExpandEdit(reply)}
+                        title="Expand editor"
+                      >
+                        <MaximizeIcon size={12} strokeWidth="2.5" />
+                      </button>
+                    </div>
+                    <div className="reply-edit-actions">
+                      <button
+                        className="reply-edit-cancel"
+                        onClick={onEditCancel}
+                        title="Cancel"
+                      >
+                        <CloseIcon size={16} />
+                      </button>
+                      <button
+                        className="reply-edit-save"
+                        onClick={() => onEditSave?.(reply.id, post.id)}
+                        disabled={!editingReplyContent?.trim()}
+                        title="Save"
+                      >
+                        <CheckIcon size={20} strokeWidth="2.5" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="reply-content">{reply.content}</p>
                 )}
               </div>
-              
-              // Reply content - either edit form or display
-              {editingReplyId === reply.id ? (
-                <div className="reply-edit-form">
-                  <textarea className="reply-edit-input" value={editingReplyContent}
-                    onChange={(e) => onEditChange?.(e.target.value)} autoFocus />
-                  <div className="reply-edit-actions">
-                    <button className="reply-edit-btn reply-edit-btn--cancel" onClick={onEditCancel}>Cancel</button>
-                    <button className="reply-edit-btn reply-edit-btn--save"
-                      onClick={() => onEditSave?.(reply.id, post.id)}
-                      disabled={!editingReplyContent?.trim()}>Save</button>
-                  </div>
-                </div>
-              ) : (
-                <p className="reply-content">{reply.content}</p>
-              )}
             </div>
-          </div>
-          
-          // After map, if hasMore, show "Show X more replies" button
+          ))}
+
           {hasMore && (
             <button className="show-more-replies-btn" onClick={() => onShowMore?.(post.id)}>
               Show {replies.length - 3} more replies
             </button>
           )}
-      */}
+        </div>
+      )}
+
+      {/* Expanded Edit Modal */}
+      {isEditModalOpen && editingReply && createPortal(
+        <div className="expanded-composer-overlay" onClick={handleCloseModal}>
+          <div className="expanded-composer-modal edit-mode" onClick={(e) => e.stopPropagation()}>
+            <div className="expanded-composer-header">
+              <h3>
+                <EditIcon size={20} />
+                Edit Comment
+              </h3>
+              <button 
+                className="close-btn-glow"
+                onClick={handleCloseModal}
+              >
+                <CloseIcon size={24} />
+              </button>
+            </div>
+            <div className="expanded-composer-body">
+              <textarea
+                className="composer-textarea"
+                placeholder="Edit your comment..."
+                value={editingReplyContent}
+                onChange={(e) => onEditChange?.(e.target.value)}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    handleCloseModal();
+                  }
+                }}
+              />
+            </div>
+            <div className="expanded-composer-footer">
+              <button 
+                className="submit-btn icon-btn"
+                disabled={!editingReplyContent?.trim() || isSaving}
+                onClick={handleModalSave}
+                title="Save"
+              >
+                {isSaving ? (
+                  <span className="saving-dots">...</span>
+                ) : (
+                  <CheckIcon size={24} strokeWidth="2.5" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

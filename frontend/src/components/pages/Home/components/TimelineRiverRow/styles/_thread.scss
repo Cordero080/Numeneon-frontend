@@ -157,6 +157,19 @@
   font-weight: 600;
   font-size: var(--font-size-sm);
   color: var(--color-white);
+  
+  /* Type-based colors for comment authors */
+  &--thoughts {
+    color: #1ce0e0; /* cyan/blue */
+  }
+  
+  &--media {
+    color: #ad7afe; /* purple */
+  }
+  
+  &--milestones {
+    color: #30c87ff9; /* green */
+  }
 }
 
 .reply-time {
@@ -205,10 +218,18 @@
   display: flex;
   align-items: flex-end;
   gap: var(--space-sm);
+  width: 100%;
+  min-width: 350px;
+}
+
+.reply-edit-input-wrapper {
+  flex: 1;
+  position: relative;
+  min-width: 300px;
 }
 
 .reply-edit-input {
-  flex: 1;
+  width: 100%;
   background:
     linear-gradient(145deg, #0a0a0a, #000000),
     radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1), transparent 50%),
@@ -224,7 +245,7 @@
   background-blend-mode: overlay, multiply, overlay;
   border: 1px solid rgba(0, 212, 255, 0.3);
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 10px 36px 10px 12px;
   color: var(--text-primary);
   font-family: 'degular', sans-serif;
   font-size: var(--font-size-sm);
@@ -233,6 +254,7 @@
   outline: none;
   transition: border-color 0.3s ease;
   min-height: 36px;
+  box-sizing: border-box;
   box-shadow:
     0 4px 8px rgba(0, 0, 0, 0.8),
     inset 0 1px 3px rgba(255, 255, 255, 0.2),
@@ -240,6 +262,36 @@
     
   &:focus {
     border-color: rgba(0, 212, 255, 0.5);
+  }
+}
+
+/* Expand button in reply edit form */
+.expand-edit-btn {
+  position: absolute;
+  bottom: 12px;
+  right: 4px;
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  padding: 0;
+  width: 22px;
+  height: 22px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  opacity: 0.8;
+
+  &:hover {
+    color: var(--blue-primary);
+    border-color: rgba(26, 115, 231, 0.5);
+    background: rgba(26, 115, 231, 0.15);
+    opacity: 1;
+    transform: scale(1.1);
+    box-shadow: 0 0 8px rgba(26, 115, 231, 0.3);
   }
 }
 

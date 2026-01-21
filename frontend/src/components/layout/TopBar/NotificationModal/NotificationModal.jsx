@@ -1,114 +1,69 @@
-// =============================================================================
 // 🔵 PABLO - UI Architect
-// NotificationModal.jsx - Friend request notifications
-// =============================================================================
-//
-// ┌────────────────────────────────────────────────────────────────────────────┐
-// │ [🔔] Friend Requests (3)                                            [✕]  │
-// ├────────────────────────────────────────────────────────────────────────────┤
-// │  ┌──────────────────────────────────────────────────────────────────────┐ │
-// │  │ [AB] Arthur Bernier wants to be friends       [✓ Accept] [✗ Decline] │ │
-// │  ├──────────────────────────────────────────────────────────────────────┤ │
-// │  │ [NP] Natalia P wants to be friends            [✓ Accept] [✗ Decline] │ │
-// │  └──────────────────────────────────────────────────────────────────────┘ │
-// │                                                                           │
-// │  ─ OR ─                                                                   │
-// │                                                                           │
-// │  ┌──────────────────────────────────────────────────────────────────────┐ │
-// │  │        No pending friend requests                                    │ │
-// │  └──────────────────────────────────────────────────────────────────────┘ │
-// └────────────────────────────────────────────────────────────────────────────┘
-//
-// =============================================================================
+// NotificationModal.jsx - Minimal notification dropdown
 
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useFriends } from '@contexts';
-import { BellIcon, CloseIcon, CheckCircleIcon, CloseCircleIcon } from '@assets/icons';
 import './NotificationModal.scss';
 
 function NotificationModal({ isOpen, onClose }) {
-  // ─────────────────────────────────────────────────────────────────────────
-  // CONTEXT
-  // ─────────────────────────────────────────────────────────────────────────
-  const { friendRequests, acceptFriendRequest, declineFriendRequest } = useFriends();
+  const navigate = useNavigate();
+  const { pendingRequests, acceptRequest, declineRequest } = useFriends();
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // HANDLERS
-  // ─────────────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const handleKeyDown = (e) => e.key === 'Escape' && onClose();
+    if (isOpen) document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
   const handleAccept = async (requestId) => {
-    // TODO: Call acceptFriendRequest(requestId)
-    // TODO: Handle errors gracefully
+    await acceptRequest(requestId);
   };
 
   const handleDecline = async (requestId) => {
-    // TODO: Call declineFriendRequest(requestId)
-    // TODO: Handle errors gracefully
+    await declineRequest(requestId);
   };
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // RENDER
-  // ─────────────────────────────────────────────────────────────────────────
-  if (!isOpen) return null;
-
   return (
-    <div className="notification-modal-overlay" onClick={onClose}>
-      <div className="notification-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="notif-overlay" onClick={onClose}>
+      <div className="notif-dropdown" onClick={(e) => e.stopPropagation()}>
         
-        {/* ═══════════════════════════════════════════════════════════════════ */}
-        {/* HEADER                                                              */}
-        {/* ═══════════════════════════════════════════════════════════════════ */}
-        <div className="notification-header">
-          <BellIcon size={20} className="header-icon" />
-          <h2>Friend Requests ({friendRequests?.length || 0})</h2>
-          <button className="close-btn-glow" onClick={onClose}>
-            <CloseIcon size={20} />
-          </button>
+        <div className="notif-header">
+          <span>Notifications</span>
+          <button className="notif-close" onClick={onClose}>✕</button>
         </div>
 
-        {/* ═══════════════════════════════════════════════════════════════════ */}
-        {/* REQUESTS LIST                                                       */}
-        {/* ═══════════════════════════════════════════════════════════════════ */}
-        <div className="notification-content">
-          {friendRequests?.length > 0 ? (
-            <ul className="request-list">
-              {friendRequests.map((request) => (
-                <li key={request.id} className="request-item">
-                  <div className="request-info">
-                    <span className="request-avatar">
-                      {/* TODO: First letter of requester's name */}
-                    </span>
-                    <span className="request-name">
-                      {/* TODO: from_user.first_name from_user.last_name */}
-                    </span>
-                    <span className="request-text">wants to be friends</span>
-                  </div>
-                  <div className="request-actions">
-                    <button 
-                      className="action-btn accept"
-                      onClick={() => handleAccept(request.id)}
-                      title="Accept"
-                    >
-                      <CheckCircleIcon size={18} />
-                      <span>Accept</span>
-                    </button>
-                    <button 
-                      className="action-btn decline"
-                      onClick={() => handleDecline(request.id)}
-                      title="Decline"
-                    >
-                      <CloseCircleIcon size={18} />
-                      <span>Decline</span>
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
+        <div className="notif-list">
+          {pendingRequests.length === 0 ? (
+            <p className="notif-empty">No notifications</p>
           ) : (
-            <div className="empty-state">
-              <BellIcon size={32} className="empty-icon" />
-              <p>No pending friend requests</p>
-            </div>
+            pendingRequests.map((req) => (
+              <div key={req.id} className="notif-item">
+                <p className="notif-text">
+                  <span 
+                    className="notif-name" 
+                    onClick={() => { navigate(`/profile/${req.from_user.username}`); onClose(); }}
+                  >
+                    {req.from_user.username}
+                  </span>
+                  {' '}wants to be friends
+                </p>
+                <div className="notif-actions">
+                  <button className="notif-accept" onClick={() => handleAccept(req.id)}>✓</button>
+                  <button className="notif-decline" onClick={() => handleDecline(req.id)}>✕</button>
+                </div>
+              </div>
+            ))
           )}
         </div>
+
+        {pendingRequests.length > 0 && (
+          <button className="notif-viewall" onClick={() => { navigate('/friends'); onClose(); }}>
+            View All
+          </button>
+        )}
       </div>
     </div>
   );

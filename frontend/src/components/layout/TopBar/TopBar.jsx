@@ -1,60 +1,5 @@
-// =============================================================================
 // 🔵 PABLO - UI Architect
 // TopBar.jsx - Top navigation bar component
-// =============================================================================
-//
-// TODO: Build the top navigation bar with icons and modals
-//
-// IMPORTS:
-// - useState from react
-// - useNavigate from react-router-dom
-// - TopBar.scss (PROVIDED - don't modify)
-// - Child components: MessageModal, SearchModal, NotificationModal
-// - ThemeToggle from @components/ui/ThemeToggle
-// - Contexts: useMessages, useAuth, useFriends, useSearch
-// - Icons: TargetReticleIcon, MessageBubbleIcon, BroadcastIcon, LogoutIcon, LoginIcon
-//
-// STRUCTURE:
-// ┌────────────────────────────────────────────────────────────────────────┐
-// │ [NUMENEON logo]                    🌓 🔍 💬 🔔 🚪                      │
-// │                                   Theme Search Msgs Notif Logout       │
-// └────────────────────────────────────────────────────────────────────────┘
-//
-// HOOKS NEEDED:
-// - useMessages() → { isMessageModalOpen, openMessages, closeMessages }
-// - useAuth() → { logout, user }
-// - useFriends() → { pendingRequests } (for notification badge count)
-// - useSearch() → { isSearchModalOpen, openSearch, closeSearch }
-// - useNavigate() for routing
-//
-// LOCAL STATE:
-// - isNotificationsOpen: Boolean for notification modal
-//
-// RENDER LOGIC:
-// 1. Logo: Clickable, navigates to '/'
-// 2. Icon bar (right side):
-//    - ThemeToggle component
-//    - Search icon → opens search modal
-//    - Messages icon → opens message modal  
-//    - If user logged in:
-//      - Notification icon → opens notification modal
-//        - Show badge with pendingRequests.length if > 0
-//      - Logout icon → calls logout() and navigates to /login
-//    - If user NOT logged in:
-//      - Login icon → navigates to /login
-//
-// 3. Modals (conditional rendering below TopBar):
-//    - MessageModal when isMessageModalOpen
-//    - SearchModal with isOpen/onClose props
-//    - NotificationModal with isOpen/onClose props
-//
-// SCSS class names (already in TopBar.scss):
-// - .top-bar
-// - .top-bar-logo
-// - .top-bar-icons
-// - .icon-placeholder, .icon-search, .icon-messages, etc.
-// - .notification-badge
-// =============================================================================
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -63,13 +8,15 @@ import MessageModal from './MessageModal/MessageModal';
 import SearchModal from './SearchModal/SearchModal';
 import NotificationModal from './NotificationModal/NotificationModal';
 import { ThemeToggle } from '@components/ui/ThemeToggle';
-import { useMessages, useAuth, useFriends, useSearch } from '@contexts';
+import { useMessages, useAuth, useFriends, useSearch, useSideNav } from '@contexts';
 import { 
   TargetReticleIcon, 
   MessageBubbleIcon, 
   BroadcastIcon, 
   LogoutIcon, 
-  LoginIcon 
+  LoginIcon,
+  HamburgerIcon,
+  CloseIcon 
 } from '@assets/icons';
 
 function TopBar() {
@@ -77,18 +24,30 @@ function TopBar() {
   const { logout, user } = useAuth();
   const { pendingRequests } = useFriends();
   const { isSearchModalOpen, openSearch, closeSearch } = useSearch();
+  const { isOpen: isSideNavOpen, toggleNav, isMobile } = useSideNav();
   const navigate = useNavigate();
   
+  // 🔵 Local state for notification modal
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   const handleLogout = () => {
-    // TODO: Call logout()
-    // TODO: Navigate to '/login'
+    logout();
+    navigate('/login');
   };
 
   return (
     <>
       <div className="top-bar">
+        {/* 🔵 Hamburger menu button - mobile only */}
+        {isMobile && (
+          <button 
+            className="hamburger-btn"
+            onClick={toggleNav}
+            aria-label={isSideNavOpen ? 'Close menu' : 'Open menu'}
+          >
+            {isSideNavOpen ? <CloseIcon size={24} /> : <HamburgerIcon size={24} />}
+          </button>
+        )}
         <div 
           className="top-bar-logo" 
           onClick={() => navigate('/')}
@@ -123,9 +82,9 @@ function TopBar() {
                 style={{ cursor: 'pointer', position: 'relative' }}
               >
                 <BroadcastIcon size={20} />
-                {/* TODO: Show badge if pendingRequests.length > 0 */}
+                {/* Notification badge */}
                 {pendingRequests.length > 0 && (
-                  <span className="notification-badge">{/* TODO: count */}</span>
+                  <span className="notification-badge">{pendingRequests.length}</span>
                 )}
               </div>
               <div 
@@ -138,6 +97,7 @@ function TopBar() {
               </div>
             </>
           )}
+          {/* Always show login link if not logged in */}
           {!user && (
             <div 
               className="icon-placeholder icon-login" 
@@ -151,15 +111,18 @@ function TopBar() {
         </div>
       </div>
 
+      {/* Message Modal */}
       {isMessageModalOpen && (
         <MessageModal onClose={closeMessages} />
       )}
       
+      {/* Search Modal */}
       <SearchModal 
         isOpen={isSearchModalOpen} 
         onClose={closeSearch} 
       />
       
+      {/* Notification Modal */}
       <NotificationModal
         isOpen={isNotificationsOpen}
         onClose={() => setIsNotificationsOpen(false)}

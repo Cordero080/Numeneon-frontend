@@ -59,7 +59,7 @@
   align-items: center;
   justify-content: center;
   z-index: 5;
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 .comment-input-wrapper .expand-composer-btn:hover {
@@ -68,6 +68,7 @@
   background: rgba(26, 115, 231, 0.15);
   opacity: 1;
   transform: scale(1.1);
+  box-shadow: 0 0 8px rgba(26, 115, 231, 0.3);
 }
 
 .comment-input-wrapper:has(.comment-input:focus) .expand-composer-btn {
@@ -435,17 +436,89 @@
   bottom: 0;
   background: var(--bg-secondary);
   border-top: 1px solid var(--border-subtle);
-  padding: var(--space-lg) var(--space-xl);
+  padding: var(--space-md) var(--space-xl);
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
   gap: var(--space-md);
   flex-shrink: 0;
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Post actions row at the bottom */
+.full-page-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: var(--space-sm);
+  width: 100%;
+  
+  .reply-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'sweet-square-pro', sans-serif;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    padding: 6px;
+    
+    &:hover {
+      transform: scale(1.15);
+      filter: drop-shadow(0 0 8px currentColor);
+    }
+    
+    /* Like button hover */
+    &:nth-child(1):hover {
+      color: var(--heart-color, #4fffff);
+    }
+    
+    /* Comment button hover */
+    &:nth-child(2):hover {
+      color: #c9a8ff;
+    }
+    
+    /* Share button hover */
+    &:nth-child(3):hover {
+      color: #1ae784;
+    }
+    
+    /* Bookmark button hover */
+    &:nth-child(4):hover {
+      color: #ffb347;
+    }
+    
+    &.is-liked {
+      color: var(--heart-color, #4fffff);
+      
+      svg path {
+        fill: var(--heart-color, #4fffff);
+        stroke: var(--heart-color, #4fffff);
+        filter: drop-shadow(0 0 8px var(--heart-color, #4fffff));
+      }
+    }
+    
+    span {
+      font-weight: 500;
+    }
+    
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
 }
 
 .full-page-composer-fixed .comment-input-wrapper {
   flex: 1;
   position: relative;
+  width: 100%;
 }
 
 .full-page-composer-fixed .comment-input {
@@ -507,4 +580,188 @@
   color: var(--accent);
   background: rgba(26, 231, 132, 0.1);
   filter: drop-shadow(0 0 6px rgba(26, 231, 132, 0.4));
+}
+
+/* ============================================
+   EXPANDED COMPOSER MODAL (Edit Mode)
+   Same as Profile page edit modal
+   ============================================ */
+
+.expanded-composer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.expanded-composer-modal {
+  width: 100%;
+  max-width: 700px;
+  /* Holographic cosmic black background - matching main composer modal */
+  background:
+    linear-gradient(145deg, rgba(10, 10, 10, 0.95), rgba(0, 0, 0, 0.85)),
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1), transparent 50%),
+    radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.5), transparent 50%),
+    linear-gradient(
+      45deg,
+      rgba(26, 115, 231, 0.05),
+      rgba(220, 8, 188, 0.05),
+      rgba(26, 115, 231, 0.05)
+    );
+  background-size: 100% 100%, 150% 150%, 150% 150%, 200% 200%;
+  background-blend-mode: overlay, multiply, overlay;
+  background-position: 0% 50%, 75% 75%, 75% 75%, 50% 50%;
+  
+  border: 1px solid rgba(26, 115, 231, 0.4);
+  border-radius: 24px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(26, 115, 231, 0.15),
+    inset 0 1px 3px rgba(255, 255, 255, 0.1),
+    inset 0 -1px 3px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow: hidden;
+  
+  &.edit-mode {
+    border-color: rgba(255, 193, 7, 0.4);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.5),
+      0 0 60px rgba(255, 193, 7, 0.15),
+      inset 0 1px 3px rgba(255, 255, 255, 0.1),
+      inset 0 -1px 3px rgba(0, 0, 0, 0.5);
+  }
+}
+
+.expanded-composer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-family: var(--font-title);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--cyan);
+    
+    svg {
+      color: var(--cyan);
+    }
+  }
+  
+  .edit-mode & h3 {
+    color: #ffc107;
+    
+    svg {
+      color: #ffc107;
+    }
+  }
+}
+
+.expanded-composer-body {
+  padding: 20px;
+  
+  .composer-textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 16px;
+    background:
+      linear-gradient(145deg, #0a0a0a, #000000),
+      radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1), transparent 50%),
+      radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.5), transparent 50%);
+    background-size: 100% 100%, 150% 150%, 150% 150%;
+    background-position: 0% 50%, 75% 75%, 75% 75%;
+    background-blend-mode: overlay, multiply, overlay;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-family: 'degular', sans-serif;
+    font-size: 1rem;
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow:
+      0 4px 8px rgba(0, 0, 0, 0.8),
+      inset 0 1px 3px rgba(255, 255, 255, 0.2),
+      inset 0 -1px 3px rgba(0, 0, 0, 0.5);
+    
+    &:focus {
+      border-color: rgba(0, 212, 255, 0.6);
+      box-shadow:
+        0 0 20px rgba(0, 212, 255, 0.4),
+        0 4px 8px rgba(0, 0, 0, 0.8),
+        inset 0 1px 3px rgba(255, 255, 255, 0.3),
+        inset 0 -1px 3px rgba(0, 0, 0, 0.5);
+    }
+    
+    &::placeholder {
+      color: var(--text-muted);
+    }
+  }
+  
+  .edit-mode & .composer-textarea {
+    border-color: rgba(255, 193, 7, 0.3);
+    
+    &:focus {
+      border-color: rgba(255, 193, 7, 0.6);
+      box-shadow:
+        0 0 20px rgba(255, 193, 7, 0.3),
+        0 4px 8px rgba(0, 0, 0, 0.8),
+        inset 0 1px 3px rgba(255, 255, 255, 0.3),
+        inset 0 -1px 3px rgba(0, 0, 0, 0.5);
+    }
+  }
+}
+
+.expanded-composer-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  
+  .submit-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--cyan), var(--magenta));
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(79, 255, 255, 0.3);
+    }
+    
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+  
+  .edit-mode & .submit-btn {
+    background: linear-gradient(135deg, #ffc107, #ff8800);
+    
+    &:hover:not(:disabled) {
+      box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+    }
+  }
 }

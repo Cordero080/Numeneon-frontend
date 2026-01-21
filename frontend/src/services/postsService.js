@@ -1,109 +1,74 @@
-// =============================================================================
-// 🟢 COLIN - Posts Lead
-// postsService.js - API calls for posts CRUD operations
-// =============================================================================
-//
-// TODO: Create a service object with methods for all posts API calls
-//
-// This is a plain JavaScript object (not a class) containing async functions.
-// Each function makes an API call and returns the data.
-// Uses apiClient (from Tito) which handles JWT tokens automatically.
-//
-// API ENDPOINTS:
-// - GET    /api/posts/              → List all posts
-// - GET    /api/posts/?username=xxx → List posts by user
-// - GET    /api/posts/:id/          → Get single post
-// - GET    /api/posts/:id/replies/  → Get replies to a post
-// - POST   /api/posts/              → Create new post
-// - PATCH  /api/posts/:id/          → Update post
-// - DELETE /api/posts/:id/          → Delete post
-// - POST   /api/posts/:id/like/     → Toggle like
-// - POST   /api/posts/:id/share/    → Increment share count
-//
-// POST DATA FORMAT:
-// {
-//   content: string,
-//   type: 'thoughts' | 'media' | 'milestones',
-//   media_url?: string (optional)
-// }
-//
-// REPLY DATA FORMAT:
-// Same as post, but includes parent_id
-//
-// Think about:
-// - Why return response.data instead of full response?
-// - What does PATCH vs PUT mean? (Partial update vs full replace)
-// - Why doesn't delete() return anything? (204 No Content)
-//
-// Hint: import apiClient from './apiClient';
-// Hint: const response = await apiClient.get('/posts/');
-// Hint: return response.data;
-// =============================================================================
-
-import apiClient from "./apiClient";
+/**
+ * =============================================================================
+ * POSTS SERVICE: 
+ * postsService is an OBJECT (not a class, not a function)
+ It's a collection of async functions that make API calls
+ 
+ * File: frontend/src/services/postsService.js
+ * Assigned to: COLIN
+ * Responsibility: API calls for posts CRUD
+ *
+ * Status: IMPLEMENTED ✅
+ * =============================================================================
+ */
+import apiClient from "./apiClient"; // Axios instance with JWT interceptors
 
 const postsService = {
-  // TODO: getAll - GET /api/posts/
-  // Returns array of posts
+  // GET /api/posts/ => lists all posts (top-level only)
   getAll: async () => {
-    // Your code here
+    const response = await apiClient.get("/posts/"); // Sends GET, token added automatically
+    return response.data; // Return just the JSON array, not full axios response
   },
-
-  // TODO: getByUsername - GET /api/posts/?username=xxx
-  // Returns posts filtered by username
+  // GET /api/posts/?username=xxx => lists posts by a specific user
   getByUsername: async (username) => {
-    // Your code here
+    const response = await apiClient.get(`/posts/?username=${username}`);
+    return response.data;
   },
-
-  // TODO: getById - GET /api/posts/:id/
-  // Returns single post object
+  // GET /api/posts/:id/ → single post
   getById: async (id) => {
-    // Your code here
+    const response = await apiClient.get(`/posts/${id}/`); // Template literal inserts id into URL
+    return response.data;
   },
-
-  // TODO: getReplies - GET /api/posts/:id/replies/
-  // Returns array of reply posts
+  // GET /api/posts/:id/replies/ → get replies for a post
   getReplies: async (id) => {
-    // Your code here
+    const response = await apiClient.get(`/posts/${id}/replies/`);
+    return response.data;
   },
-
-  // TODO: create - POST /api/posts/
-  // Body: { content, type, media_url? }
-  // Returns created post with id
+  // POST /api/posts/ → create post
   create: async (data) => {
-    // Your code here
+    // data is an object like { content: "text", type: "thought" }
+    // For replies, include parent_id: parentPostId
+    const response = await apiClient.post("/posts/", data);
+    return response.data;
+    // Returns the new post object with id, author, timestamps
   },
-
-  // TODO: createReply - POST /api/posts/
-  // Body: { ...data, parent_id }
-  // Returns created reply post
+  // POST reply to a specific post
   createReply: async (parentId, data) => {
-    // Your code here
+    const response = await apiClient.post("/posts/", {
+      ...data,
+      parent_id: parentId,
+    });
+    return response.data;
   },
-
-  // TODO: update - PATCH /api/posts/:id/
-  // Body: { content? } (partial update)
-  // Returns updated post
+  // PATCH /api/posts/:id/ → update post (partial update, not full replace)
   update: async (id, data) => {
-    // Your code here
+    // data is an object like { content: "edited text" }
+    const response = await apiClient.patch(`/posts/${id}/`, data);
+    return response.data; // Returns updated post
   },
-
-  // TODO: delete - DELETE /api/posts/:id/
-  // No return value (204 No Content)
+  // DELETE /api/posts/:id/ → delete post
   delete: async (id) => {
-    // Your code here
+    await apiClient.delete(`/posts/${id}/`); // No return - DELETE gives 204 No Content
   },
-
-  // TODO: like - POST /api/posts/:id/like/
-  // Toggles like, returns updated post with is_liked and likes_count
+  // POST /api/posts/:id/like/ → toggle like on a post
   like: async (id) => {
-    // Your code here
+    const response = await apiClient.post(`/posts/${id}/like/`);
+    return response.data; // Returns updated post with new likes_count and is_liked
   },
-
-  // TODO: share - POST /api/posts/:id/share/
-  // Increments share count, returns updated post
+  // POST /api/posts/:id/share/ → increment share count
   share: async (id) => {
-    // Your code here
+    const response = await apiClient.post(`/posts/${id}/share/`);
+    return response.data; // Returns updated post with new shares_count
   },
 };
 

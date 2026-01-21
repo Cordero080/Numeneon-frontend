@@ -11,7 +11,7 @@ export const EditIcon = ({ size = 18, className = '', ...props }) => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="1"
     className={className}
     {...props}
   >
@@ -28,7 +28,7 @@ export const TrashIcon = ({ size = 18, className = '', ...props }) => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="1"
     className={className}
     {...props}
   >

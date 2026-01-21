@@ -194,34 +194,62 @@
 
 /* Adaptive column layouts for river-labels in friends feed */
 .friend-row-group .river-labels {
+  display: flex;
+  gap: var(--space-sm);
   position: relative; /* Override sticky for feed context */
   top: auto;
   margin-bottom: var(--space-md);
+  width: 100%;
 }
 
-.friend-row-group .river-labels--1-col {
-  grid-template-columns: 1fr;
+/* Collapsed decks container in friend rows */
+.friend-row-group .collapsed-decks-container {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-sm);
 }
 
-.friend-row-group .river-labels--2-col {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.friend-row-group .river-labels--3-col {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-/* River label count - right side of label */
+/* River label - equal size tabs using flex */
 .friend-row-group .river-label {
-  position: relative; /* For absolute positioning of count */
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: none;
 }
 
-.river-label-count {
-  position: absolute;
-  right: var(--space-md);
+/* River label count - inline with title when clickable */
+.friend-row-group .river-label-count {
   font-size: 12px;
   font-weight: 500;
   opacity: 0.7;
+  margin-left: var(--space-xs);
+}
+
+/* When clickable, count stays inline, collapse icon goes to corner */
+.friend-row-group .river-label--clickable {
+  padding-right: 36px;
+}
+
+.friend-row-group .river-label--clickable .river-label-count {
+  position: static;
+}
+
+/* Collapse icon in corner */
+.friend-row-group .river-label-collapse-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  font-weight: bold;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.friend-row-group .river-label--clickable:hover .river-label-collapse-icon {
+  opacity: 1;
 }
 
 /* Type-specific count colors */
@@ -237,14 +265,23 @@
   color: rgba(255, 215, 0, 1);
 }
 
-/* Dim non-recent labels by default */
+/* Base label - full opacity by default */
 .friend-row-group .river-label {
-  opacity: 0.6;
+  opacity: 1;
   transition: all 0.3s ease;
 }
 
 .friend-row-group .river-label span {
   text-shadow: none;
+}
+
+/* Not most recent type - slightly dimmed */
+.friend-row-group .river-label.river-label--not-recent:not(.river-label--collapsed) {
+  opacity: 0.6;
+  
+  &:hover {
+    opacity: 0.8;
+  }
 }
 
 /* Most recent type - brighter label */

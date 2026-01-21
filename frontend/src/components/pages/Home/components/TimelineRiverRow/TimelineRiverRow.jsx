@@ -1,278 +1,6 @@
 // 🔵 PABLO - UI Architect
 // TimelineRiverRow.jsx - Single row in timeline showing one user's posts across 3 columns
 // Refactored: Components extracted to ./components/
-//
-// This is the main orchestrator component for displaying a user's posts in the Home/Feed.
-// It handles both MOBILE (tab-based navigation) and DESKTOP (3-column Smart Deck) views.
-//
-// TODO: Implement TimelineRiverRow component
-//
-// ============================================================================
-// IMPORTS
-// ============================================================================
-// - useState, useEffect from 'react'
-// - useNavigate from 'react-router-dom'
-// - './TimelineRiverRow.scss'
-// - MediaLightbox from '../MediaLightbox/MediaLightbox'
-// - DeleteConfirmModal from '../DeleteConfirmModal/DeleteConfirmModal'
-// - { useAuth, usePosts, useMessages } from '@contexts'
-// - { ChevronLeftIcon, ChevronRightIcon } from '@assets/icons'
-// - { PostCard, SmartDeck, MobileTabNav } from './components'
-//
-// ============================================================================
-// COMPONENT PROPS
-// ============================================================================
-// - rowData: Object containing { user, thoughts, media, milestones }
-// - onCommentClick: Function to handle comment button click
-// - activeCommentPostId: ID of post with active comment composer
-// - commentText: Current comment text
-// - setCommentText: Function to update comment text
-// - setActiveCommentPostId: Function to set active comment post
-// - onDeletePost: Function to delete a post
-// - onUpdatePost: Function to update a post
-//
-// ============================================================================
-// CONTEXT HOOKS
-// ============================================================================
-// - const { user: currentUser } = useAuth();
-// - const { posts, fetchReplies, createReply, deletePost, updatePost, likePost, sharePost } = usePosts();
-// - const { openMessages } = useMessages();
-// - const navigate = useNavigate();
-//
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-//
-// handleUserClick(e, userId, username):
-//   - e.stopPropagation()
-//   - If currentUser?.id === userId or currentUser?.username === username: navigate('/profile')
-//   - Else: navigate(`/profile/${username}`)
-//
-// getFreshPost(postId):
-//   - Return posts.find(p => p.id === postId)
-//   - Purpose: Get fresh data from context (rowData may have stale snapshots)
-//
-// getMostRecentType():
-//   - Purpose: Determine which category has the most recent post (for highlighting)
-//   - Logic:
-//     * Get latest timestamp from each array (thoughts, media, milestones)
-//     * Return the type with highest timestamp
-//   - Returns: 'thoughts' | 'media' | 'milestones' | null
-//
-// ============================================================================
-// STATE VARIABLES
-// ============================================================================
-//
-// // Fresh post data (map rowData through getFreshPost)
-// const thoughts = (rowData.thoughts || []).map(p => getFreshPost(p.id) || p);
-// const media = (rowData.media || []).map(p => getFreshPost(p.id) || p);
-// const milestones = (rowData.milestones || []).map(p => getFreshPost(p.id) || p);
-// const mostRecentType = getMostRecentType();
-//
-// // Edit mode state
-// const [editingPostId, setEditingPostId] = useState(null);
-// const [isSaving] = useState(false);
-//
-// // Delete modal state
-// const [deleteModalPostId, setDeleteModalPostId] = useState(null);
-// const [deleteModalParentId, setDeleteModalParentId] = useState(null);
-// const [isDeleting, setIsDeleting] = useState(false);
-//
-// // Thread view state (expanded replies)
-// const [expandedThreadId, setExpandedThreadId] = useState(null);
-// const [threadReplies, setThreadReplies] = useState({});
-// const [loadingThread, setLoadingThread] = useState(null);
-// const [showAllReplies, setShowAllReplies] = useState({});
-//
-// // Mobile state
-// const [isMobile, setIsMobile] = useState(false);
-// const [mobileActiveTab, setMobileActiveTab] = useState('thoughts');
-// const [mobileCardIndex, setMobileCardIndex] = useState({ thoughts: 0, media: 0, milestones: 0 });
-//
-// // Desktop state
-// const [activeColumnType, setActiveColumnType] = useState(null);
-// const [expandedMediaPost, setExpandedMediaPost] = useState(null);
-// const [isComposerFullPage, setIsComposerFullPage] = useState(false);
-// const [isEditMode, setIsEditMode] = useState(false);
-//
-// // Smart Deck state (carousel indices per type)
-// const [deckIndex, setDeckIndex] = useState({ thoughts: 0, media: 0, milestones: 0 });
-//
-// ============================================================================
-// DECK NAVIGATION FUNCTIONS
-// ============================================================================
-//
-// nextCard(type, totalCards):
-//   - setDeckIndex(prev => ({ ...prev, [type]: (prev[type] + 1) % totalCards }))
-//
-// prevCard(type, totalCards):
-//   - setDeckIndex(prev => ({ ...prev, [type]: prev[type] === 0 ? totalCards - 1 : prev[type] - 1 }))
-//
-// selectCard(type, index):
-//   - setDeckIndex(prev => ({ ...prev, [type]: index }))
-//
-// ============================================================================
-// EFFECTS
-// ============================================================================
-//
-// useEffect - Check mobile on mount and resize:
-//   - const checkMobile = () => setIsMobile(window.innerWidth < 650);
-//   - Call checkMobile()
-//   - window.addEventListener('resize', checkMobile)
-//   - Return cleanup: window.removeEventListener('resize', checkMobile)
-//
-// ============================================================================
-// THREAD/REPLY HANDLERS
-// ============================================================================
-//
-// toggleThread(postId):
-//   - If expandedThreadId === postId: setExpandedThreadId(null)
-//   - Else: setExpandedThreadId(postId)
-//     - If !threadReplies[postId]: fetch replies and store in threadReplies
-//
-// handleReplySubmit(postId, content):
-//   - Call createReply(postId, { content, type: 'thoughts' })
-//   - On success: update threadReplies, clear comment text, expand thread
-//
-// handleUpdateReply(replyId, data):
-//   - Call updatePost(replyId, data)
-//   - Update threadReplies state
-//
-// handleExpandMedia(post):
-//   - setExpandedMediaPost(post)
-//   - Fetch replies if not already loaded
-//
-// handleDeleteReply(replyId, parentId):
-//   - Set delete modal state
-//
-// toggleShowAllReplies(postId):
-//   - Toggle showAllReplies[postId]
-//
-// handleEditPost(post):
-//   - Set editing state and open composer
-//
-// ============================================================================
-// RENDER POST CARD FUNCTION
-// ============================================================================
-//
-// renderPostCard(post, type):
-//   - Calculate contentLength, hasNoMedia, isShortPost
-//   - Calculate isSinglePost (only 1 post total across all types)
-//   - Return <PostCard ... /> with all necessary props:
-//     * post, type, user, currentUser, isSinglePost, isShortPost
-//     * Action handlers: onUserClick, onLike, onShare, onComment, onMessage, onEdit, onDelete, onExpandMedia
-//     * Thread props: onToggleThread, expandedThreadId, threadReplies, loadingThread, showAllReplies, etc.
-//     * Comment composer props: activeCommentPostId, commentText, setCommentText, etc.
-//
-// ============================================================================
-// COMPUTED VALUES FOR RENDERING
-// ============================================================================
-//
-// const hasThoughts = thoughts.length > 0;
-// const hasMedia = media.length > 0;
-// const hasMilestones = milestones.length > 0;
-// const columnCount = [hasThoughts, hasMedia, hasMilestones].filter(Boolean).length;
-//
-// // Desktop navigation handlers
-// handleNextColumn() / handlePrevColumn() - for navigating between columns
-//
-// // Mobile tab data
-// const postsByType = { thoughts: [...], media: [...], milestones: [...] };
-// const postCounts = { thoughts: N, media: N, milestones: N };
-// const availableTabs = ['thoughts', 'media', 'milestones'].filter(type => postsByType[type].length > 0);
-// const effectiveTab = determine which tab to show based on mobileActiveTab
-// const currentTabPosts = postsByType[effectiveTab];
-// const currentTabIndex = mobileCardIndex[effectiveTab];
-//
-// ============================================================================
-// MOBILE JSX (when isMobile && availableTabs.length > 0)
-// ============================================================================
-//
-// <div className="timeline-river-row-wrapper timeline-river-row-wrapper--mobile">
-//   <MobileTabNav availableTabs={availableTabs} activeTab={effectiveTab} onTabChange={setMobileActiveTab} postCounts={postCounts} />
-//   
-//   <div className="mobile-card-area">
-//     {currentTabPosts.length > 0 && (
-//       <>
-//         <div className="mobile-card-container">
-//           {renderPostCard(currentTabPosts[currentTabIndex], effectiveTab)}
-//         </div>
-//         
-//         {currentTabPosts.length > 1 && (
-//           <div className="mobile-card-controls">
-//             {/* Position indicator - shows X/Y above buttons */}
-//             <span className="mobile-nav-position">
-//               {currentTabIndex + 1}/{currentTabPosts.length}
-//             </span>
-//             
-//             <button className="mobile-nav-btn mobile-nav-btn--prev" onClick={...}>
-//               <ChevronLeftIcon size={20} />
-//             </button>
-//             
-//             <div className="mobile-card-indicators">
-//               {currentTabPosts.map((_, index) => (
-//                 <div key={index} className={`mobile-indicator ${index === currentTabIndex ? 'mobile-indicator--active' : ''}`} onClick={...} />
-//               ))}
-//             </div>
-//             
-//             <button className="mobile-nav-btn mobile-nav-btn--next" onClick={...}>
-//               <ChevronRightIcon size={20} />
-//             </button>
-//           </div>
-//         )}
-//       </>
-//     )}
-//   </div>
-//   
-//   <MediaLightbox ... />
-// </div>
-//
-// ============================================================================
-// DESKTOP JSX (3 Columns Side-by-Side with Smart Decks)
-// ============================================================================
-//
-// <div className={`timeline-river-row timeline-river-row--${columnCount}-col`}>
-//   {hasThoughts && (
-//     <SmartDeck
-//       posts={thoughts}
-//       type="thoughts"
-//       currentIndex={deckIndex.thoughts}
-//       onNextCard={nextCard}
-//       onPrevCard={prevCard}
-//       onSelectCard={selectCard}
-//       isRecentType={mostRecentType === 'thoughts'}
-//       renderPostCard={renderPostCard}
-//     />
-//   )}
-//   {hasMedia && (
-//     <SmartDeck posts={media} type="media" currentIndex={deckIndex.media} isRecentType={mostRecentType === 'media'} ... />
-//   )}
-//   {hasMilestones && (
-//     <SmartDeck posts={milestones} type="milestones" currentIndex={deckIndex.milestones} isRecentType={mostRecentType === 'milestones'} ... />
-//   )}
-//   
-//   {/* Desktop navigation controls (when 3 columns and one is active) */}
-//   {columnCount === 3 && activeColumnType && (
-//     <div className="desktop-stack-nav">...</div>
-//   )}
-//   
-//   <MediaLightbox ... />
-//   <DeleteConfirmModal ... />
-// </div>
-//
-// ============================================================================
-// KEY FEATURES CHECKLIST
-// ============================================================================
-// ✓ Most-recent highlighting: isRecentType prop passed to SmartDeck
-// ✓ Mobile position indicator: mobile-nav-position shows X/Y above buttons
-// ✓ Mobile tab navigation: MobileTabNav component
-// ✓ Desktop Smart Decks: SmartDeck component for each category
-// ✓ Thread support: Inline replies with expand/collapse
-// ✓ MediaLightbox: Full-screen media viewer
-// ✓ DeleteConfirmModal: Confirmation dialog for deletes
-// ✓ Responsive: isMobile check at 650px breakpoint
-//
-// ============================================================================
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -280,39 +8,629 @@ import './TimelineRiverRow.scss';
 import MediaLightbox from '../MediaLightbox/MediaLightbox';
 import DeleteConfirmModal from '../DeleteConfirmModal/DeleteConfirmModal';
 import { useAuth, usePosts, useMessages } from '@contexts';
-import { ChevronLeftIcon, ChevronRightIcon } from '@assets/icons';
+import { ChevronLeftIcon, ChevronRightIcon, EditIcon, CheckIcon, CloseIcon, ThoughtBubbleIcon, ImageIcon, StarIcon, UserIcon } from '@assets/icons';
+import { createPortal } from 'react-dom';
 
 // Extracted components
-import { PostCard, SmartDeck, MobileTabNav } from './components';
+import { PostCard, MobileTabNav } from './components';
+import SmartDeck, { SmartDeckContent } from './components/SmartDeck/SmartDeck';
 
 function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commentText, setCommentText, setActiveCommentPostId, onDeletePost, onUpdatePost }) {
-  // TODO: Extract user from rowData
-  // TODO: Get currentUser from useAuth()
-  // TODO: Get posts, fetchReplies, createReply, deletePost, updatePost, likePost, sharePost from usePosts()
-  // TODO: Get openMessages from useMessages()
-  // TODO: Get navigate from useNavigate()
+  // 🔵 Extract data from props
+  const { user } = rowData;
+  const { user: currentUser } = useAuth();
+  const { posts, fetchReplies, createReply, deletePost, updatePost, likePost, sharePost, collapsedDecks, collapseDeck, expandDeck } = usePosts();
+  const { openMessages } = useMessages();
+  const navigate = useNavigate();
   
-  // TODO: Implement handleUserClick(e, userId, username)
-  // TODO: Implement getFreshPost(postId)
-  // TODO: Map rowData posts through getFreshPost for fresh data
-  // TODO: Implement getMostRecentType()
+  // Navigate to user's profile when clicking their name/avatar
+  const handleUserClick = (e, userId, username) => {
+    e.stopPropagation();
+    if (currentUser?.id === userId || currentUser?.username === username) {
+      navigate('/profile');
+    } else {
+      navigate(`/profile/${username}`);
+    }
+  };
   
-  // TODO: Initialize all state variables as documented
+  // Get fresh post data from context (rowData may have stale snapshots)
+  const getFreshPost = (postId) => posts.find(p => p.id === postId);
   
-  // TODO: Implement deck navigation functions (nextCard, prevCard, selectCard)
+  // Map rowData posts to fresh versions from context
+  const thoughts = (rowData.thoughts || []).map(p => getFreshPost(p.id) || p);
+  const media = (rowData.media || []).map(p => getFreshPost(p.id) || p);
+  const milestones = (rowData.milestones || []).map(p => getFreshPost(p.id) || p);
   
-  // TODO: Implement useEffect for mobile detection
+  // 🔵 Calculate which post type was most recently posted
+  const getMostRecentType = () => {
+    const getLatestTimestamp = (arr) => {
+      if (!arr.length) return 0;
+      return Math.max(...arr.map(p => new Date(p.createdAt || p.created_at || 0).getTime()));
+    };
+    
+    const timestamps = {
+      thoughts: getLatestTimestamp(thoughts),
+      media: getLatestTimestamp(media),
+      milestones: getLatestTimestamp(milestones)
+    };
+    
+    let mostRecent = null;
+    let maxTime = 0;
+    for (const [type, time] of Object.entries(timestamps)) {
+      if (time > maxTime) {
+        maxTime = time;
+        mostRecent = type;
+      }
+    }
+    return mostRecent;
+  };
   
-  // TODO: Implement thread handlers (toggleThread, handleReplySubmit, handleUpdateReply, etc.)
+  const mostRecentType = getMostRecentType();
   
-  // TODO: Implement renderPostCard(post, type)
+  // State for edit mode (dedicated edit modal, separate from comment composer)
+  const [editingPostId, setEditingPostId] = useState(null);
+  const [editingPostContent, setEditingPostContent] = useState('');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   
-  // TODO: Calculate hasThoughts, hasMedia, hasMilestones, columnCount
-  // TODO: Implement desktop navigation handlers
-  // TODO: Set up mobile tab data
+  // State for delete modal
+  const [deleteModalPostId, setDeleteModalPostId] = useState(null);
+  const [deleteModalParentId, setDeleteModalParentId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
-  // TODO: Return appropriate JSX based on isMobile
-  return null;
+  // State for thread view (expanded replies)
+  const [expandedThreadId, setExpandedThreadId] = useState(null);
+  const [threadReplies, setThreadReplies] = useState({});
+  const [loadingThread, setLoadingThread] = useState(null);
+  const [showAllReplies, setShowAllReplies] = useState({});
+  
+  // Mobile state
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileActiveTab, setMobileActiveTab] = useState(mostRecentType || 'thoughts');
+  const [mobileCardIndex, setMobileCardIndex] = useState({ thoughts: 0, media: 0, milestones: 0 });
+  
+  // Desktop state
+  const [activeColumnType, setActiveColumnType] = useState(null);
+  const [expandedMediaPost, setExpandedMediaPost] = useState(null);
+
+  const [isComposerFullPage, setIsComposerFullPage] = useState(false);
+  
+  // Smart Deck state
+  const [deckIndex, setDeckIndex] = useState({
+    thoughts: 0,
+    media: 0,
+    milestones: 0
+  });
+  
+  // Collapsed decks state - now from context (shared across pages)
+  // Handlers: collapseDeck, expandDeck from usePosts()
+  
+  // Deck navigation
+  const nextCard = (type, totalCards) => {
+    setDeckIndex(prev => ({
+      ...prev,
+      [type]: (prev[type] + 1) % totalCards
+    }));
+  };
+  
+  const prevCard = (type, totalCards) => {
+    setDeckIndex(prev => ({
+      ...prev,
+      [type]: prev[type] === 0 ? totalCards - 1 : prev[type] - 1
+    }));
+  };
+  
+  const selectCard = (type, index) => {
+    setDeckIndex(prev => ({ ...prev, [type]: index }));
+  };
+  
+  // Check if mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 650);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  // Toggle thread view and load replies
+  const toggleThread = async (postId) => {
+    if (expandedThreadId === postId) {
+      setExpandedThreadId(null);
+    } else {
+      setExpandedThreadId(postId);
+      if (!threadReplies[postId]) {
+        setLoadingThread(postId);
+        const result = await fetchReplies(postId);
+        if (result.success) {
+          setThreadReplies(prev => ({ ...prev, [postId]: result.data }));
+        }
+        setLoadingThread(null);
+      }
+    }
+  };
+  
+  // Handle reply submission
+  const handleReplySubmit = async (postId, content) => {
+    const result = await createReply(postId, { content, type: 'thoughts' });
+    if (result.success) {
+      setThreadReplies(prev => ({
+        ...prev,
+        [postId]: [...(prev[postId] || []), result.data]
+      }));
+      setCommentText('');
+      // Don't close the expanded view - user should see their new reply
+      // setActiveCommentPostId(null);
+      setExpandedThreadId(postId);
+      return true;
+    }
+    return false;
+  };
+  
+  // Handle reply update
+  const handleUpdateReply = async (replyId, data) => {
+    const result = await updatePost(replyId, data);
+    if (result.success) {
+      // Update in all thread replies
+      setThreadReplies(prev => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(postId => {
+          updated[postId] = updated[postId].map(r => 
+            r.id === replyId ? { ...r, ...data } : r
+          );
+        });
+        return updated;
+      });
+      return true;
+    }
+    return false;
+  };
+  
+  // Handle expand media - fetch replies if not already loaded
+  const handleExpandMedia = async (post) => {
+    setExpandedMediaPost(post);
+    // Fetch replies if not already loaded
+    if (!threadReplies[post.id]) {
+      setLoadingThread(post.id);
+      const result = await fetchReplies(post.id);
+      if (result.success) {
+        setThreadReplies(prev => ({ ...prev, [post.id]: result.data }));
+      }
+      setLoadingThread(null);
+    }
+  };
+  
+  // Handle reply delete
+  const handleDeleteReply = (replyId, parentId) => {
+    setDeleteModalPostId(replyId);
+    setDeleteModalParentId(parentId);
+  };
+  
+  // Toggle show all replies
+  const toggleShowAllReplies = (postId) => {
+    setShowAllReplies(prev => ({ ...prev, [postId]: !prev[postId] }));
+  };
+  
+  // Handle edit post - opens dedicated edit modal (separate from comment composer)
+  const handleEditPost = (post) => {
+    setEditingPostId(post.id);
+    setEditingPostContent(post.content);
+  };
+
+  // Handle card click - opens expanded view with comments
+  const handleCardClick = async (post) => {
+    // Set active comment post to show full-page composer
+    setActiveCommentPostId(post.id);
+    setIsComposerFullPage(true);
+    // Fetch replies if not already loaded
+    if (!threadReplies[post.id]) {
+      setLoadingThread(post.id);
+      const result = await fetchReplies(post.id);
+      if (result.success) {
+        setThreadReplies(prev => ({ ...prev, [post.id]: result.data }));
+      }
+      setLoadingThread(null);
+    }
+  };
+  
+  // Render a post card with all necessary props
+  const renderPostCard = (post, type) => {
+    const contentLength = (post.content || '').length;
+    const hasNoMedia = !post.image && !post.media_url;
+    const isShortPost = contentLength < 80 && hasNoMedia;
+    
+    const isSinglePost = 
+      (type === 'thoughts' && thoughts.length === 1 && media.length === 0 && milestones.length === 0) ||
+      (type === 'media' && media.length === 1 && thoughts.length === 0 && milestones.length === 0) ||
+      (type === 'milestones' && milestones.length === 1 && thoughts.length === 0 && media.length === 0);
+    
+    return (
+      <PostCard
+        key={post.id}
+        post={post}
+        type={type}
+        user={user}
+        currentUser={currentUser}
+        isSinglePost={isSinglePost}
+        isShortPost={isShortPost}
+        // Actions
+        onUserClick={handleUserClick}
+        onLike={likePost}
+        onShare={sharePost}
+        onComment={onCommentClick}
+        onMessage={openMessages}
+        onEdit={handleEditPost}
+        onDelete={(id) => setDeleteModalPostId(id)}
+        onExpandMedia={handleExpandMedia}
+        onCardClick={handleCardClick}
+        // Thread props
+        onToggleThread={toggleThread}
+        expandedThreadId={expandedThreadId}
+        threadReplies={threadReplies}
+        loadingThread={loadingThread}
+        showAllReplies={showAllReplies}
+        onToggleShowAllReplies={toggleShowAllReplies}
+        onReplySubmit={handleReplySubmit}
+        onUpdateReply={handleUpdateReply}
+        onDeleteReply={handleDeleteReply}
+        // Comment composer props
+        activeCommentPostId={activeCommentPostId}
+        commentText={commentText}
+        setCommentText={setCommentText}
+        setActiveCommentPostId={setActiveCommentPostId}
+        isComposerFullPage={isComposerFullPage}
+        setIsComposerFullPage={setIsComposerFullPage}
+        isSaving={false}
+      />
+    );
+  };
+  
+  // Count how many post types exist
+  const hasThoughts = thoughts.length > 0;
+  const hasMedia = media.length > 0;
+  const hasMilestones = milestones.length > 0;
+  const columnCount = [hasThoughts, hasMedia, hasMilestones].filter(Boolean).length;
+  
+  // Desktop navigation handlers
+  const handleNextColumn = () => {
+    const columns = [hasThoughts && 'thoughts', hasMedia && 'media', hasMilestones && 'milestones'].filter(Boolean);
+    const currentIndex = columns.indexOf(activeColumnType);
+    const nextIndex = (currentIndex + 1) % columns.length;
+    setActiveColumnType(columns[nextIndex]);
+  };
+  
+  const handlePrevColumn = () => {
+    const columns = [hasThoughts && 'thoughts', hasMedia && 'media', hasMilestones && 'milestones'].filter(Boolean);
+    const currentIndex = columns.indexOf(activeColumnType);
+    const prevIndex = currentIndex <= 0 ? columns.length - 1 : currentIndex - 1;
+    setActiveColumnType(columns[prevIndex]);
+  };
+  
+  // Build arrays for mobile tabs
+  const postsByType = {
+    thoughts: hasThoughts ? thoughts : [],
+    media: hasMedia ? media : [],
+    milestones: hasMilestones ? milestones : []
+  };
+  
+  const postCounts = {
+    thoughts: thoughts.length,
+    media: media.length,
+    milestones: milestones.length
+  };
+  
+  const availableTabs = [];
+  if (hasThoughts) availableTabs.push('thoughts');
+  if (hasMedia) availableTabs.push('media');
+  if (hasMilestones) availableTabs.push('milestones');
+  
+  const effectiveTab = postsByType[mobileActiveTab]?.length > 0 ? mobileActiveTab : availableTabs[0] || 'thoughts';
+  const currentTabPosts = postsByType[effectiveTab] || [];
+  const currentTabIndex = mobileCardIndex[effectiveTab] || 0;
+
+  // 🟢 MOBILE: Tab-based navigation
+  if (isMobile && availableTabs.length > 0) {
+    return (
+      <div className="timeline-river-row-wrapper timeline-river-row-wrapper--mobile">
+        <MobileTabNav
+          availableTabs={availableTabs}
+          activeTab={effectiveTab}
+          onTabChange={setMobileActiveTab}
+          postCounts={postCounts}
+        />
+        
+        <div className="mobile-card-area">
+          {currentTabPosts.length > 0 && (
+            <>
+              <div className="mobile-card-container">
+                {renderPostCard(currentTabPosts[currentTabIndex], effectiveTab)}
+              </div>
+              
+              {currentTabPosts.length > 1 && (
+                <div className="mobile-card-controls">
+                  <span className="mobile-nav-position">
+                    {currentTabIndex + 1}/{currentTabPosts.length}
+                  </span>
+                  <button 
+                    className="mobile-nav-btn mobile-nav-btn--prev"
+                    onClick={() => setMobileCardIndex(prev => ({
+                      ...prev,
+                      [effectiveTab]: prev[effectiveTab] === 0 ? currentTabPosts.length - 1 : prev[effectiveTab] - 1
+                    }))}
+                  >
+                    <ChevronLeftIcon size={20} />
+                  </button>
+                  
+                  <div className="mobile-card-indicators">
+                    {currentTabPosts.map((_, index) => (
+                      <div 
+                        key={index} 
+                        className={`mobile-indicator ${index === currentTabIndex ? 'mobile-indicator--active' : ''}`}
+                        onClick={() => setMobileCardIndex(prev => ({ ...prev, [effectiveTab]: index }))}
+                      />
+                    ))}
+                  </div>
+                  
+                  <button 
+                    className="mobile-nav-btn mobile-nav-btn--next"
+                    onClick={() => setMobileCardIndex(prev => ({
+                      ...prev,
+                      [effectiveTab]: (prev[effectiveTab] + 1) % currentTabPosts.length
+                    }))}
+                  >
+                    <ChevronRightIcon size={20} />
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+        
+        <MediaLightbox 
+          post={expandedMediaPost ? (posts.find(p => p.id === expandedMediaPost.id) || expandedMediaPost) : null}
+          onClose={() => setExpandedMediaPost(null)}
+          commentText={commentText}
+          setCommentText={setCommentText}
+          threadReplies={threadReplies}
+          onReplySubmit={handleReplySubmit}
+        />
+      </div>
+    );
+  }
+
+  // Calculate how many decks are currently expanded
+  const expandedCount = [
+    hasThoughts && !collapsedDecks.has('thoughts'),
+    hasMedia && !collapsedDecks.has('media'),
+    hasMilestones && !collapsedDecks.has('milestones')
+  ].filter(Boolean).length;
+  
+  // Collapse all decks
+  const handleCollapseAll = () => {
+    if (hasThoughts) collapseDeck('thoughts');
+    if (hasMedia) collapseDeck('media');
+    if (hasMilestones) collapseDeck('milestones');
+  };
+
+  // 🟢 DESKTOP: Tabs in header row, content below - like mobile tabs
+  const allCollapsed = expandedCount === 0;
+  
+  return (
+    <div className={`timeline-river-row timeline-river-row--expanded-${expandedCount}`}>
+      {/* User info header - only when ALL tabs collapsed */}
+      {allCollapsed && (
+        <div className="timeline-river-row__user-header">
+          <div 
+            className="river-avatar clickable-user"
+            onClick={(e) => handleUserClick(e, user.id, user.username)}
+          >
+            <UserIcon size={24} />
+          </div>
+          <span 
+            className="river-author clickable-user"
+            onClick={(e) => handleUserClick(e, user.id, user.username)}
+          >
+            {user.display_name || user.name || user.username}
+          </span>
+        </div>
+      )}
+      
+      {/* Tabs row - all tabs same size, collapsed ones greyed out, non-recent dimmed */}
+      <div className="timeline-river-row__tabs">
+        {hasThoughts && (
+          <button 
+            className={`deck-tab deck-tab--thoughts${collapsedDecks.has('thoughts') ? ' deck-tab--collapsed' : ''}${mostRecentType && mostRecentType !== 'thoughts' ? ' deck-tab--not-recent' : ''}`}
+            onClick={() => collapsedDecks.has('thoughts') ? expandDeck('thoughts') : collapseDeck('thoughts')}
+          >
+            <span className="deck-tab__icon"><ThoughtBubbleIcon className="smart-deck-icon-svg" /></span>
+            <span className="deck-tab__label">Thoughts</span>
+            <span className="deck-tab__count">{thoughts.length}</span>
+            <span className="deck-tab__collapse">{collapsedDecks.has('thoughts') ? '+' : '−'}</span>
+          </button>
+        )}
+        {hasMedia && (
+          <button 
+            className={`deck-tab deck-tab--media${collapsedDecks.has('media') ? ' deck-tab--collapsed' : ''}${mostRecentType && mostRecentType !== 'media' ? ' deck-tab--not-recent' : ''}`}
+            onClick={() => collapsedDecks.has('media') ? expandDeck('media') : collapseDeck('media')}
+          >
+            <span className="deck-tab__icon"><ImageIcon className="smart-deck-icon-svg" /></span>
+            <span className="deck-tab__label">Media</span>
+            <span className="deck-tab__count">{media.length}</span>
+            <span className="deck-tab__collapse">{collapsedDecks.has('media') ? '+' : '−'}</span>
+          </button>
+        )}
+        {hasMilestones && (
+          <button 
+            className={`deck-tab deck-tab--milestones${collapsedDecks.has('milestones') ? ' deck-tab--collapsed' : ''}${mostRecentType && mostRecentType !== 'milestones' ? ' deck-tab--not-recent' : ''}`}
+            onClick={() => collapsedDecks.has('milestones') ? expandDeck('milestones') : collapseDeck('milestones')}
+          >
+            <span className="deck-tab__icon"><StarIcon className="smart-deck-icon-svg" /></span>
+            <span className="deck-tab__label">Milestones</span>
+            <span className="deck-tab__count">{milestones.length}</span>
+            <span className="deck-tab__collapse">{collapsedDecks.has('milestones') ? '+' : '−'}</span>
+          </button>
+        )}
+      </div>
+      
+      {/* Content row - only expanded decks */}
+      <div className="timeline-river-row__content">
+        {hasThoughts && !collapsedDecks.has('thoughts') && (
+          <SmartDeckContent
+            posts={thoughts}
+            type="thoughts"
+            currentIndex={deckIndex.thoughts}
+            onNextCard={nextCard}
+            onPrevCard={prevCard}
+            onSelectCard={selectCard}
+            renderPostCard={renderPostCard}
+          />
+        )}
+        {hasMedia && !collapsedDecks.has('media') && (
+          <SmartDeckContent
+            posts={media}
+            type="media"
+            currentIndex={deckIndex.media}
+            onNextCard={nextCard}
+            onPrevCard={prevCard}
+            onSelectCard={selectCard}
+            renderPostCard={renderPostCard}
+          />
+        )}
+        {hasMilestones && !collapsedDecks.has('milestones') && (
+          <SmartDeckContent
+            posts={milestones}
+            type="milestones"
+            currentIndex={deckIndex.milestones}
+            onNextCard={nextCard}
+            onPrevCard={prevCard}
+            onSelectCard={selectCard}
+            renderPostCard={renderPostCard}
+          />
+        )}
+      </div>
+      
+      {/* Desktop navigation controls */}
+      {columnCount === 3 && activeColumnType && (
+        <div className="desktop-stack-nav">
+          <button 
+            className="desktop-stack-close"
+            onClick={() => setActiveColumnType(null)}
+            title="Close (Esc)"
+          >
+            ×
+          </button>
+          <button 
+            className="desktop-stack-btn desktop-stack-btn--prev"
+            onClick={handlePrevColumn}
+            title="Previous card"
+          >
+            <ChevronLeftIcon size={20} />
+          </button>
+          <button 
+            className="desktop-stack-btn desktop-stack-btn--next"
+            onClick={handleNextColumn}
+            title="Next card"
+          >
+            <ChevronRightIcon size={20} />
+          </button>
+        </div>
+      )}
+
+      <MediaLightbox 
+        post={expandedMediaPost ? (posts.find(p => p.id === expandedMediaPost.id) || expandedMediaPost) : null}
+        onClose={() => setExpandedMediaPost(null)}
+        commentText={commentText}
+        setCommentText={setCommentText}
+        threadReplies={threadReplies}
+        onReplySubmit={handleReplySubmit}
+      />
+
+      <DeleteConfirmModal
+        isOpen={deleteModalPostId !== null}
+        onClose={() => {
+          setDeleteModalPostId(null);
+          setDeleteModalParentId(null);
+        }}
+        onConfirm={async () => {
+          setIsDeleting(true);
+          
+          if (deleteModalParentId) {
+            const result = await deletePost(deleteModalPostId);
+            if (result.success) {
+              setThreadReplies(prev => ({
+                ...prev,
+                [deleteModalParentId]: (prev[deleteModalParentId] || []).filter(r => r.id !== deleteModalPostId)
+              }));
+            }
+          } else {
+            await onDeletePost(deleteModalPostId);
+          }
+          
+          setIsDeleting(false);
+          setDeleteModalPostId(null);
+          setDeleteModalParentId(null);
+        }}
+        isDeleting={isDeleting}
+      />
+
+      {/* Edit Modal - Dedicated editor (same as Profile page) */}
+      {editingPostId && createPortal(
+        <div className="expanded-composer-overlay" onClick={() => {
+          setEditingPostId(null);
+          setEditingPostContent('');
+        }}>
+          <div className="expanded-composer-modal edit-mode" onClick={(e) => e.stopPropagation()}>
+            <div className="expanded-composer-header">
+              <h3>
+                <EditIcon size={20} />
+                Edit Post
+              </h3>
+              <button 
+                className="close-btn-glow"
+                onClick={() => {
+                  setEditingPostId(null);
+                  setEditingPostContent('');
+                }}
+              >
+                <CloseIcon size={24} />
+              </button>
+            </div>
+            <div className="expanded-composer-body">
+              <textarea
+                className="composer-textarea"
+                placeholder="Edit your post..."
+                value={editingPostContent}
+                onChange={(e) => setEditingPostContent(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className="expanded-composer-footer">
+              <button 
+                className="submit-btn icon-btn"
+                disabled={!editingPostContent.trim() || isSavingEdit}
+                onClick={async () => {
+                  if (editingPostContent.trim() && editingPostId && onUpdatePost) {
+                    setIsSavingEdit(true);
+                    try {
+                      await onUpdatePost(editingPostId, { content: editingPostContent.trim() });
+                      setEditingPostId(null);
+                      setEditingPostContent('');
+                    } catch (error) {
+                      console.error('Failed to update post:', error);
+                    } finally {
+                      setIsSavingEdit(false);
+                    }
+                  }
+                }}
+                title="Save"
+              >
+                <CheckIcon size={24} strokeWidth="2.5" />
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </div>
+  );
 }
 
 export default TimelineRiverRow;

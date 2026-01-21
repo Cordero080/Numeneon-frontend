@@ -1,57 +1,54 @@
-// =============================================================================
 // 🔵 PABLO - UI Architect
 // MessageModal.jsx - Full-screen messaging modal with blurred backdrop
-// =============================================================================
 //
-// ┌────────────────────────────────────────────────────────────────────────────┐
-// │ Messages                                              [□] [✕]             │
-// ├──────────────────────────┬─────────────────────────────────────────────────┤
-// │ [🔍 Search...]           │  [←] 🔵 Display Name                           │
-// │─────────────────────────│─────────────────────────────────────────────────│
-// │ 🔵 Arthur B       2m    │     ┌───────────────────┐                       │
-// │    Hey! Are you...      │     │ Their message     │  (received)           │
-// │─────────────────────────│     └───────────────────┘                       │
-// │ 🔵 Natalia P      1h    │                   ┌───────────────────┐         │
-// │    That sounds...       │                   │   Your reply      │ (sent)  │
-// │─────────────────────────│                   └───────────────────┘         │
-// │ 🔵 Colin W        1d    │                                                 │
-// │    Let's build...       │                                                 │
-// ├──────────────────────────┼─────────────────────────────────────────────────┤
-// │                          │ [Type a message...____________] [➤ charge-N]   │
-// └──────────────────────────┴─────────────────────────────────────────────────┘
-//
-// =============================================================================
+// This component now:
+// 1. Uses MessageContext for state (conversations, messages)
+// 2. Clicking a conversation in the sidebar switches the active chat
+// 3. Typing and clicking send actually adds messages
+// 4. Shows real messages from context state
 
 import { useState, useRef, useEffect } from 'react';
 import { MinimizeIcon, MaximizeIcon, CloseIcon, ChevronLeftIcon, ChevronRightIcon, MessageBubbleIcon } from '@assets/icons';
 import { useMessages } from '@contexts/MessageContext';
 import './MessageModal.scss';
 
-// HELPER: Format relative time (e.g., "2m", "1h", "3d")
+// 🔵 Helper: Format relative time (e.g., "2m", "1h", "3d")
 const formatRelativeTime = (date) => {
-  // TODO: Calculate time difference from now
-  // - < 1 min: return 'now'
-  // - < 60 min: return `${minutes}m`
-  // - < 24 hours: return `${hours}h`
-  // - else: return `${days}d`
+  if (!date) return '';
+  const now = new Date();
+  const diffMs = now - new Date(date);
+  const diffMinutes = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMinutes < 1) return 'now';
+  if (diffMinutes < 60) return `${diffMinutes}m`;
+  if (diffHours < 24) return `${diffHours}h`;
+  return `${diffDays}d`;
 };
 
-// HELPER: Format message timestamp (e.g., "2:30 PM")
+// 🔵 Helper: Format message timestamp (e.g., "2:30 PM")
 const formatMessageTime = (date) => {
-  // TODO: Return localized time string
-  // Hint: toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+  if (!date) return '';
+  return new Date(date).toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit',
+    hour12: true 
+  });
 };
 
-// HELPER: Get initials from display name (e.g., "Arthur Bernier" → "AB")
+// 🔵 Helper: Get initials from display name
 const getInitials = (name) => {
-  // TODO: Split name, return first letter of each word (max 2)
-  // Handle edge cases: null, single word, empty string
+  if (!name) return '?';
+  const parts = name.split(' ');
+  if (parts.length >= 2) {
+    return parts[0][0] + parts[1][0];
+  }
+  return name[0];
 };
 
 function MessageModal({ onClose }) {
-  // ─────────────────────────────────────────────────────────────────────────
-  // CONTEXT
-  // ─────────────────────────────────────────────────────────────────────────
+  // 🔵 Get state and actions from context
   const { 
     conversations, 
     selectedConversationId, 
@@ -60,61 +57,81 @@ function MessageModal({ onClose }) {
     sendMessage 
   } = useMessages();
   
-  // ─────────────────────────────────────────────────────────────────────────
-  // LOCAL STATE
-  // ─────────────────────────────────────────────────────────────────────────
+  // 🔵 Local state for the text input
   const [messageText, setMessageText] = useState('');
+  
+  // 🔵 Local state for search filtering
   const [searchQuery, setSearchQuery] = useState('');
-  const [mobileView, setMobileView] = useState('list'); // 'list' | 'chat'
+  
+  // 🔵 Mobile view state - 'list' shows conversations, 'chat' shows the chat
+  const [mobileView, setMobileView] = useState('list');
+  
+  // 🔵 Fullscreen mode state
   const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  // 🔵 Ref for scrolling to bottom of messages
   const messagesEndRef = useRef(null);
   
-  // ─────────────────────────────────────────────────────────────────────────
-  // EFFECTS
-  // ─────────────────────────────────────────────────────────────────────────
+  // 🔵 Scroll to bottom when messages change
   useEffect(() => {
-    // TODO: Auto-scroll to bottom when messages change
-    // Hint: messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [selectedConversation?.messages]);
   
-  // ─────────────────────────────────────────────────────────────────────────
-  // COMPUTED VALUES
-  // ─────────────────────────────────────────────────────────────────────────
+  // 🔵 Calculate charge level (0-4) based on message length
+  // This creates the "charging up" visual effect on the send button
   const getChargeLevel = () => {
-    // TODO: Return 0-4 based on messageText.length
-    // 0 chars = 0, <10 = 1, <30 = 2, <60 = 3, else = 4
-    // This powers the "charging up" visual effect on send button
+    const len = messageText.length;
+    if (len === 0) return 0;
+    if (len < 10) return 1;
+    if (len < 30) return 2;
+    if (len < 60) return 3;
+    return 4; // Fully charged
   };
   
+  // 🔵 Handle sending a message
+  const handleSend = () => {
+    if (!messageText.trim()) return;
+    
+    // Call context function to add message
+    sendMessage(messageText);
+    
+    // Clear the input
+    setMessageText('');
+  };
+  
+  // 🔵 Handle Enter key to send (Shift+Enter for newline)
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+  
+  // 🔵 Filter conversations based on search query
   const filteredConversations = conversations.filter((conv) => {
-    // TODO: Filter by searchQuery matching displayName, username, or message content
-    // If no query, return all
+    if (!searchQuery.trim()) return true;
+    
+    const query = searchQuery.toLowerCase();
+    
+    // Match by display name
+    if (conv.user.displayName?.toLowerCase().includes(query)) return true;
+    
+    // Match by username
+    if (conv.user.username?.toLowerCase().includes(query)) return true;
+    
+    // Match by message content
+    const hasMatchingMessage = conv.messages?.some(msg => 
+      msg.text?.toLowerCase().includes(query)
+    );
+    if (hasMatchingMessage) return true;
+    
+    return false;
   });
   
-  // ─────────────────────────────────────────────────────────────────────────
-  // HANDLERS
-  // ─────────────────────────────────────────────────────────────────────────
-  const handleSend = () => {
-    // TODO: If messageText is empty, return early
-    // TODO: Call sendMessage(messageText) from context
-    // TODO: Clear messageText
-  };
-  
-  const handleKeyDown = (e) => {
-    // TODO: If Enter (without Shift), prevent default and call handleSend
-    // Shift+Enter should allow newline
-  };
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // RENDER
-  // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="message-modal-overlay" onClick={onClose}>
       <div className={`message-modal ${isFullscreen ? 'fullscreen' : ''}`} onClick={(e) => e.stopPropagation()}>
-        
-        {/* ═══════════════════════════════════════════════════════════════════ */}
-        {/* HEADER                                                              */}
-        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* Header */}
         <div className="message-modal-header">
           <h2 className="message-modal-title">Messages</h2>
           <div className="modal-header-actions">
@@ -123,7 +140,11 @@ function MessageModal({ onClose }) {
               onClick={() => setIsFullscreen(!isFullscreen)}
               title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
             >
-              {isFullscreen ? <MinimizeIcon size={20} /> : <MaximizeIcon size={20} />}
+              {isFullscreen ? (
+                <MinimizeIcon size={20} />
+              ) : (
+                <MaximizeIcon size={20} />
+              )}
             </button>
             <button className="close-btn-glow" onClick={onClose}>
               <CloseIcon size={24} />
@@ -131,14 +152,9 @@ function MessageModal({ onClose }) {
           </div>
         </div>
 
-        {/* ═══════════════════════════════════════════════════════════════════ */}
-        {/* BODY - Two Column Layout                                            */}
-        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* Body - Two column layout */}
         <div className="message-modal-body">
-          
-          {/* ─────────────────────────────────────────────────────────────────── */}
-          {/* LEFT COLUMN: Conversations List                                     */}
-          {/* ─────────────────────────────────────────────────────────────────── */}
+          {/* Left: Conversations List */}
           <div className={`message-conversations ${mobileView === 'list' ? 'show' : ''}`}>
             <div className="conversations-header">
               <div className="conversations-search-wrapper">
@@ -148,7 +164,9 @@ function MessageModal({ onClose }) {
                   className="conversations-search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Escape' && setSearchQuery('')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') setSearchQuery('');
+                  }}
                 />
                 {searchQuery && (
                   <button 
@@ -161,8 +179,8 @@ function MessageModal({ onClose }) {
                 )}
               </div>
             </div>
-            
             <div className="conversations-list">
+              {/* 🔵 Map through filtered conversations from context */}
               {filteredConversations.map((conv) => {
                 const lastMessage = conv.messages[conv.messages.length - 1];
                 const isActive = conv.id === selectedConversationId;
@@ -173,27 +191,30 @@ function MessageModal({ onClose }) {
                     className={`conversation-item ${isActive ? 'active' : ''}`}
                     onClick={() => {
                       selectConversation(conv.id);
-                      setMobileView('chat');
+                      setMobileView('chat'); // Switch to chat view on mobile
                     }}
                   >
+                    {/* Avatar - show initials */}
                     <div className="conversation-avatar">
-                      <span className="initial-1">{/* TODO: First initial */}</span>
-                      <span className="initial-2">{/* TODO: Second initial (if exists) */}</span>
+                      <span className="initial-1">{getInitials(conv.user.displayName)[0]}</span>
+                      {getInitials(conv.user.displayName).length > 1 && (
+                        <span className="initial-2">{getInitials(conv.user.displayName)[1]}</span>
+                      )}
                     </div>
                     <div className="conversation-info">
                       <span className="conversation-name">{conv.user.displayName}</span>
                       <span className="conversation-preview">
-                        {/* TODO: Show preview of last message (truncate to 30 chars) */}
+                        {lastMessage ? lastMessage.text.substring(0, 30) + (lastMessage.text.length > 30 ? '...' : '') : 'No messages yet'}
                       </span>
                     </div>
                     <span className="conversation-time">
-                      {/* TODO: formatRelativeTime(conv.lastMessageTime) */}
+                      {formatRelativeTime(conv.lastMessageTime)}
                     </span>
                   </div>
                 );
               })}
               
-              {/* Empty States */}
+              {/* Empty state - no search results */}
               {filteredConversations.length === 0 && searchQuery.trim() && (
                 <div className="conversations-empty">
                   <p>No results for "{searchQuery}"</p>
@@ -201,6 +222,7 @@ function MessageModal({ onClose }) {
                 </div>
               )}
               
+              {/* Empty state - no conversations at all */}
               {conversations.length === 0 && (
                 <div className="conversations-empty">
                   <p>No conversations yet</p>
@@ -210,27 +232,31 @@ function MessageModal({ onClose }) {
             </div>
           </div>
 
-          {/* ─────────────────────────────────────────────────────────────────── */}
-          {/* RIGHT COLUMN: Chat View                                             */}
-          {/* ─────────────────────────────────────────────────────────────────── */}
+          {/* Right: Chat View */}
           <div className={`message-chat ${mobileView === 'list' ? 'hide' : ''}`}>
             {selectedConversation ? (
               <>
                 {/* Chat Header */}
                 <div className="chat-header">
-                  <button className="chat-back-btn" onClick={() => setMobileView('list')}>
+                  {/* Mobile back button */}
+                  <button 
+                    className="chat-back-btn"
+                    onClick={() => setMobileView('list')}
+                  >
                     <ChevronLeftIcon size={20} />
                   </button>
                   <div className="chat-user-info">
                     <div className="chat-avatar">
-                      <span className="initial-1">{/* TODO */}</span>
-                      <span className="initial-2">{/* TODO */}</span>
+                      <span className="initial-1">{getInitials(selectedConversation.user.displayName)[0]}</span>
+                      {getInitials(selectedConversation.user.displayName).length > 1 && (
+                        <span className="initial-2">{getInitials(selectedConversation.user.displayName)[1]}</span>
+                      )}
                     </div>
                     <span className="chat-username">{selectedConversation.user.displayName}</span>
                   </div>
                 </div>
                 
-                {/* Messages List */}
+                {/* Messages */}
                 <div className="chat-messages">
                   {selectedConversation.messages.map((msg) => (
                     <div 
@@ -238,16 +264,18 @@ function MessageModal({ onClose }) {
                       className={`chat-message ${msg.sender === 'me' ? 'sent' : 'received'}`}
                     >
                       <p>{msg.text}</p>
-                      <span className="message-time">{/* TODO: formatMessageTime */}</span>
+                      <span className="message-time">{formatMessageTime(msg.timestamp)}</span>
                     </div>
                   ))}
                   
+                  {/* Empty conversation state */}
                   {selectedConversation.messages.length === 0 && (
                     <div className="chat-empty">
                       <p>Start a conversation with {selectedConversation.user.displayName}</p>
                     </div>
                   )}
                   
+                  {/* Scroll anchor */}
                   <div ref={messagesEndRef} />
                 </div>
                 
@@ -271,6 +299,7 @@ function MessageModal({ onClose }) {
                 </div>
               </>
             ) : (
+              /* No conversation selected state */
               <div className="chat-no-selection">
                 <div className="no-selection-icon">
                   <MessageBubbleIcon size={48} stroke="rgba(201,168,255,0.4)" strokeWidth="1.5" />

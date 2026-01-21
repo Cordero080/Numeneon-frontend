@@ -15,11 +15,11 @@
 
 .river-media-image {
   width: 100%;
+  height: auto;
   display: block;
+  max-height: 500px;
   object-fit: cover;
   object-position: center;
-  max-height: 300px;
-  height: auto;
   transition: transform 0.3s ease;
 }
 

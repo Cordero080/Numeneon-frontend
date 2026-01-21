@@ -31,6 +31,8 @@
   z-index: 2;
   width: 100%;
   overflow: visible; /* Prevent inner scrollbar */
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   // Auth pages (login/signup) and landing - no sidebar offset
   &:has(.login-container),
@@ -44,11 +46,11 @@
 }
 
 // ============================================
-// RESPONSIVE - Desktop with sidebar
+// RESPONSIVE - Desktop with sidebar (769px+)
 // ============================================
 
 // Desktop: Account for 56px sidebar - center content in remaining space
-@media (min-width: 481px) {
+@media (min-width: 769px) {
   .main-content {
     margin-left: 56px;
     width: calc(100% - 56px);
@@ -64,33 +66,32 @@
   }
 }
 
-// Tablet: Account for 44px sidebar
-@media (min-width: 481px) and (max-width: 768px) {
-  .main-content {
-    margin-left: 44px;
-    width: calc(100% - 44px);
-    padding-top: 55px;
-    padding-bottom: 65px;
+// ============================================
+// RESPONSIVE - Mobile/Tablet (768px and below)
+// Hamburger menu - content is always centered
+// ============================================
 
-    // Auth/landing pages - no sidebar offset
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+    padding-top: 60px;
+    padding-bottom: 20px;
+
+    // Auth/landing pages - no padding
     &:has(.login-container),
     &:has(.signup-container),
     &:has(.landing-container) {
-      margin-left: 0;
-      width: 100%;
       padding-top: 0;
       padding-bottom: 0;
     }
   }
 }
 
-// Mobile: No sidebar, bottom nav instead
 @media (max-width: 480px) {
   .main-content {
-    margin-left: 0;
-    width: 100%;
     padding-top: 50px;
-    padding-bottom: 60px;
+    padding-bottom: 15px;
 
     // Auth/landing pages - no padding
     &:has(.login-container),

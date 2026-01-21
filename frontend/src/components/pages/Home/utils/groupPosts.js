@@ -1,54 +1,67 @@
 /**
- * Groups posts by USER ONLY for Timeline River layout
- * All posts from the same user go into ONE row (carousel navigates between them)
- * Posts are capped at MAX_POSTS_PER_TYPE for carousel performance
- * @param {Array} posts - Flat array of posts
- * @param {Object} options - Configuration options
- * @param {number} options.maxPostsPerType - Max posts per type (default: 12)
- * @returns {Object} Structure: { orderId: { user, thoughts[], media[], milestones[], mostRecentDate } }
+ * Utility functions for grouping posts by user for the Timeline River layout.
+ * Used by TimelineRiverFeed.jsx to organize posts into user rows.
  */
 
-// Maximum posts per type in carousel (prevents excessive clicking)
-const MAX_POSTS_PER_TYPE = 12;
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPER FUNCTIONS (defined once, not recreated per iteration)
+// ─────────────────────────────────────────────────────────────────────────────
 
-export const groupPostsByUserAndDay = (posts, options = {}) => {
-  const maxPosts = options.maxPostsPerType ?? MAX_POSTS_PER_TYPE;
-  const grouped = {}; // 🔵 Keyed by userId only (not date!)
+/**
+ * Get display name from author object or string
+ */
+const getDisplayName = (author) => {
+  if (!author) return "Unknown";
+  if (typeof author === "string") return author;
+  return author.username || "Unknown";
+};
+
+/**
+ * Generate avatar initials from author
+ */
+const getInitials = (author) => {
+  if (!author) return "??";
+  if (typeof author === "string") return author.slice(0, 2).toUpperCase();
+  if (author.first_name && author.last_name) {
+    return `${author.first_name[0]}${author.last_name[0]}`.toUpperCase();
+  }
+  if (author.first_name) return author.first_name.slice(0, 2).toUpperCase();
+  return author.username?.slice(0, 2).toUpperCase() || "??";
+};
+
+/**
+ * Parse post timestamp to milliseconds
+ */
+const getPostTime = (post) =>
+  new Date(post.createdAt || post.created_at || 0).getTime();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN FUNCTIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Groups posts by user for Timeline River layout.
+ * Each user gets ONE bucket with three category arrays (thoughts, media, milestones).
+ *
+ * @param {Array} posts - Flat array of posts from backend
+ * @returns {Object} { orderId: { user, thoughts[], media[], milestones[], mostRecentTimestamp } }
+ */
+export const groupPostsByUserAndDay = (posts) => {
+  const grouped = {};
 
   posts.forEach((post) => {
-    // Handle author as object (backend) or string (mock)
+    // Extract author info (handles both object and string formats)
     const authorObj = typeof post.author === "object" ? post.author : null;
-    const orderId = post.userId || (authorObj ? authorObj.id : post.author);
-
-    // Get display name - always use username
-    const getDisplayName = (author) => {
-      if (!author) return "Unknown";
-      if (typeof author === "string") return author;
-      return author.username || "Unknown";
-    };
-
-    // Generate avatar initials from name
-    const getInitials = (author) => {
-      if (!author) return "??";
-      if (typeof author === "string") return author.slice(0, 2).toUpperCase();
-      if (author.first_name && author.last_name) {
-        return `${author.first_name[0]}${author.last_name[0]}`.toUpperCase();
-      }
-      if (author.first_name) {
-        return author.first_name.slice(0, 2).toUpperCase();
-      }
-      return author.username ? author.username.slice(0, 2).toUpperCase() : "??";
-    };
-
-    const authorName = getDisplayName(authorObj || post.author);
-    const postDate = new Date(post.createdAt || post.created_at || Date.now());
+    const orderId = post.userId || authorObj?.id || post.author;
+    const postTime = getPostTime(post);
+    const type = post.type || "thoughts";
 
     // Create user bucket if it doesn't exist
     if (!grouped[orderId]) {
       grouped[orderId] = {
         user: {
           id: orderId,
-          name: authorName,
+          name: getDisplayName(authorObj || post.author),
           username:
             authorObj?.username ||
             (typeof post.author === "string" ? post.author : null),
@@ -59,24 +72,18 @@ export const groupPostsByUserAndDay = (posts, options = {}) => {
         thoughts: [],
         media: [],
         milestones: [],
-        mostRecentDate: postDate, // Track most recent post date
-        totalCounts: { thoughts: 0, media: 0, milestones: 0 }, // Track total before cap
+        mostRecentTimestamp: postTime,
       };
     }
 
-    // Update most recent date if this post is newer
-    if (postDate > grouped[orderId].mostRecentDate) {
-      grouped[orderId].mostRecentDate = postDate;
+    // Update most recent timestamp if this post is newer
+    if (postTime > grouped[orderId].mostRecentTimestamp) {
+      grouped[orderId].mostRecentTimestamp = postTime;
     }
 
-    // Add post to correct category (thoughts/media/milestones)
-    // Cap at maxPosts per type for carousel performance
-    const type = post.type || "thoughts";
+    // Add post to correct category
     if (grouped[orderId][type]) {
-      grouped[orderId].totalCounts[type]++; // Track total count
-      if (grouped[orderId][type].length < maxPosts) {
-        grouped[orderId][type].push(post);
-      }
+      grouped[orderId][type].push(post);
     }
   });
 
@@ -84,46 +91,19 @@ export const groupPostsByUserAndDay = (posts, options = {}) => {
 };
 
 /**
- * Converts grouped posts into sorted array for rendering
- * Sorts by most recent post timestamp - whoever posted most recently appears first
+ * Converts grouped posts into sorted array for rendering.
+ * Sorts by most recent post timestamp (newest first).
+ *
  * @param {Object} grouped - Result from groupPostsByUserAndDay
- * @returns {Array} Sorted array of { orderId, data, mostRecentTimestamp }
+ * @returns {Array} [{ date, orderId, data }] sorted newest first
  */
 export const sortGroupedPosts = (grouped) => {
-  const rows = [];
-
-  Object.keys(grouped).forEach((orderId) => {
-    const userData = grouped[orderId];
-
-    // Find the most recent post timestamp across all types
-    const allPosts = [
-      ...userData.thoughts,
-      ...userData.media,
-      ...userData.milestones,
-    ];
-
-    const mostRecentTimestamp = allPosts.reduce((latest, post) => {
-      const postTime = new Date(
-        post.createdAt || post.created_at || 0
-      ).getTime();
-      return postTime > latest ? postTime : latest;
-    }, 0);
-
-    // Format the most recent date for display
-    const mostRecentDate = new Date(mostRecentTimestamp)
-      .toISOString()
-      .split("T")[0];
-
-    rows.push({
-      date: mostRecentDate, // Show most recent post date
+  return Object.entries(grouped)
+    .map(([orderId, userData]) => ({
+      date: new Date(userData.mostRecentTimestamp).toISOString().split("T")[0],
       orderId,
       data: userData,
-      mostRecentTimestamp,
-    });
-  });
-
-  // Sort by most recent timestamp (newest first)
-  rows.sort((a, b) => b.mostRecentTimestamp - a.mostRecentTimestamp);
-
-  return rows;
+      mostRecentTimestamp: userData.mostRecentTimestamp,
+    }))
+    .sort((a, b) => b.mostRecentTimestamp - a.mostRecentTimestamp);
 };

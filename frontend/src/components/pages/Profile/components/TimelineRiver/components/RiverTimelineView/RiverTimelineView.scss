@@ -13,6 +13,9 @@
   transition: all 0.3s ease;
   position: relative;
   overflow: visible;
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box;
   /* Cyberpunk cut corners - matching feed posts */
   clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
   /* Thick left border accent for 3D depth */
@@ -94,6 +97,42 @@
 .achievement-card {
   --accent-color: rgba(255, 215, 0, 0.5);
   --accent-glow: rgba(255, 215, 0, 0.2);
+}
+
+/* ============================================
+   CARD AVATAR HEADER
+   ============================================ */
+
+.river-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.river-avatar {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border-default);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  svg {
+    color: var(--cyan);
+  }
+}
+
+.river-author {
+  font-family: var(--font-title);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-primary);
 }
 
 /* ============================================

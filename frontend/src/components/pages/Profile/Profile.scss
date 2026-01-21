@@ -1228,10 +1228,54 @@ html:not([data-theme="light"]) {
   border-top: 1px solid var(--border-subtle);
   padding: var(--space-md) var(--space-xl);
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
   gap: var(--space-md);
   flex-shrink: 0;
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Post Actions Row */
+.full-page-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: var(--space-sm);
+}
+
+.reply-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  
+  &:hover {
+    transform: scale(1.15);
+    filter: drop-shadow(0 0 8px currentColor);
+    color: rgba(255, 255, 255, 0.9);
+  }
+  
+  &.is-liked {
+    color: var(--heart-color, #c9a8ff);
+    
+    svg {
+      fill: var(--heart-color, #c9a8ff);
+      stroke: var(--heart-color, #c9a8ff);
+      filter: drop-shadow(0 0 6px var(--heart-color, #c9a8ff));
+    }
+  }
+  
+  svg {
+    width: 18px;
+    height: 18px;
+  }
 }
 
 .full-page-composer-fixed .comment-input-wrapper {

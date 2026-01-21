@@ -1,100 +1,5 @@
-// =============================================================================
-// 🔵 PABLO - UI Architect
-// Home.jsx - Main home feed page with composer, stories, and timeline
-// =============================================================================
-//
-// TODO: Build the main home feed page
-//
-// LAYOUT:
-// ┌────────────────────────────────────────────────────────────────────────┐
-// │  ┌─────────────────────────────────────────────────────────────────┐  │
-// │  │ [avatar] [Share something…_______________] [expand btn]         │  │
-// │  └─────────────────────────────────────────────────────────────────┘  │
-// │                                                                        │
-// │  ┌─────────────────────────────────────────────────────────────────┐  │
-// │  │ [Your Story] [Friend1] [Friend2] [Friend3] → (scrollable)       │  │
-// │  └─────────────────────────────────────────────────────────────────┘  │
-// │                                                                        │
-// │  ┌─────────────────────────────────────────────────────────────────┐  │
-// │  │                    TimelineRiverFeed                            │  │
-// │  │                    (posts from context)                         │  │
-// │  └─────────────────────────────────────────────────────────────────┘  │
-// │                                                                        │
-// │  [ComposerModal - shown when showComposer is true]                    │
-// └────────────────────────────────────────────────────────────────────────┘
-//
-// IMPORTS:
-// - useState from react
-// - TimelineRiverFeed from './components/TimelineRiverFeed'
-// - ComposerModal from '@Profile/components/ComposerModal/ComposerModal'
-// - usePosts, useFriends from '@contexts'
-// - Icons: UserIcon, PostTriangleIcon, MaximizeIcon from '@assets/icons'
-// - Home.scss (PROVIDED)
-//
-// FROM CONTEXT:
-// - usePosts(): { posts, createPost, deletePost, updatePost }
-// - useFriends(): { friends }
-//
-// STATE VARIABLES:
-// - showComposer: Boolean - controls if ComposerModal is open
-// - composerType: 'thought' | 'media' | 'milestone' - type of post being created
-// - composerText: String - text in the inline composer textarea
-// - isPosting: Boolean - loading state while creating post
-// - activeCommentPostId: Number|null - which post has comment box open
-// - commentText: String - what user is typing in comment box
-//
-// HELPER FUNCTIONS:
-// - getInitials(firstName, lastName, username): Returns "AB" from "Arthur Bernier"
-//   - If firstName + lastName exist: return first letters
-//   - If only firstName: return first 2 chars
-//   - Fallback: return first 2 chars of username
-//
-// HANDLERS:
-// - handleInlineKeyDown(e): 
-//   - If Cmd/Ctrl + Enter: prevent default, call handleInlinePost
-//
-// - handleInlinePost():
-//   - If no text or already posting, return early
-//   - Set isPosting true
-//   - Call createPost({ content, type: 'thoughts' })
-//   - Set isPosting false
-//   - If success: clear composerText
-//   - If error: show alert
-//
-// - handleStoryMouseMove(e): 3D tilt effect on hover
-//   - Get card element and its bounding rect
-//   - Calculate mouse position relative to card
-//   - Calculate rotation based on distance from center (max ±1 degree)
-//   - Apply transform: translateY + rotateX + rotateY + scale
-//
-// - handleStoryMouseLeave(e): Reset card transform
-//
-// DERIVED DATA:
-// - stories: Array built from friends
-//   - First item: { id: 0, name: "Your Story", hasStory: false, isYours: true }
-//   - Rest: map friends to { id, name: username, avatar: initials, hasStory: true }
-//
-// JSX STRUCTURE:
-// 1. div.feed-container
-//    2. div.composer-section
-//       - div.composer-avatar with UserIcon
-//       - div.composer-input-wrapper
-//         - textarea.composer-input (controlled by composerText)
-//         - PostTriangleIcon (shown when text exists, not posting)
-//       - button.composer-expand-btn with MaximizeIcon (opens modal)
-//    
-//    3. div.stories-section
-//       - div.stories-scroll
-//         - Map stories → div.story-card (with mouse handlers for 3D effect)
-//           - div.story-avatar (with/without has-story class)
-//             - If isYours: div.add-story-icon with "+"
-//             - Else: UserIcon
-//           - div.story-name
-//    
-//    4. TimelineRiverFeed component (pass all props for posts and comments)
-//    
-//    5. ComposerModal component (pass showComposer state and setters)
-// =============================================================================
+// 🔵 PABLO - UI/Styling | 🟢 COLIN + 🟠 TITO - API Logic
+// Home.jsx - Timeline river feed page
 
 import { useState } from 'react';
 import './Home.scss';
@@ -104,50 +9,108 @@ import { usePosts, useFriends } from '@contexts';
 import { UserIcon, PostTriangleIcon, MaximizeIcon } from '@assets/icons';
 
 function Home() {
+  // Get real data from contexts
   const { posts, createPost, deletePost, updatePost } = usePosts();
   const { friends } = useFriends();
-  
+    
+   // 🔵 STATE 1: Controls if the big composer modal is open/closed
   const [showComposer, setShowComposer] = useState(false);
-  const [composerType, setComposerType] = useState('thought');
+  const [composerType, setComposerType] = useState('thought'); // 'thought', 'media', or 'milestone'
+
+  // STATE: Inline composer text
   const [composerText, setComposerText] = useState('');
   const [isPosting, setIsPosting] = useState(false);
-  const [activeCommentPostId, setActiveCommentPostId] = useState(null);
-  const [commentText, setCommentText] = useState('');
-  
-  const getInitials = (firstName, lastName, username) => {
-    // TODO: Return initials from name or username
+
+  // HANDLER: Submit from inline composer (Cmd/Ctrl + Enter)
+  const handleInlineKeyDown = async (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault();
+      handleInlinePost();
+    }
   };
-  
-  const handleInlineKeyDown = (e) => {
-    // TODO: If Cmd/Ctrl + Enter, prevent default and call handleInlinePost
-  };
-  
+
+  // HANDLER: Post from inline composer
   const handleInlinePost = async () => {
-    // TODO: If no text or isPosting, return early
-    // TODO: Set isPosting true
-    // TODO: Call createPost({ content: composerText, type: 'thoughts' })
-    // TODO: Set isPosting false
-    // TODO: If success, clear composerText; else show alert
+    if (!composerText.trim() || isPosting) return;
+    
+    setIsPosting(true);
+    const result = await createPost({ content: composerText.trim(), type: 'thoughts' });
+    setIsPosting(false);
+    
+    if (result.success) {
+      setComposerText('');
+    } else {
+      alert(result.error || 'Failed to create post');
+    }
   };
-  
+
+    // STATE 2: Tracks WHICH post has its comment box open (null = none open)
+    // (Which post's comment box is open?)
+  const [activeCommentPostId, setActiveCommentPostId] = useState(null);
+  //↑ variable (number or null)   ↑ setter function   ↑ starts with none open
+  // Which post user is commenting on
+
+  // STATE 3: Stores what user is typing in comment box
+   // (What's in the comment textarea?)
+  const [commentText, setCommentText] = useState('');
+    // ↑ variable (string)   ↑ setter function   ↑ starts empty
+
+  // HANDLER 1: Creates 3D tilt effect when mouse moves over story card
   const handleStoryMouseMove = (e) => {
-    // TODO: 3D tilt effect on story cards
-    // Get card bounds, calculate mouse position relative to center
-    // Apply transform with rotateX, rotateY, translateY, scale
-  };
+    const card = e.currentTarget;
+    // Get the story card element that mouse is over
+    const rect = card.getBoundingClientRect();
+    // Get card's position/size on screen
+
+    // Calculate mouse position RELATIVE to card (not whole screen)
+    const x = e.clientX - rect.left;// Mouse Y position relative to card
+    // Mouse X position from LEFT edge of browser window
+
+    const y = e.clientY - rect.top; // Mouse Y position relative to card
+    // Mouse Y position from TOP edge of browser window
   
+    // Find center of card- calculate how far mouse is from center
+    const centerX = rect.width / 2; // Find center of card
+    const centerY = rect.height / 2;
+    
+    const rotateX = ((y - centerY) / centerY) * -1; // Max 1 degree
+                                                    // Vertical tilt
+     // Calculate rotation based on distance from center                                          
+    // If mouse is at center → no rotation (0deg)
+    // If mouse is at edge → max rotation (±1deg)
+     const rotateY = ((x - centerX) / centerX) * 1; // Max 1 degree
+                                                   // Horizontal tilt
+    // Apply 3D transform to card (lift + tilt)
+    card.style.transform = `translateY(-4px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+  };
+   // HANDLER 2: Reset card when mouse leaves
   const handleStoryMouseLeave = (e) => {
-    // TODO: Reset card transform to initial state
-  };
+    // Remove transform → card returns to normal
+    e.currentTarget.style.transform = ''; // Reset animation
   
-  // TODO: Build stories array from friends
+  };
+
+  // Helper to get initials
+  const getInitials = (firstName, lastName, username) => {
+    if (firstName && lastName) return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    if (firstName) return firstName.slice(0, 2).toUpperCase();
+    return username.slice(0, 2).toUpperCase();
+  };
+
+  // Build stories from friends (real data) - always use username
   const stories = [
-    { id: 0, name: 'Your Story', hasStory: false, isYours: true },
-    // TODO: Map friends to story objects
+    { id: 0, name: "Your Story", avatar: "YS", hasStory: false, isYours: true },
+    ...friends.map(friend => ({
+      id: friend.id,
+      name: friend.username,
+      avatar: getInitials(friend.first_name, friend.last_name, friend.username),
+      hasStory: true,
+    }))
   ];
 
   return (
     <div className="feed-container">
+       {/* 🟢 Section 1: Composer (click to open modal) */}
       <div className="composer-section">
         <div className="composer-avatar">
           <UserIcon size={24} />
@@ -159,33 +122,46 @@ function Home() {
             value={composerText}
             onChange={(e) => setComposerText(e.target.value)}
             onKeyDown={handleInlineKeyDown}
+            rows={1}
+            disabled={isPosting}
           />
-          {composerText && !isPosting && (
-            <PostTriangleIcon size={20} onClick={handleInlinePost} />
+          {/* Post icon - shows when there's text */}
+          {composerText.trim() && !isPosting && (
+            <span 
+              className="composer-post-icon"
+              onClick={handleInlinePost}
+              title="Post"
+            >
+              <PostTriangleIcon size={16} />
+            </span>
           )}
         </div>
         <button 
           className="composer-expand-btn"
           onClick={() => setShowComposer(true)}
+          title="More options"
         >
-          <MaximizeIcon size={20} />
+          <MaximizeIcon size={14} strokeWidth="2.5" />
         </button>
       </div>
 
+       {/* 🟢 Section 2: Stories carousel */}
       <div className="stories-section">
         <div className="stories-scroll">
-          {stories.map((story) => (
+          {stories.map(story => ( // 🔵 Loop through stories array
             <div 
               key={story.id} 
-              className="story-card"
+              className={`story-card ${story.isYours ? 'your-story' : ''}`}
               onMouseMove={handleStoryMouseMove}
               onMouseLeave={handleStoryMouseLeave}
             >
               <div className={`story-avatar ${story.hasStory ? 'has-story' : ''}`}>
                 {story.isYours ? (
+                  // Your Story - show + icon
                   <div className="add-story-icon">+</div>
                 ) : (
-                  <UserIcon size={20} />
+                  // Other stories - show person icon
+                  <UserIcon size={28} />
                 )}
               </div>
               <div className="story-name">{story.name}</div>
@@ -194,17 +170,31 @@ function Home() {
         </div>
       </div>
 
+       {/* 🟢 Section 3: Timeline River Feed (the main posts) */}
       <TimelineRiverFeed
-        posts={posts}
+      // PROP 1: Pass the entire posts array (data)
+        posts={posts}// ⚠️ CRITICAL: Passes posts data to child component
+      //↑ name of prop   ↑ value (the array)
+
+      // PROP 2: Pass state variable (so child knows which comment is open)
         activeCommentPostId={activeCommentPostId}
+
+        // PROP 3: Pass state SETTER (so child can CHANGE parent's state!)
         setActiveCommentPostId={setActiveCommentPostId}
+
+        // PROP 4: Pass state variable (comment text)
         commentText={commentText}
+        //          ↑ current value
         setCommentText={setCommentText}
+         // PROP 5: Pass state SETTER (so child can update text)
+        
+        // PROP 6 & 7: Delete and update actions
         onDeletePost={deletePost}
         onUpdatePost={updatePost}
       />
 
-      <ComposerModal
+    {/* 🟢 Section 4: Composer Modal (shared with Profile) */}
+      <ComposerModal 
         showComposer={showComposer}
         setShowComposer={setShowComposer}
         composerType={composerType}

@@ -25,9 +25,8 @@
 /* River Column Labels */
 
 .river-labels {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-xl);
+  display: flex;
+  gap: var(--space-sm);
   margin-bottom: 30px;
   position: sticky;
   top: 60px;
@@ -35,136 +34,228 @@
   padding: 20px 0;
   z-index: 5;
   box-sizing: border-box;
+  align-items: center;
+  width: 100%;
 }
 
+/* All tabs same size */
 .river-label {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
-  font-family: var(--font-title);
-  font-size: 13px;
-  font-weight: 400;
-  font-style: normal;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: var(--space-md);
-  border-radius: 12px;
+  padding: 8px 12px;
   background: var(--bg-glass);
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: var(--font-title);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: inherit;
   transition: all 0.3s ease;
-  opacity: 0.6; /* Dimmed by default */
-  position: relative; /* For count positioning */
 }
 
-/* Most recent type - brighter label */
-.river-label.river-label--recent {
+.river-label-count {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.river-label-collapse-icon {
+  font-size: 16px;
+  font-weight: bold;
+  opacity: 0.5;
+  margin-left: auto;
+}
+
+/* Collapsed tab - same size, just greyed out */
+.river-label--collapsed {
+  opacity: 0.35;
+  
+  &:hover {
+    opacity: 0.6;
+  }
+}
+
+/* Not most recent - slightly dimmed (higher specificity) */
+.river-labels .river-label.river-label--not-recent:not(.river-label--collapsed) {
+  opacity: 0.6;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+/* Type-specific colors */
+.river-label--thoughts {
+  border-color: rgba(77, 171, 247, 0.4);
+  svg { color: rgba(77, 171, 247, 1); }
+  span { color: rgba(77, 171, 247, 1); }
+}
+
+.river-label--media {
+  border-color: rgba(233, 78, 200, 0.4);
+  svg { color: rgba(233, 78, 200, 1); }
+  span { color: rgba(233, 78, 200, 1); }
+}
+
+.river-label--milestones {
+  border-color: rgba(255, 215, 0, 0.4);
+  svg { color: rgba(255, 215, 0, 1); }
+  span { color: rgba(255, 215, 0, 1); }
+}
+
+/* ============================================
+   RIVER STREAMS - COLUMN LAYOUT
+   ============================================ */
+
+/* ============================================
+   COLLAPSE/EXPAND FUNCTIONALITY
+   Clickable labels and pill buttons for collapsing cards
+   ============================================ */
+
+/* Clickable labels - collapse on click */
+.river-label--clickable {
+  cursor: pointer;
+  position: relative;
+  padding-right: 36px; /* Space for collapse icon */
+  
+  &:hover:not(.river-label--not-recent) {
+    opacity: 1;
+  }
+}
+
+/* Collapsed state - greyed out like mobile non-selected tabs */
+.river-labels .river-label.river-label--collapsed {
+  opacity: 0.35 !important;
+  padding-right: var(--space-md); /* No need for collapse icon space */
+  
+  &:hover {
+    opacity: 0.6 !important;
+  }
+}
+
+/* Collapse icon (minus sign) - positioned in the corner */
+.river-label-collapse-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  font-weight: bold;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.river-label--clickable:hover .river-label-collapse-icon {
   opacity: 1;
 }
 
-/* Thoughts - Blue outline */
-.left-label {
+/* Collapsed decks container */
+.collapsed-decks-container {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  width: 100%;
+  margin-bottom: var(--space-sm);
+}
+
+/* Pill buttons for collapsed labels */
+.river-label-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-default);
+  cursor: pointer;
+  font-family: var(--font-title);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: all 0.2s ease;
+  height: 32px;
+  
+  &:hover {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+/* Pill count badge */
+.pill-count {
+  font-size: 10px;
+  opacity: 0.8;
+  margin-left: 2px;
+}
+
+/* Thoughts pill - Blue */
+.river-label-pill:has(svg[class*="message"]),
+.river-label-pill:first-child:not(:has(svg[class*="image"])):not(:has(svg[class*="milestone"])) {
   color: rgba(77, 171, 247, 1);
-  border: 1px solid rgba(77, 171, 247, 0.4);
-  box-shadow: 0 0 8px rgba(77, 171, 247, 0.15),
-              inset 0 0 12px rgba(77, 171, 247, 0.05);
-  text-shadow: 0 0 4px rgba(77, 171, 247, 0.3);
+  border-color: rgba(77, 171, 247, 0.4);
+  
+  &:hover {
+    border-color: rgba(77, 171, 247, 0.8);
+    box-shadow: 0 0 8px rgba(77, 171, 247, 0.3);
+  }
 }
 
-.left-label svg {
-  color: rgba(77, 171, 247, 1);
-  filter: drop-shadow(0 0 4px rgba(77, 171, 247, 0.4));
-}
-
-.left-label.river-label--recent {
-  border: 1px solid rgba(77, 171, 247, 0.8);
-  box-shadow: 0 0 12px rgba(77, 171, 247, 0.4),
-              0 0 20px rgba(77, 171, 247, 0.2),
-              inset 0 0 12px rgba(77, 171, 247, 0.1);
-  text-shadow: 0 0 12px rgba(77, 171, 247, 0.9), 0 0 20px rgba(77, 171, 247, 0.6);
-}
-
-.left-label.river-label--recent svg {
-  filter: drop-shadow(0 0 6px rgba(77, 171, 247, 0.8));
-}
-
-/* Media - Magenta outline */
-.center-label {
+/* Media pill - Magenta */
+.river-label-pill:has(svg[class*="image"]) {
   color: rgba(233, 78, 200, 1);
-  border: 1px solid rgba(233, 78, 200, 0.4);
-  box-shadow: 0 0 8px rgba(233, 78, 200, 0.15),
-              inset 0 0 12px rgba(233, 78, 200, 0.05);
-  text-shadow: 0 0 4px rgba(233, 78, 200, 0.3);
+  border-color: rgba(233, 78, 200, 0.4);
+  
+  &:hover {
+    border-color: rgba(233, 78, 200, 0.8);
+    box-shadow: 0 0 8px rgba(233, 78, 200, 0.3);
+  }
 }
 
-.center-label svg {
-  color: rgba(233, 78, 200, 1);
-  filter: drop-shadow(0 0 4px rgba(233, 78, 200, 0.4));
-}
-
-.center-label.river-label--recent {
-  border: 1px solid rgba(233, 78, 200, 0.8);
-  box-shadow: 0 0 12px rgba(233, 78, 200, 0.4),
-              0 0 20px rgba(233, 78, 200, 0.2),
-              inset 0 0 12px rgba(233, 78, 200, 0.1);
-  text-shadow: 0 0 12px rgba(233, 78, 200, 0.9), 0 0 20px rgba(233, 78, 200, 0.6);
-}
-
-.center-label.river-label--recent svg {
-  filter: drop-shadow(0 0 6px rgba(233, 78, 200, 0.8));
-}
-
-/* Milestones - Gold outline */
-.right-label {
+/* Milestones pill - Gold */
+.river-label-pill:has(svg[class*="milestone"]) {
   color: rgba(255, 215, 0, 1);
-  border: 1px solid rgba(255, 215, 0, 0.4);
-  box-shadow: 0 0 8px rgba(255, 215, 0, 0.15),
-              inset 0 0 12px rgba(255, 215, 0, 0.05);
-  text-shadow: 0 0 4px rgba(255, 215, 0, 0.3);
+  border-color: rgba(255, 215, 0, 0.4);
+  
+  &:hover {
+    border-color: rgba(255, 215, 0, 0.8);
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+  }
 }
 
-.right-label svg {
-  color: rgba(255, 215, 0, 1);
-  filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.4));
+/* Dynamic flexbox layouts for expanded columns - columns fill available space */
+.river-streams--expanded-3,
+.river-streams--expanded-2,
+.river-streams--expanded-1 {
+  /* All columns use flex: 1 to fill available space */
 }
 
-.right-label.river-label--recent {
-  border: 1px solid rgba(255, 215, 0, 0.8);
-  box-shadow: 0 0 12px rgba(255, 215, 0, 0.4),
-              0 0 20px rgba(255, 215, 0, 0.2),
-              inset 0 0 12px rgba(255, 215, 0, 0.1);
-  text-shadow: 0 0 12px rgba(255, 215, 0, 0.9), 0 0 20px rgba(255, 215, 0, 0.6);
+.river-streams--expanded-0 {
+  display: none !important;
 }
 
-.right-label.river-label--recent svg {
-  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.8));
+/* Labels don't need grid adjustments with flexbox */
+
+/* Override post width constraints when expanded */
+.river-streams--expanded-2 .river-card,
+.river-streams--expanded-1 .river-card {
+  max-width: 100% !important;
 }
 
-/* Label count badge - shows total posts per category */
-.river-label-count {
-  font-size: 12px;
-  font-weight: 500;
-  margin-left: var(--space-sm);
-  display: inline-block;
-}
-
-.left-label .river-label-count {
-  color: rgba(77, 171, 247, 1);
-}
-
-.center-label .river-label-count {
-  color: rgba(233, 78, 200, 1);
-}
-
-.right-label .river-label-count {
-  color: rgba(255, 215, 0, 1);
+.river-streams--expanded-2 .post--single,
+.river-streams--expanded-1 .post--single,
+.river-streams--expanded-2 .post--compact,
+.river-streams--expanded-1 .post--compact {
+  max-width: 100% !important;
 }
 
 /* River Streams Container */
 
 .river-streams {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
   gap: var(--space-xl);
   position: relative;
   box-sizing: border-box;
@@ -199,10 +290,15 @@
   position: relative;
   min-width: 0;
   box-sizing: border-box;
+  flex: 1 1 0;
+  width: 100%;
+  align-items: stretch; /* Ensure children fill full width */
 }
 
 /* Import global smart-deck styles for carousel navigation */
 @import '../../../Home/components/TimelineRiverRow/styles/_smart-deck';
+@import '../../../Home/components/TimelineRiverRow/styles/_thread';
+@import '../../../Home/components/TimelineRiverRow/styles/_composer';
 
 /* Smart deck navigation styles moved to RiverSmartDeck/RiverSmartDeck.scss */
 
