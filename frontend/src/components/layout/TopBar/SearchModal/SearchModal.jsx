@@ -1,26 +1,5 @@
-// =============================================================================
 // 🔵 PABLO - UI Architect
 // SearchModal.jsx - Global search modal for users and posts
-// =============================================================================
-//
-// ┌────────────────────────────────────────────────────────────────────────────┐
-// │ [🎯] Search users or posts..._________________________ [×] [✕]            │
-// ├────────────────────────────────────────────────────────────────────────────┤
-// │  [All]  [Users (3)]  [Posts (5)]                                          │
-// ├────────────────────────────────────────────────────────────────────────────┤
-// │  USERS                                                                     │
-// │  ┌──────────────────────────────────────────────────────────────────────┐ │
-// │  │ [AB] Arthur Bernier  @arthurb                              [💬]     │ │
-// │  │ [NP] Natalia P       @nataliap                             [💬]     │ │
-// │  └──────────────────────────────────────────────────────────────────────┘ │
-// │  POSTS                                                                     │
-// │  ┌──────────────────────────────────────────────────────────────────────┐ │
-// │  │ [AB] @arthurb                                                        │ │
-// │  │      Just built something cool with React...                         │ │
-// │  └──────────────────────────────────────────────────────────────────────┘ │
-// └────────────────────────────────────────────────────────────────────────────┘
-//
-// =============================================================================
 
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -28,43 +7,48 @@ import { usePosts, useFriends, useMessages } from '@contexts';
 import { TargetReticleIcon, CloseIcon, MessageBubbleIcon } from '@assets/icons';
 import './SearchModal.scss';
 
-// HELPER: Get initials from name (e.g., "Arthur Bernier" → "AB")
+// Helper to get initials from name
 const getInitials = (name) => {
-  // TODO: Return first 2 letters as initials
-  // Handle: null, single word names, full names
+  if (!name) return '??';
+  const parts = name.split(' ');
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
 };
 
 function SearchModal({ isOpen, onClose }) {
-  // ─────────────────────────────────────────────────────────────────────────
-  // STATE & REFS
-  // ─────────────────────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'users' | 'posts'
+  const [activeTab, setActiveTab] = useState('all'); // 'all', 'users', 'posts'
   const inputRef = useRef(null);
   const navigate = useNavigate();
   
-  // ─────────────────────────────────────────────────────────────────────────
-  // CONTEXT
-  // ─────────────────────────────────────────────────────────────────────────
   const { posts } = usePosts();
   const { friends } = useFriends();
   const { openMessages } = useMessages();
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // EFFECTS
-  // ─────────────────────────────────────────────────────────────────────────
-  
-  // Auto-focus input when modal opens
+  // Focus input when modal opens
   useEffect(() => {
     if (isOpen && inputRef.current) {
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isOpen]);
   
-  // Escape key handler
+  // Clear search when modal closes
+  const handleClose = () => {
+    setSearchQuery('');
+    setActiveTab('all');
+    onClose();
+  };
+
+  // Handle escape key
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // TODO: If Escape, clear search and close modal
+      if (e.key === 'Escape') {
+        setSearchQuery('');
+        setActiveTab('all');
+        onClose();
+      }
     };
     if (isOpen) {
       document.addEventListener('keydown', handleKeyDown);
@@ -72,76 +56,79 @@ function SearchModal({ isOpen, onClose }) {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // HANDLERS
-  // ─────────────────────────────────────────────────────────────────────────
-  const handleClose = () => {
-    setSearchQuery('');
-    setActiveTab('all');
-    onClose();
-  };
+  if (!isOpen) return null;
 
-  const handleUserClick = (user) => {
-    // TODO: Navigate to /profile/:username
-    // TODO: Call handleClose()
-  };
-
-  const handleMessageUser = (e, user) => {
-    // TODO: e.stopPropagation() to prevent triggering handleUserClick
-    // TODO: Call openMessages with user data
-    // TODO: Call handleClose()
-  };
-
-  const handlePostClick = (post) => {
-    // TODO: Navigate to post author's profile
-    // TODO: Call handleClose()
-  };
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // COMPUTED VALUES
-  // ─────────────────────────────────────────────────────────────────────────
-  
-  // Build searchable users list from posts authors + friends
+  // Get unique users from posts (post authors)
   const postAuthors = posts.reduce((acc, post) => {
-    // TODO: Extract unique authors from posts
-    // Each author: { id, username, displayName, first_name, last_name }
+    if (post.author && !acc.find(u => u.username === post.author.username)) {
+      acc.push({
+        id: post.author.id,
+        username: post.author.username,
+        displayName: post.author.first_name && post.author.last_name 
+          ? `${post.author.first_name} ${post.author.last_name}`
+          : post.author.username,
+        first_name: post.author.first_name,
+        last_name: post.author.last_name,
+      });
+    }
     return acc;
   }, []);
 
+  // Combine friends and post authors for searchable users
   const allUsers = [...friends, ...postAuthors].reduce((acc, user) => {
-    // TODO: Deduplicate by username
+    if (!acc.find(u => u.username === user.username)) {
+      acc.push(user);
+    }
     return acc;
   }, []);
 
   // Filter based on search query
   const query = searchQuery.toLowerCase().trim();
   
-  const filteredUsers = query ? allUsers.filter(user => {
-    // TODO: Match against username, first_name, last_name, displayName
-    return false;
-  }) : [];
+  const filteredUsers = query ? allUsers.filter(user => 
+    user.username?.toLowerCase().includes(query) ||
+    user.first_name?.toLowerCase().includes(query) ||
+    user.last_name?.toLowerCase().includes(query) ||
+    user.displayName?.toLowerCase().includes(query)
+  ) : [];
 
-  const filteredPosts = query ? posts.filter(post => {
-    // TODO: Match against content, author username
-    return false;
-  }).slice(0, 10) : []; // Limit to 10 posts
+  const filteredPosts = query ? posts.filter(post =>
+    post.content?.toLowerCase().includes(query) ||
+    post.author?.username?.toLowerCase().includes(query)
+  ).slice(0, 10) : []; // Limit to 10 posts
+
+  // Handle clicking on a user result
+  const handleUserClick = (user) => {
+    navigate(`/profile/${user.username}`);
+    handleClose();
+  };
+
+  // Handle clicking message button on user result
+  const handleMessageUser = (e, user) => {
+    e.stopPropagation(); // Prevent triggering user click
+    openMessages({
+      id: user.id,
+      username: user.username,
+      displayName: user.displayName || `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username,
+    });
+    handleClose();
+  };
+
+  // Handle clicking on a post result
+  const handlePostClick = (post) => {
+    // Navigate to author's profile (could expand to scroll to specific post later)
+    navigate(`/profile/${post.author.username}`);
+    handleClose();
+  };
 
   const hasResults = filteredUsers.length > 0 || filteredPosts.length > 0;
   const showUsers = activeTab === 'all' || activeTab === 'users';
   const showPosts = activeTab === 'all' || activeTab === 'posts';
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // RENDER
-  // ─────────────────────────────────────────────────────────────────────────
-  if (!isOpen) return null;
-
   return (
     <div className="search-modal-overlay" onClick={handleClose}>
       <div className="search-modal" onClick={(e) => e.stopPropagation()}>
-        
-        {/* ═══════════════════════════════════════════════════════════════════ */}
-        {/* SEARCH HEADER                                                       */}
-        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* Search Header */}
         <div className="search-header">
           <div className="search-input-wrapper">
             <TargetReticleIcon size={20} className="search-icon" />
@@ -168,9 +155,7 @@ function SearchModal({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* ═══════════════════════════════════════════════════════════════════ */}
-        {/* FILTER TABS (only shown when there are results)                     */}
-        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* Filter Tabs */}
         {query && hasResults && (
           <div className="search-tabs">
             <button 
@@ -194,12 +179,8 @@ function SearchModal({ isOpen, onClose }) {
           </div>
         )}
 
-        {/* ═══════════════════════════════════════════════════════════════════ */}
-        {/* SEARCH RESULTS                                                      */}
-        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* Search Results */}
         <div className="search-results">
-          
-          {/* Empty State: No query */}
           {!query && (
             <div className="search-empty">
               <p>Start typing to search...</p>
@@ -207,7 +188,6 @@ function SearchModal({ isOpen, onClose }) {
             </div>
           )}
 
-          {/* Empty State: No results */}
           {query && !hasResults && (
             <div className="search-empty">
               <p>No results for "{searchQuery}"</p>
@@ -215,7 +195,7 @@ function SearchModal({ isOpen, onClose }) {
             </div>
           )}
 
-          {/* Users Results Section */}
+          {/* Users Results */}
           {query && showUsers && filteredUsers.length > 0 && (
             <div className="search-section">
               <h3 className="search-section-title">Users</h3>
@@ -226,11 +206,11 @@ function SearchModal({ isOpen, onClose }) {
                   onClick={() => handleUserClick(user)}
                 >
                   <div className="result-avatar">
-                    <span>{/* TODO: getInitials(user.displayName || user.username) */}</span>
+                    <span>{getInitials(user.displayName || user.username)}</span>
                   </div>
                   <div className="result-info">
                     <span className="result-name">
-                      {/* TODO: Display name or username */}
+                      {user.displayName || `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username}
                     </span>
                     <span className="result-username">@{user.username}</span>
                   </div>
@@ -246,7 +226,7 @@ function SearchModal({ isOpen, onClose }) {
             </div>
           )}
 
-          {/* Posts Results Section */}
+          {/* Posts Results */}
           {query && showPosts && filteredPosts.length > 0 && (
             <div className="search-section">
               <h3 className="search-section-title">Posts</h3>
@@ -257,12 +237,14 @@ function SearchModal({ isOpen, onClose }) {
                   onClick={() => handlePostClick(post)}
                 >
                   <div className="result-avatar small">
-                    <span>{/* TODO: getInitials(post.author?.username) */}</span>
+                    <span>{getInitials(post.author?.username)}</span>
                   </div>
                   <div className="result-info">
                     <span className="result-username">@{post.author?.username}</span>
                     <span className="result-content">
-                      {/* TODO: Truncate content to 80 chars */}
+                      {post.content?.length > 80 
+                        ? post.content.substring(0, 80) + '...' 
+                        : post.content}
                     </span>
                   </div>
                 </div>

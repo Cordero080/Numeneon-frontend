@@ -8,9 +8,11 @@
  * 
  * 🔗 CONNECTION: Used by TimelineRiver.jsx for both friend and own posts
  */
+import { useState, useRef } from 'react';
 import './RiverPostActions.scss';
 import {
   HeartDynamicIcon,
+  BoltDynamicIcon,
   MessageBubbleIcon,
   RepostIcon,
   BookmarkIcon,
@@ -18,9 +20,11 @@ import {
   TrashIcon,
   MessageLineIcon,
 } from '@assets/icons';
+import ReactionPicker from '@Home/components/TimelineRiverRow/components/ReactionPicker';
 
 const RiverPostActions = ({
   post,
+  postType = 'thoughts', // For heart color
   isOwnProfile = false,
   animatingHeartId,
   onLike,
@@ -29,27 +33,97 @@ const RiverPostActions = ({
   onDelete,
   onMessage,
 }) => {
+  // Reaction picker state (long-press)
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [reactionType, setReactionType] = useState(post?.reaction_type || 'like');
+  const [isHeartAnimating, setIsHeartAnimating] = useState(false);
+  const longPressTimer = useRef(null);
+  const LONG_PRESS_DURATION = 400;
+  
+  // Type-based heart colors
+  const heartColors = {
+    thoughts: '#31fcfcff',    // cyan/blue
+    media: '#ad7afeff',       // purple  
+    milestones: '#ffd700ff'   // gold
+  };
+  const heartColor = heartColors[postType] || '#2fcefaff';
+  
   if (!post) return null;
+
+  // Long-press handlers for reaction picker
+  const handleReactionMouseDown = (e) => {
+    e.stopPropagation();
+    longPressTimer.current = setTimeout(() => {
+      setShowReactionPicker(true);
+    }, LONG_PRESS_DURATION);
+  };
+  
+  const handleReactionMouseUp = async (e) => {
+    e.stopPropagation();
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+      
+      if (!showReactionPicker) {
+        setIsHeartAnimating(true);
+        setTimeout(() => setIsHeartAnimating(false), 300);
+        await onLike?.(post.id);
+      }
+    }
+  };
+  
+  const handleReactionMouseLeave = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+  
+  const handleReactionSelect = async (selectedReaction) => {
+    setShowReactionPicker(false);
+    setReactionType(selectedReaction);
+    setIsHeartAnimating(true);
+    setTimeout(() => setIsHeartAnimating(false), 300);
+    
+    if (!post.is_liked) {
+      await onLike?.(post.id);
+    }
+  };
 
   // Determine CSS class based on context
   const actionsClass = isOwnProfile 
     ? 'river-post-actions my-post-actions' 
     : 'river-post-actions friend-post-actions';
+  
+  const isAnimating = isHeartAnimating || animatingHeartId === post.id;
 
   return (
-    <div className={actionsClass}>
-      {/* ❤️ Like button - always visible */}
+    <div className={`${actionsClass} ${showReactionPicker ? 'picker-open' : ''}`}>
+      {/* ❤️/⚡ Like button with long-press reaction picker */}
       <div
-        className={`river-post-likes ${post.is_liked ? 'is-liked' : ''} ${animatingHeartId === post.id ? 'heart-pulse' : ''}`}
-        onClick={(e) => {
-          e.stopPropagation();
-          onLike?.(post.id);
-        }}
-        title={post.is_liked ? 'Unlike' : 'Like'}
-        style={{ cursor: 'pointer' }}
+        className={`river-post-likes ${post.is_liked ? 'is-liked' : ''} ${isAnimating ? 'heart-pulse' : ''}`}
+        onMouseDown={handleReactionMouseDown}
+        onMouseUp={handleReactionMouseUp}
+        onMouseLeave={handleReactionMouseLeave}
+        onTouchStart={handleReactionMouseDown}
+        onTouchEnd={handleReactionMouseUp}
+        title={post.is_liked ? 'Unlike (hold for more)' : 'Like (hold for more)'}
+        style={{ cursor: 'pointer', '--heart-color': heartColor, position: 'relative' }}
       >
-        <HeartDynamicIcon size={18} filled={post.is_liked} />
+        {reactionType === 'emphasis' ? (
+          <BoltDynamicIcon size={18} filled={post.is_liked} fillColor={heartColor} />
+        ) : (
+          <HeartDynamicIcon size={18} filled={post.is_liked} />
+        )}
         {post.likes_count || 0}
+        
+        <ReactionPicker
+          isOpen={showReactionPicker}
+          onSelect={handleReactionSelect}
+          onClose={() => setShowReactionPicker(false)}
+          reactionColor={heartColor}
+          currentReaction={reactionType}
+        />
       </div>
 
       {/* 💬 Comment button - always visible */}

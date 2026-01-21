@@ -1,64 +1,12 @@
-// =============================================================================
-// 🔵 PABLO - UI Architect
-// RiverComposer.jsx - Comment input for TimelineRiver posts (inline + full-page)
-// =============================================================================
-//
-// TWO MODES:
-//
-// ┌─────────────────────────────────────────────────────────────────────────────┐
-// │  MODE 1: INLINE COMPOSER (isFullPage = false)                               │
-// │  ┌─────────────────────────────────────────────────────────────────────┐   │
-// │  │  ┌──────────────────────────────────┐  ┌───┐  ┌───┐                 │   │
-// │  │  │ Write a comment...               │  │ ⤢ │  │ > │                 │   │
-// │  │  └──────────────────────────────────┘  └───┘  └───┘                 │   │
-// │  │       textarea                       expand  submit                  │   │
-// │  └─────────────────────────────────────────────────────────────────────┘   │
-// └─────────────────────────────────────────────────────────────────────────────┘
-//
-// ┌─────────────────────────────────────────────────────────────────────────────┐
-// │  MODE 2: FULL-PAGE COMPOSER (isFullPage = true, rendered via Portal)        │
-// │  ┌─────────────────────────────────────────────────────────────────────┐   │
-// │  │                              [X] Close                               │   │
-// │  ├─────────────────────────────────────────────────────────────────────┤   │
-// │  │  REPLY CONTEXT (original post - not shown in edit mode)             │   │
-// │  │  ┌─────────────────────────────────────────────────────────────┐   │   │
-// │  │  │ [avatar] AuthorName @username · 2h ago                      │   │   │
-// │  │  │ Original post content here...                               │   │   │
-// │  │  │ [media if type='media']                                     │   │   │
-// │  │  └─────────────────────────────────────────────────────────────┘   │   │
-// │  ├─────────────────────────────────────────────────────────────────────┤   │
-// │  │  THREAD VIEW (existing replies)                                     │   │
-// │  │  │── [avatar] user1 · 1h - Reply content                           │   │
-// │  │  │── [avatar] user2 · 30m - Another reply                          │   │
-// │  ├─────────────────────────────────────────────────────────────────────┤   │
-// │  │  FIXED COMPOSER (at bottom)                                         │   │
-// │  │  ┌─────────────────────────────────────────────────────────────┐   │   │
-// │  │  │ Share your thoughts...                              [📷] [>]│   │   │
-// │  │  └─────────────────────────────────────────────────────────────┘   │   │
-// │  └─────────────────────────────────────────────────────────────────────┘   │
-// └─────────────────────────────────────────────────────────────────────────────┘
-//
-// PROPS:
-// - post: The post being commented on
-// - isOpen: Boolean - whether composer is visible
-// - isFullPage: Boolean - inline mode vs full-page portal mode
-// - isEditMode: Boolean - editing existing post (changes placeholder/submit icon)
-// - commentText: String - controlled textarea value
-// - setCommentText: Function to update commentText
-// - threadReplies: Array of existing replies (for full-page mode)
-// - onSubmit: Function called when submitting comment
-// - onClose: Function to close the composer
-// - onExpand: Function to switch from inline to full-page
-// - onSaveEdit: Function called when saving edit
-// - formatRelativeTime: (dateString) => string
-// - isSaving: Boolean - loading state during save
-//
-// KEYBOARD SHORTCUTS:
-// - Enter (without Shift): Submit
-// - Escape: Close
-//
-// =============================================================================
-
+/**
+ * RiverComposer - Comment input for TimelineRiver posts
+ * 
+ * Two modes:
+ * 1. Inline - small textarea under the post
+ * 2. Full-page - portal overlay with original post context + thread
+ * 
+ * 🔗 CONNECTION: Used by TimelineRiver.jsx for commenting on posts
+ */
 import { createPortal } from 'react-dom';
 import './RiverComposer.scss';
 import {
@@ -68,10 +16,15 @@ import {
   ImageIcon,
   CheckIcon,
   UserIcon,
+  HeartDynamicIcon,
+  MessageBubbleIcon,
+  RepostIcon,
+  BookmarkIcon,
 } from '@assets/icons';
 
 const RiverComposer = ({
   post,
+  postType = 'thoughts',
   isOpen,
   isFullPage,
   isEditMode = false,
@@ -82,123 +35,227 @@ const RiverComposer = ({
   onClose,
   onExpand,
   onSaveEdit,
+  onLike,
   formatRelativeTime,
   isSaving = false,
 }) => {
-  // ─────────────────────────────────────────────────────────────────────────
-  // EARLY RETURN
-  // ─────────────────────────────────────────────────────────────────────────
-  // TODO: Return null if !isOpen or !post
+  if (!isOpen || !post) return null;
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // DERIVED VALUES
-  // ─────────────────────────────────────────────────────────────────────────
-  // TODO: Extract author info from post.author
-  // - postAuthor = post.author || {}
-  // - authorName: Use first_name + last_name if both exist, else username, else 'User'
+  // Type-based heart colors
+  const heartColors = {
+    thoughts: '#31fcfcff',
+    media: '#ad7afeff',
+    milestones: '#ffd700ff'
+  };
+  const heartColor = heartColors[postType] || '#2fcefaff';
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // HANDLERS
-  // ─────────────────────────────────────────────────────────────────────────
+  // Get author info for full-page context
+  const postAuthor = post.author || {};
+  const authorName = postAuthor.first_name && postAuthor.last_name
+    ? `${postAuthor.first_name} ${postAuthor.last_name}`
+    : postAuthor.username || 'User';
+
+  // Handle keyboard shortcuts
   const handleKeyDown = (e) => {
-    // TODO: Handle Enter key (without Shift)
-    // - Prevent default
-    // - If commentText.trim() is not empty:
-    //   - If isEditMode, call onSaveEdit?.()
-    //   - Else call onSubmit?.()
-    //
-    // TODO: Handle Escape key
-    // - Call onClose?.()
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (commentText.trim()) {
+        if (isEditMode) {
+          onSaveEdit?.();
+        } else {
+          onSubmit?.();
+        }
+      }
+    }
+    if (e.key === 'Escape') {
+      onClose?.();
+    }
   };
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // MODE 1: INLINE COMPOSER
-  // ═══════════════════════════════════════════════════════════════════════════
+  // === INLINE COMPOSER ===
   if (!isFullPage) {
     return (
       <div className="inline-comment-composer">
         <div className="comment-input-wrapper">
-          {/* TODO: textarea element
-              - className="comment-input"
-              - placeholder="Write a comment..."
-              - value={commentText}
-              - onChange: update commentText AND auto-resize height
-                - e.target.style.height = 'auto'
-                - e.target.style.height = e.target.scrollHeight + 'px'
-              - rows={1}
-              - autoFocus
-              - onKeyDown={handleKeyDown} */}
-          
-          {/* TODO: expand button
-              - className="expand-composer-btn"
-              - onClick={onExpand}
-              - title="Expand to full page"
-              - Contains MaximizeIcon size={12} strokeWidth="2.5" */}
+          <textarea
+            className="comment-input"
+            placeholder="Write a comment..."
+            value={commentText}
+            onChange={(e) => {
+              setCommentText(e.target.value);
+              e.target.style.height = 'auto';
+              e.target.style.height = e.target.scrollHeight + 'px';
+            }}
+            rows={1}
+            autoFocus
+            onKeyDown={handleKeyDown}
+          />
+          <button
+            className="expand-composer-btn"
+            onClick={onExpand}
+            title="Expand to full page"
+          >
+            <MaximizeIcon size={12} strokeWidth="2.5" />
+          </button>
         </div>
-
-        {/* TODO: submit button
-            - className="comment-submit-btn"
-            - disabled={!commentText.trim()}
-            - onClick={onSubmit}
-            - Contains ChevronRightIcon size={20} strokeWidth="2.5" */}
+        <button
+          className="comment-submit-btn"
+          disabled={!commentText.trim()}
+          onClick={onSubmit}
+        >
+          <ChevronRightIcon size={20} strokeWidth="2.5" />
+        </button>
       </div>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // MODE 2: FULL-PAGE COMPOSER (Portal)
-  // ═══════════════════════════════════════════════════════════════════════════
+  // === FULL PAGE COMPOSER (Portal) ===
   return createPortal(
     <div className="full-page-composer-overlay">
       <div className="full-page-composer">
-        {/* ─────────────────────────────────────────────────────────────────── */}
-        {/* HEADER                                                              */}
-        {/* ─────────────────────────────────────────────────────────────────── */}
+        {/* Header with close button */}
         <div className="full-page-header">
-          {/* TODO: Close button
-              - className="close-btn-glow"
-              - onClick={onClose}
-              - title="Close"
-              - Contains CloseIcon size={20} */}
+          <button
+            className="close-btn-glow"
+            onClick={onClose}
+            title="Close"
+          >
+            <CloseIcon size={20} />
+          </button>
         </div>
 
-        {/* ─────────────────────────────────────────────────────────────────── */}
-        {/* SCROLLABLE CONTENT                                                  */}
-        {/* ─────────────────────────────────────────────────────────────────── */}
+        {/* Scrollable content area */}
         <div className="full-page-content">
-          {/* TODO: REPLY CONTEXT (only show if !isEditMode)
-              - className="reply-context"
-              - reply-context-header with avatar, name, handle, dot, time
-              - reply-context-content with post.content
-              - If post.type === 'media' && post.media_url, show reply-context-media with img */}
+          {/* Original Post Context (not shown in edit mode) */}
+          {!isEditMode && (
+            <div className="reply-context">
+              <div className="reply-context-header">
+                <div className="reply-context-avatar">
+                  <UserIcon size={20} />
+                </div>
+                <span className="reply-context-name">{authorName}</span>
+                <span className="reply-context-handle">@{postAuthor.username}</span>
+                <span className="reply-context-dot">·</span>
+                <span className="reply-context-time">
+                  {formatRelativeTime?.(post.created_at)}
+                </span>
+              </div>
+              <p className="reply-context-content">{post.content}</p>
+              {post.type === 'media' && post.media_url && (
+                <div className="reply-context-media">
+                  <img src={post.media_url} alt="Post media" />
+                </div>
+              )}
+            </div>
+          )}
 
-          {/* TODO: THREAD VIEW (if threadReplies.length > 0)
-              - className="full-page-thread"
-              - thread-view wrapper
-              - thread-replies container
-              - Map through threadReplies, render each reply with:
-                - thread-reply wrapper
-                - thread-connector with thread-line-vertical
-                - reply-card with reply-header (avatar, author, time) and reply-content */}
+          {/* Thread View - show existing replies */}
+          {threadReplies.length > 0 && (
+            <div className="full-page-thread">
+              <div className="thread-view">
+                <div className="thread-replies">
+                  {threadReplies.map((reply) => (
+                    <div key={reply.id} className="thread-reply">
+                      <div className="thread-connector">
+                        <div className="thread-line-vertical" />
+                      </div>
+                      <div className="reply-card">
+                        <div className="reply-header">
+                          <div className="reply-avatar">
+                            <UserIcon size={14} />
+                          </div>
+                          <span className="reply-author">
+                            {reply.author?.username || 'User'}
+                          </span>
+                          <span className="reply-time">
+                            {formatRelativeTime?.(reply.created_at)}
+                          </span>
+                        </div>
+                        <p className="reply-content">{reply.content}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* ─────────────────────────────────────────────────────────────────── */}
-        {/* FIXED COMPOSER AT BOTTOM                                            */}
-        {/* ─────────────────────────────────────────────────────────────────── */}
+        {/* Fixed Composer at Bottom */}
         <div className="full-page-composer-fixed">
-          <div className="comment-input-wrapper">
-            {/* TODO: textarea
-                - className="comment-input"
-                - placeholder varies: "Edit your post..." if isEditMode, else "Share your thoughts..."
-                - value, onChange, rows={3}, autoFocus, onKeyDown */}
+          {/* Post Actions - only show when not in edit mode */}
+          {!isEditMode && (
+            <div className="full-page-actions">
+              {/* Like */}
+              <div 
+                className={`reply-action-btn ${post.is_liked ? 'is-liked' : ''}`}
+                onClick={() => onLike?.(post.id)}
+                style={{ cursor: 'pointer', '--heart-color': heartColor }}
+              >
+                <HeartDynamicIcon size={20} filled={post.is_liked} />
+                <span>{post.likes_count || 0}</span>
+              </div>
+              {/* Comment count */}
+              <div className="reply-action-btn">
+                <MessageBubbleIcon size={20} stroke="rgba(201,168,255,0.5)" strokeWidth="1.5" />
+                <span>{post.reply_count || 0}</span>
+              </div>
+              {/* Share */}
+              <div className="reply-action-btn" style={{ cursor: 'pointer' }}>
+                <RepostIcon size={20} stroke="rgba(79,255,255,0.5)" strokeWidth="1.5" />
+                <span>{post.shares_count || 0}</span>
+              </div>
+              {/* Bookmark */}
+              <div className="reply-action-btn" style={{ cursor: 'pointer' }}>
+                <BookmarkIcon size={20} stroke="rgba(201,168,255,0.5)" strokeWidth="1.5" />
+              </div>
+            </div>
+          )}
 
-            {/* TODO: composer-actions div containing:
-                - Media button (only if !isEditMode): className="comment-media-btn"
-                  - ImageIcon with pink stroke
-                - Submit button: className "comment-submit-btn" + "edit-submit-btn" if isEditMode
-                  - disabled if !commentText.trim() || isSaving
-                  - onClick: call onSaveEdit if isEditMode, else onSubmit
-                  - Icon: CheckIcon (yellow) if isEditMode, ChevronRightIcon (green) if not */}
+          {/* Composer */}
+          <div className="comment-input-wrapper">
+            <textarea
+              className="comment-input"
+              placeholder={isEditMode ? 'Edit your post...' : 'Share your thoughts...'}
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              rows={3}
+              autoFocus
+              onKeyDown={handleKeyDown}
+            />
+
+            {/* Action buttons inside textarea */}
+            <div className="composer-actions">
+              {!isEditMode && (
+                <button
+                  className="comment-media-btn"
+                  title="Add media"
+                  onClick={() => console.log('Media upload clicked')}
+                >
+                  <ImageIcon size={18} stroke="rgba(220, 8, 188, 0.5)" strokeWidth="1.5" />
+                </button>
+              )}
+
+              <button
+                className={`comment-submit-btn ${isEditMode ? 'edit-submit-btn' : ''}`}
+                disabled={!commentText.trim() || isSaving}
+                onClick={() => {
+                  if (commentText.trim()) {
+                    if (isEditMode) {
+                      onSaveEdit?.();
+                    } else {
+                      onSubmit?.();
+                    }
+                  }
+                }}
+              >
+                {isEditMode ? (
+                  <CheckIcon size={20} stroke="rgba(255, 193, 7, 0.5)" strokeWidth="2" />
+                ) : (
+                  <ChevronRightIcon size={20} stroke="rgba(26, 231, 132, 0.5)" strokeWidth="2" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

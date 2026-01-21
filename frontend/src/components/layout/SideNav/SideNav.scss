@@ -1,15 +1,44 @@
 /* Main Navigation
    
    RESPONSIVE BEHAVIOR:
-   - Desktop (481px+): Left sidebar (side-nav) with 56px width
-   - Tablet (481-768px): Thinner side nav at 44px
-   - Mobile (480px-): Bottom nav bar (controlled by SideNav.jsx which
-     switches between 'left-nav' and 'bottom-nav' classes based on
-     window.innerWidth > 480)
+   - Desktop (769px+): Left sidebar (left-nav) with 56px width, always visible
+   - Tablet/Mobile (768px-): Slide-out nav triggered by hamburger menu
+     - Hidden by default (translated off-screen left)
+     - Opens with slide animation when hamburger clicked
+     - Backdrop overlay dims content when open
    
-   The SideNav.jsx component handles the class switching.
+   The SideNav.jsx component and SideNavContext handle the state.
    This CSS file styles both configurations.
 */
+
+/* Nav Backdrop Overlay - Mobile only */
+.nav-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  top: 60px; /* Below TopBar */
+  background: rgba(0, 7, 17, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  
+  @media (max-width: 768px) {
+    display: block;
+    opacity: 1;
+    animation: fadeIn 0.25s ease forwards;
+  }
+  
+  @media (max-width: 480px) {
+    top: 44px; /* Shorter TopBar on mobile */
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
 /* Neon Pulse Animation */
 @keyframes neonPulse {
@@ -47,7 +76,7 @@
 }
 
 /* Left Sidebar for Desktop */
-@media (min-width: 481px) {
+@media (min-width: 769px) {
   .main-nav.left-nav {
     display: flex !important;      /* Force flex display */
     position: fixed;
@@ -70,30 +99,113 @@
   }
 }
 
-/* Thinner side nav on smaller tablets */
-@media (min-width: 481px) and (max-width: 768px) {
-  .main-nav.left-nav {
-    width: 44px;
+/* Mobile: Same left-nav but slides in/out */
+@media (max-width: 768px) {
+  .main-nav.left-nav.mobile-slide {
+    display: flex !important;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    bottom: 0;
+    width: 56px;
+    height: calc(100vh - 60px);
+    flex-direction: column !important;
+    justify-content: space-around !important;
+    align-items: center;
     padding: 2rem 0;
-  }
-  
-  .main-nav.left-nav .nav-item {
-    padding: 0.5rem 0;
-  }
-  
-  .main-nav.left-nav .nav-icon {
-    width: 28px;
-    height: 28px;
-    padding: 5px;
-  }
-  
-  .main-nav.left-nav .nav-item svg {
-    width: 18px;
-    height: 18px;
+    border-right: 1px solid rgba(26, 115, 231, 0.3);
+    border-radius: 0 24px 24px 0;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2), 
+                4px 0 40px rgba(26, 115, 231, 0.15), 
+                inset -1px 0 0 rgba(255, 255, 255, 0.1);
+    z-index: 1000;
+    
+    /* Hidden by default - slide from left */
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    &.is-open {
+      transform: translateX(0);
+    }
   }
 }
 
-@media (min-width: 481px) {
+@media (max-width: 480px) {
+  .main-nav.left-nav.mobile-slide {
+    top: 44px;
+    height: calc(100vh - 44px);
+  }
+}
+
+/* Slide-out Nav for Mobile/Tablet (768px and below) - DEPRECATED, kept for reference */
+.main-nav.slide-nav {
+  position: fixed;
+  top: 60px; /* Below TopBar */
+  left: 0;
+  bottom: 0;
+  width: 200px;
+  height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  padding: 1.5rem 0;
+  gap: 0.5rem;
+  background: rgba(1, 17, 40, 0.95);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border-right: 1px solid rgba(26, 115, 231, 0.3);
+  box-shadow: 4px 0 30px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  
+  /* Hidden by default - slide from left */
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &.is-open {
+    transform: translateX(0);
+  }
+  
+  .nav-item {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 0.75rem 1.25rem;
+    gap: 0.75rem;
+    border-radius: 0;
+    border-left: 3px solid transparent;
+    
+    span {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    
+    &.active {
+      border-left-color: var(--accent);
+      background: rgba(26, 231, 132, 0.1);
+    }
+    
+    &:hover {
+      background: rgba(26, 115, 231, 0.15);
+      transform: none;
+    }
+  }
+  
+  .nav-icon {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-nav.slide-nav {
+    top: 44px; /* Shorter TopBar on mobile */
+    height: calc(100vh - 44px);
+    width: 180px;
+  }
+}
+
+@media (min-width: 769px) {
   .main-nav.left-nav .nav-item {
     flex-direction: column;
     width: 100%;
@@ -160,26 +272,6 @@
     height: 70%;
     animation: neonPulse 2s ease-in-out infinite;
   }
-}
-
-/* Bottom Navigation for Mobile */
-.main-nav.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  padding: 0rem 1rem;
-  background: rgba(0, 7, 17, 0.3);
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  border-top: 1px solid rgba(26, 115, 231, 0.3);
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2),
-              0 -1px 40px rgba(26, 115, 231, 0.15),
-              inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  z-index: 100; /* MOBILE: increase to 1000 to stay above content */
 }
 
 /* Shared Base Styles */
@@ -275,49 +367,18 @@
   }
 }
 
-/* Responsive */
-@media (max-width: 480px) {
-  .main-nav.bottom-nav {
-    padding: 0.25rem 0.5rem;
-    padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px));
-  }
-
-  .nav-item {
-    padding: 0.2rem 0.4rem;
-    font-size: var(--font-size-xs);
-    border-left: none;
-    gap: 0.1rem;
-  }
-  
-  .nav-item.active {
-    border-left: none;
-    border-bottom: 2px solid var(--primary);
-  }
-
-  .nav-icon {
-    width: 28px;
-    height: 28px;
-    padding: var(--space-xs);
-  }
-
-  .nav-item svg {
-    width: 18px;
-    height: 18px;
-  }
-  
-  .nav-item span {
-    display: none;
-  }
-}
-
 /* ============================================
    LIGHT MODE OVERRIDES
    ============================================ */
 [data-theme="light"] {
+  .nav-backdrop {
+    background: rgba(237, 237, 239, 0.8);
+  }
+
   .main-nav {
     background: var(--bg-glass) !important;
     backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
   }
 
   .main-nav.left-nav {
@@ -325,10 +386,10 @@
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
   }
 
-  .main-nav.bottom-nav {
-    background: rgba(255, 255, 255, 0.9) !important;
-    border-top: 1px solid var(--border-default) !important;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  .main-nav.slide-nav {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-right: 1px solid var(--border-default) !important;
+    box-shadow: 4px 0 30px rgba(0, 0, 0, 0.15);
   }
 
   .nav-item {
@@ -353,10 +414,8 @@
     filter: drop-shadow(0 0 4px rgba(26, 115, 231, 0.4)) !important;
   }
 
-
-
   /* Neon indicator bar - subtle in light mode */
-  @media (min-width: 481px) {
+  @media (min-width: 769px) {
     .main-nav.left-nav .nav-item::before {
       background: linear-gradient(180deg, 
         rgba(26, 115, 231, 0.8),

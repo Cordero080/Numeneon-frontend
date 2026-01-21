@@ -1,49 +1,15 @@
-// =============================================================================
-// 🟡 NATALIA - Auth Lead
-// AuthContext.jsx - Global authentication state management
-// =============================================================================
-//
-// TODO: Create a context that manages user authentication
-//
-// This is the FOUNDATION of the app - without auth, nothing works!
-// Every protected feature checks this context to see if user is logged in.
-//
-// STATE:
-// - user: Object with user data (or null if not logged in)
-// - isLoading: Boolean, true while checking auth status
-// - isAuthenticated: Boolean, true if user is logged in
-//
-// FUNCTIONS TO PROVIDE:
-// - login(email, password): Authenticate user, store JWT, fetch user data
-// - signup(username, email, password): Create account, then auto-login
-// - logout(): Clear tokens and user state
-// - updateProfile(profileData): Update user's profile info
-//
-// ON MOUNT:
-// - Check localStorage for existing accessToken
-// - If token exists, call /api/auth/me/ to get user data
-// - If token is invalid/expired, clear it
-//
-// JWT STORAGE:
-// - accessToken: Short-lived, used for API calls
-// - refreshToken: Long-lived, used to get new access tokens
-// - Both stored in localStorage
-//
-// API ENDPOINTS:
-// - POST /api/auth/login/ → { email, password } → { access, refresh }
-// - POST /api/auth/signup/ → { username, email, password }
-// - GET /api/auth/me/ → Returns current user data
-// - PUT /api/auth/profile/:id/ → Update profile
-//
-// Think about:
-// - Why check auth on mount? (User refreshes page)
-// - Why use isLoading? (Prevent flash of login page)
-// - What should happen if token refresh fails?
-//
-// Hint: useEffect with empty deps [] runs once on mount
-// Hint: After login, fetch /api/auth/me/ to get full user object
-// Hint: Always return { success, error } from async functions
-// =============================================================================
+/**
+ * =============================================================================
+ * AUTH CONTEXT
+ * =============================================================================
+ * File: frontend/src/contexts/AuthContext.jsx
+ * Assigned to: PABLO
+ * Responsibility: Global authentication state management
+ * Status: IMPLEMENTED ✅
+ * =============================================================================
+ */// ⬆️ RECEIVES: nothing - this is a provider that GIVES data to others
+// ⬇️ SENDS: user, isLoading, isAuthenticated, login(), signup(), logout(), updateProfile()
+
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import apiClient from '@services/apiClient';
@@ -51,62 +17,125 @@ import apiClient from '@services/apiClient';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  // TODO: Set up state
-  // const [user, setUser] = useState(null);
-  // const [isLoading, setIsLoading] = useState(true);
-  // const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // children = whatever is inside <AuthProvider>...</AuthProvider>
+  // In main.jsx, children is <PostsProvider><FriendsProvider><App/></FriendsProvider></PostsProvider>
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // useEfffect is triggered only when a user mounts the component, this happens when a user loads the app. UseEffect gets the data from localStorage and checks if the user is authenticated
+  // Check if user is logged in on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('accessToken');
+      console.log('AuthContext checkAuth - token exists:', !!token);
+      if (token) {
+        try {
+          const response = await apiClient.get('/auth/me/');
+          console.log('Auth /me response:', response.data);
+          setUser(response.data);
+          setIsAuthenticated(true);
+        } catch (error) {
+          console.error('Auth check failed:', error);
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+        }
+      } else {
+        console.log('No token found, user not logged in');
+      }
+      setIsLoading(false);
+    };
 
-  // TODO: Check for existing auth on mount
-  // useEffect(() => {
-  //   const checkAuth = async () => {
-  //     const token = localStorage.getItem('accessToken');
-  //     if (token) {
-  //       try {
-  //         const response = await apiClient.get('/auth/me/');
-  //         setUser(response.data);
-  //         setIsAuthenticated(true);
-  //       } catch (error) {
-  //         // Token invalid - clear it
-  //         localStorage.removeItem('accessToken');
-  //         localStorage.removeItem('refreshToken');
-  //       }
-  //     }
-  //     setIsLoading(false);
-  //   };
-  //   checkAuth();
-  // }, []);
+    checkAuth();
+  }, []);
 
-  // TODO: Implement login function
-  // const login = async (email, password) => {
-  //   try {
-  //     const response = await apiClient.post('/auth/login/', { email, password });
-  //     localStorage.setItem('accessToken', response.data.access);
-  //     localStorage.setItem('refreshToken', response.data.refresh);
-  //     const userResponse = await apiClient.get('/auth/me/');
-  //     setUser(userResponse.data);
-  //     setIsAuthenticated(true);
-  //     return { success: true };
-  //   } catch (error) {
-  //     return { success: false, error: error.response?.data?.detail || 'Login failed' };
-  //   }
-  // };
+  // Login function
+  const login = async (email, password) => {
+    try {
+      const response = await apiClient.post('/auth/login/', { email, password });
+      localStorage.setItem('accessToken', response.data.access);
+      localStorage.setItem('refreshToken', response.data.refresh);
+      
+      // Fetch user info
+      const userResponse = await apiClient.get('/auth/me/');
+      setUser(userResponse.data);
+      setIsAuthenticated(true);
+      
+      return { success: true };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.detail || 'Login failed' 
+      };
+    }
+  };
 
-  // TODO: Implement signup function
-  // const signup = async (username, email, password) => { ... };
+  // Signup function
+  const signup = async (username, email, password) => {
+    try {
+      await apiClient.post('/auth/signup/', { 
+        username, 
+        email, 
+        password 
+      });
+      
+      // Auto-login after signup
+      const loginResult = await login(username, password);
+      return loginResult;
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.error || 'Signup failed' 
+      };
+    }
+  };
 
-  // TODO: Implement logout function
-  // const logout = () => { ... };
+  // Update user profile
+  const updateProfile = async (profileData) => {
+    try {
+      const response = await apiClient.put(`/auth/profile/${user.profile.id}/`, profileData);
+      setUser(prev => ({
+        ...prev,
+        profile: response.data
+      }));
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Profile update failed'
+      };
+    }
+  };
 
-  // TODO: Implement updateProfile function
-  // const updateProfile = async (profileData) => { ... };
+  const logout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    setUser(null);
+    setIsAuthenticated(false);
+  };
 
-  // TODO: Return provider with all values and functions
-  // Your code here
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        isAuthenticated,
+        login,
+        signup,
+        logout,
+        updateProfile,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
-  // TODO: Return useContext(AuthContext) with error check
-  // Your code here
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
 
 export default AuthContext;
