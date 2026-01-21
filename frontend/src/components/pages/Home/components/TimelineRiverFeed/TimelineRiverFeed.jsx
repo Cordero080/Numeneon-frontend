@@ -1,8 +1,8 @@
 // 🔵 PABLO - UI/Styling | 🟢 COLIN + 🟠 TITO - Posts Data Logic
 // TimelineRiverFeed.jsx - Main timeline feed with 3-column river layout
 //
-// ROW-CHUNKING: Posts are chunked into rows of MAX 12 per category.
-// If USER posts 15 thoughts in a day, they get 2 rows: [3 newest] then [12 older].
+// ROW-CHUNKING: Posts are chunked into rows of max 12 per category.
+// When a user posts 15 thoughts in a day, they get 2 rows: [3 newest] then [12 older].
 
 import { groupPostsByUserAndDay, sortGroupedPosts } from '@components/pages/Home/utils/groupPosts';
 import TimelineRiverRow from '../TimelineRiverRow';

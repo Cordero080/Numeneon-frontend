@@ -1,8 +1,5 @@
-// =============================================================================
-// 🟣 CRYSTAL - Friends Lead
+// 🔵 PABLO - UI/Styling | 🟣 CRYSTAL - API Logic  
 // Friends.jsx - Friends list and requests page
-// =============================================================================
-
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -11,280 +8,248 @@ import DeleteConfirmModal from '@Home/components/DeleteConfirmModal/DeleteConfir
 import { MessageBubbleIcon, UnlinkIcon, PlusIcon } from '@assets/icons';
 import './Friends.scss';
 
+// Helper function to assign color variants to cards
 const getColorVariant = (id) => {
-  const variants = ["pink", "blue", "purple", "green"];
+  const variants = ['card-cyan', 'card-magenta', 'card-green', 'card-purple', 'card-orange'];
   return variants[id % variants.length];
 };
 
-const getInitials = (first, last, username) => {
-  if (first && last) return `${first[0]}${last[0]}`.toUpperCase();
+// Helper to get initials from name
+const getInitials = (firstName, lastName, username) => {
+  if (firstName && lastName) {
+    return `${firstName[0]}${lastName[0]}`.toUpperCase();
+  }
+  if (firstName) {
+    return firstName.slice(0, 2).toUpperCase();
+  }
   return username.slice(0, 2).toUpperCase();
 };
 
+// Helper to get display name - always use username
 const getDisplayName = (friend) => {
-  if (friend.first_name) {
-    return `${friend.first_name} ${friend.last_name || ""}`;
-  }
-  return friend.username;
+  return friend.username || 'Unknown';
 };
 
-/* ================== COMPONENT ================== */
-
 function Friends() {
-  const [activeTab, setActiveTab] = useState("all");
-  const [friendToRemove, setFriendToRemove] = useState(null);
-  const [isRemoving, setIsRemoving] = useState(false);
-
+  const [activeTab, setActiveTab] = useState('all'); // 'all', 'requests', 'suggestions'
+  const [friendToRemove, setFriendToRemove] = useState(null); // Friend being removed
+  const [isRemoving, setIsRemoving] = useState(false); // Loading state
   const navigate = useNavigate();
-  const {
-    friends,
-    pendingRequests,
-    isLoading,
+  
+  // Get data from context (connected to backend)
+  const { 
+    friends, 
+    pendingRequests, 
+    isLoading, 
     error,
-    acceptRequest,
-    declineRequest,
-    removeFriend,
+    acceptRequest, 
+    declineRequest, 
+    removeFriend 
   } = useFriends();
-
+  
+  // Get message context for opening DMs
   const { openMessages } = useMessages();
 
-  /* ================== MOCK SUGGESTIONS ================== */
+  // Debug logging
+  console.log('Friends page - friends:', friends, 'pending:', pendingRequests, 'loading:', isLoading, 'error:', error);
 
+  // Suggestions are still mock for now (would need a different API)
   const suggestions = [
-    { id: 99, username: "nova" },
-    { id: 98, username: "zenith" },
-    { id: 97, username: "pixel" },
+    { id: 201, name: 'Maya Patel', username: 'mayap', avatar: 'MP', mutualFriends: 5 },
+    { id: 202, name: 'Jake Thompson', username: 'jaket', avatar: 'JT', mutualFriends: 2 },
+    { id: 203, name: 'Emma Wilson', username: 'emmaw', avatar: 'EW', mutualFriends: 8 },
   ];
 
-  /* ================== HANDLERS ================== */
-
-  const handleFriendClick = (friend) => {
-    navigate(`/profile/${friend.username}`);
+  // Handle accept friend request
+  const handleAccept = async (requestId) => {
+    const result = await acceptRequest(requestId);
+    if (!result.success) {
+      console.error('Failed to accept:', result.error);
+    }
   };
 
-  const handleMessageFriend = (friend, e) => {
-    e.stopPropagation();
-    openMessages(friend);
+  // Handle decline friend request
+  const handleDecline = async (requestId) => {
+    const result = await declineRequest(requestId);
+    if (!result.success) {
+      console.error('Failed to decline:', result.error);
+    }
   };
 
-  const handleRemoveClick = (friend, e) => {
+  // Handle remove friend - show confirmation modal
+  const handleRemoveClick = (e, friend) => {
     e.stopPropagation();
     setFriendToRemove(friend);
   };
 
+  // Confirm remove friend
   const handleConfirmRemove = async () => {
     if (!friendToRemove) return;
-
+    
     setIsRemoving(true);
-    await removeFriend(friendToRemove.id);
+    const result = await removeFriend(friendToRemove.id);
     setIsRemoving(false);
+    
+    if (!result.success) {
+      console.error('Failed to remove:', result.error);
+    }
+    
     setFriendToRemove(null);
   };
 
-  const handleAccept = async (id) => {
-    await acceptRequest(id);
+  // Handle clicking on a friend card - navigate to their profile
+  const handleFriendClick = (friend) => {
+    navigate(`/profile/${friend.username}`);
   };
 
-  const handleDecline = async (id) => {
-    await declineRequest(id);
+  // Handle clicking the message icon - open message modal with this friend
+  const handleMessageFriend = (e, friend) => {
+    e.stopPropagation(); // Prevent triggering card click
+    openMessages({
+      id: friend.id,
+      username: friend.username,
+      displayName: friend.first_name && friend.last_name 
+        ? `${friend.first_name} ${friend.last_name}`
+        : friend.username,
+    });
   };
 
-  /* ================== RENDER ================== */
+  if (isLoading) {
+    return (
+      <div className="friends-page">
+        <div className="friends-header">
+          <h1 className="friends-title">Friends</h1>
+        </div>
+        <div className="loading-state">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="friends-page">
-
-      {/* HEADER */}
+      {/* Scan line overlay */}
+      <div className="scan-overlay"></div>
+      
+      {/* Header - Centered with stats below */}
       <div className="friends-header">
         <h1 className="friends-title">Friends</h1>
-
         <div className="friends-stats">
-          <div className="stat-item">
+          <span className="stat-item">
             <span className="stat-value">{friends.length}</span>
             <span className="stat-label">connected</span>
-          </div>
-
-          <div className="stat-dot" />
-
-          <div className="stat-item">
-            <span className="stat-value">
-              {pendingRequests.length}
-            </span>
+          </span>
+          <span className="stat-dot"></span>
+          <span className="stat-item">
+            <span className="stat-value">{pendingRequests.length}</span>
             <span className="stat-label">pending</span>
-          </div>
+          </span>
         </div>
       </div>
 
-      {/* TABS */}
+      {/* Tabs */}
       <div className="friends-tabs">
-        <button
-          className={`tab-btn ${
-            activeTab === "all" ? "active" : ""
-          }`}
-          onClick={() => setActiveTab("all")}
+        <button 
+          className={`tab-btn ${activeTab === 'all' ? 'active' : ''}`}
+          onClick={() => setActiveTab('all')}
         >
-          All Friends
+          Friends
         </button>
-
-        <button
-          className={`tab-btn ${
-            activeTab === "requests" ? "active" : ""
-          }`}
-          onClick={() => setActiveTab("requests")}
+        <button 
+          className={`tab-btn ${activeTab === 'requests' ? 'active' : ''}`}
+          onClick={() => setActiveTab('requests')}
         >
           Requests
+          {pendingRequests.length > 0 && <span className="tab-badge">{pendingRequests.length}</span>}
         </button>
-
-        <button
-          className={`tab-btn ${
-            activeTab === "suggestions" ? "active" : ""
-          }`}
-          onClick={() => setActiveTab("suggestions")}
+        <button 
+          className={`tab-btn ${activeTab === 'suggestions' ? 'active' : ''}`}
+          onClick={() => setActiveTab('suggestions')}
         >
           Suggestions
         </button>
       </div>
 
-      {/* CONTENT */}
+      {/* Content */}
       <div className="friends-content">
-
-        {/* LOADING */}
-        {isLoading && <p className="empty-state">Loading...</p>}
-
-        {error && (
-          <p className="empty-state error">{error}</p>
-        )}
-
-        {/* ALL FRIENDS */}
-        {activeTab === "all" && (
+        {activeTab === 'all' && (
           <div className="friends-grid">
-            {friends.length === 0 && (
-              <p className="empty-state">
-                No friends yet 
-              </p>
-            )}
-
-            {friends.map((friend) => (
-              <div
-                key={friend.id}
-                className={`friend-card card-${getColorVariant(
-                  friend.id
-                )}`}
-                onClick={() =>
-                  handleFriendClick(friend)
-                }
+            {friends.map(friend => (
+              <div 
+                key={friend.id} 
+                className={`friend-card card card-interactive ${getColorVariant(friend.id)}`}
+                onClick={() => handleFriendClick(friend)}
+                style={{ cursor: 'pointer' }}
               >
-                <span className="scan-line" />
-
+                <div className="scan-line"></div>
                 <div className="friend-avatar">
-                  <span>
-                    {getInitials(
-                      friend.first_name,
-                      friend.last_name,
-                      friend.username
-                    )}
-                  </span>
-                  <span className="status-dot online" />
+                  <span>{getInitials(friend.first_name, friend.last_name, friend.username)}</span>
+                  <div className="status-dot online"></div>
                 </div>
-
                 <div className="friend-info">
-                  <h3 className="friend-name">
-                    {getDisplayName(friend)}
-                  </h3>
-                  <p className="friend-username">
-                    @{friend.username}
-                  </p>
-                  <p className="friend-mutual">
-                    2 mutual friends
-                  </p>
+                  <h3 className="friend-name">{getDisplayName(friend)}</h3>
+                  <span className="friend-username">@{friend.username}</span>
                 </div>
-
-                <button
-                  className="friend-action-btn"
-                  onClick={(e) =>
-                    handleMessageFriend(friend, e)
-                  }
+                <button 
+                  className="friend-action-btn" 
+                  onClick={(e) => handleMessageFriend(e, friend)} 
+                  title="Message friend"
                 >
-                  <MessageBubbleIcon />
+                  <MessageBubbleIcon size={20} />
                 </button>
-
-                <button
-                  className="friend-remove-btn"
-                  onClick={(e) =>
-                    handleRemoveClick(friend, e)
-                  }
+                <button 
+                  className="friend-remove-btn" 
+                  onClick={(e) => handleRemoveClick(e, friend)} 
+                  title="Remove friend"
                 >
-                  <UnlinkIcon />
+                  <UnlinkIcon size={16} />
                 </button>
               </div>
             ))}
           </div>
         )}
 
-        {/* REQUESTS */}
-        {activeTab === "requests" && (
+        {activeTab === 'requests' && (
           <div className="friends-grid">
-            {pendingRequests.length === 0 && (
-              <p className="empty-state">
-                No pending requests ✨
-              </p>
-            )}
-
-            {pendingRequests.map((req) => (
-              <div
-                key={req.id}
-                className="friend-card"
+            {pendingRequests.map(request => (
+              <div 
+                key={request.id} 
+                className="friend-card card request-card"
+                onClick={() => navigate(`/profile/${request.from_user.username}`)}
+                style={{ cursor: 'pointer' }}
               >
-                <span className="scan-line" />
-
-                <div className="friend-info">
-                  <h3 className="friend-name">
-                    {req.from_user.username}
-                  </h3>
+                <div className="scan-line"></div>
+                <div className="friend-avatar">
+                  <span>{getInitials(request.from_user.first_name, request.from_user.last_name, request.from_user.username)}</span>
                 </div>
-
-                <div className="request-actions">
-                  <button
-                    className="btn-accept"
-                    onClick={() =>
-                      handleAccept(req.id)
-                    }
-                  >
-                    Accept
-                  </button>
-
-                  <button
-                    className="btn-decline"
-                    onClick={() =>
-                      handleDecline(req.id)
-                    }
-                  >
-                    Decline
-                  </button>
+                <div className="friend-info">
+                  <h3 className="friend-name">{getDisplayName(request.from_user)}</h3>
+                  <span className="friend-username">@{request.from_user.username}</span>
+                </div>
+                <div className="request-actions" onClick={(e) => e.stopPropagation()}>
+                  <button className="btn-accept" onClick={() => handleAccept(request.id)}>Accept</button>
+                  <button className="btn-decline" onClick={() => handleDecline(request.id)}>Decline</button>
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* SUGGESTIONS */}
-        {activeTab === "suggestions" && (
+        {activeTab === 'suggestions' && (
           <div className="friends-grid">
-            {suggestions.map((user) => (
-              <div
-                key={user.id}
-                className="friend-card"
-              >
-                <span className="scan-line" />
-
-                <div className="friend-info">
-                  <h3 className="friend-name">
-                    {user.username}
-                  </h3>
+            {suggestions.map(suggestion => (
+              <div key={suggestion.id} className="friend-card card suggestion-card">
+                <div className="scan-line"></div>
+                <div className="friend-avatar">
+                  <span>{suggestion.avatar}</span>
                 </div>
-
+                <div className="friend-info">
+                  <h3 className="friend-name">{suggestion.name}</h3>
+                  <span className="friend-username">{suggestion.username}</span>
+                  <span className="friend-mutual">{suggestion.mutualFriends} mutual friends</span>
+                </div>
                 <button className="btn-add-friend">
-                  <PlusIcon /> Add
+                  <PlusIcon size={16} />
+                  Add
                 </button>
               </div>
             ))}
@@ -292,19 +257,15 @@ function Friends() {
         )}
       </div>
 
-      {/* CONFIRM MODAL */}
-      {friendToRemove && (
-        <DeleteConfirmModal
-          isOpen={true}
-          title="Remove Friend"
-          message={`Remove ${friendToRemove.username}?`}
-          onCancel={() =>
-            setFriendToRemove(null)
-          }
-          onConfirm={handleConfirmRemove}
-          isLoading={isRemoving}
-        />
-      )}
+      {/* Remove Friend Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={!!friendToRemove}
+        onClose={() => setFriendToRemove(null)}
+        onConfirm={handleConfirmRemove}
+        isDeleting={isRemoving}
+        title="Remove Friend?"
+        message={friendToRemove ? `Are you sure you want to remove @${friendToRemove.username} from your friends?` : ''}
+      />
     </div>
   );
 }

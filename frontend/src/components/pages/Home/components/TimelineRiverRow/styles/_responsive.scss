@@ -4,20 +4,21 @@
    ============================================ */
 
 @media (min-width: 1201px) {
-  .timeline-river-row--3-col {
+  .timeline-river-row--expanded-3 .timeline-river-row__content {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-lg);
   }
   
-  .timeline-river-row--2-col {
+  .timeline-river-row--expanded-2 .timeline-river-row__content {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-xl);
   }
   
-  .timeline-river-row--3-col .smart-deck,
-  .timeline-river-row--2-col .smart-deck,
-  .timeline-river-row--3-col .river-post-card,
-  .timeline-river-row--2-col .river-post-card {
+  .timeline-river-row__content .smart-deck-content,
+  .timeline-river-row__content .smart-deck-card-container,
+  .timeline-river-row__content .river-post-card {
     min-width: 0;
     width: 100%;
   }
@@ -32,6 +33,29 @@
   .timeline-river-row--3-col,
   .timeline-river-row--2-col {
     overflow-x: clip;
+  }
+  
+  /* Collapsed decks container - full width above cards */
+  .collapsed-decks-container {
+    width: 100%;
+    flex: 0 0 100%;
+    margin-bottom: var(--space-md);
+  }
+  
+  /* Single category - centered, not full width */
+  .timeline-river-row--expanded-1 .timeline-river-row__content {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .timeline-river-row--expanded-1 .smart-deck-content {
+    max-width: 750px;
+  }
+  
+  .timeline-river-row--expanded-1 .smart-deck,
+  .timeline-river-row--expanded-2 .smart-deck {
+    margin-left: 0 !important;
+    position: relative !important;
   }
   
   /* 3-column stacking */
@@ -151,7 +175,7 @@
   
   .timeline-river-row--3-col .river-media-image {
     min-height: 100px;
-    max-height: 160px;
+    max-height: 350px;
   }
   
   .timeline-river-row--3-col .river-post-actions {
@@ -217,7 +241,7 @@
   
   .timeline-river-row--2-col .river-media-image {
     min-height: 100px;
-    max-height: 160px;
+    max-height: 400px;
   }
   
   .timeline-river-row--2-col .river-post-actions {
@@ -304,8 +328,8 @@
   }
   
   .smart-deck .river-media-image {
-    height: 140px !important;
-    max-height: 140px !important;
+    height: auto !important;
+    max-height: 400px !important;
     min-height: unset;
   }
 }
@@ -381,8 +405,8 @@
   }
   
   .river-media-image {
-    height: 140px !important;
-    max-height: 140px !important;
+    height: auto !important;
+    max-height: 350px !important;
   }
   
   /* Carousel cards full width */

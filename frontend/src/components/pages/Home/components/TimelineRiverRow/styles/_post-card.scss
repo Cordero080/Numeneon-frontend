@@ -220,6 +220,13 @@
   color: var(--cyan);
   font-size: var(--font-size-sm);
   flex-shrink: 0;
+  overflow: hidden;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 }
 
 .river-avatar svg {

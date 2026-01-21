@@ -20,6 +20,7 @@ export {
   ChevronRightIcon,
   BackIcon,
   FlipIcon,
+  HamburgerIcon,
 } from "./navigation";
 
 // User & Profile
@@ -41,6 +42,7 @@ export {
   ShareIcon,
   BookmarkIcon,
   RepostIcon,
+  BoltDynamicIcon,
 } from "./engagement";
 
 // Actions

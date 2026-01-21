@@ -16,6 +16,19 @@
   transition: transform 0.3s ease;
   backface-visibility: hidden;
   -webkit-font-smoothing: subpixel-antialiased;
+  
+  /* When reaction picker is open, fade other buttons */
+  &.picker-open .river-action-btn {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+  }
+  
+  /* Keep likes visible */
+  &.picker-open .river-post-likes {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 
 /* Align likes (heart + count) with other action buttons */

@@ -125,3 +125,24 @@ export const RepostIcon = ({ size = 18, className = '', ...props }) => (
     <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
   </svg>
 );
+
+/** Dynamic Bolt/Lightning icon - for "emphasis" reaction, matches post type color */
+export const BoltDynamicIcon = ({ size = 18, className = '', filled = false, fillColor, strokeColor = 'rgba(201,168,255,0.5)', ...props }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    className={className}
+    style={{ overflow: 'visible' }}
+    {...props}
+  >
+    <polygon 
+      points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"
+      fill={filled ? (fillColor || "currentColor") : "none"} 
+      stroke={filled ? (fillColor || "currentColor") : strokeColor} 
+      strokeWidth="1.5"
+      strokeLinejoin="round"
+    />
+  </svg>
+);

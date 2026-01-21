@@ -1,27 +1,5 @@
-// =============================================================================
-// 🔵 PABLO - UI Architect | 🟢 COLIN - Post Creation Logic
+// 🔵 PABLO - UI/Styling | 🟢 COLIN - Post Creation Logic
 // ComposerModal.jsx - Modal for creating new posts
-// =============================================================================
-//
-// ┌────────────────────────────────────────────────────────────────────────────┐
-// │ Share Your Thoughts                                          [─] [□] [✕]  │
-// ├────────────────────────────────────────────────────────────────────────────┤
-// │  ┌────┐                                                                    │
-// │  │ 👤 │  @username                                                         │
-// │  └────┘  🔘 Public                                                         │
-// │                                                                            │
-// │  ┌────────────────────────────────────────────────────────────────────┐    │
-// │  │ What's on your mind?                                               │    │
-// │  │                                                                    │    │
-// │  │                                                                    │    │
-// │  └────────────────────────────────────────────────────────────────────┘    │
-// │                                                                            │
-// │  [💭 Thought]  [📷 Media]  [🏆 Milestone]  ← type toggle                   │
-// ├────────────────────────────────────────────────────────────────────────────┤
-// │  [😊] [📍]                                     [Post Thought]             │
-// └────────────────────────────────────────────────────────────────────────────┘
-//
-// =============================================================================
 
 import React, { useState } from 'react';
 import './ComposerModal.scss';
@@ -40,54 +18,55 @@ import {
 } from '@assets/icons';
 
 function ComposerModal({ showComposer, setShowComposer, composerType, setComposerType }) {
-  // ─────────────────────────────────────────────────────────────────────────
-  // CONTEXT & STATE
-  // ─────────────────────────────────────────────────────────────────────────
   const { user } = useAuth();
   const { createPost } = usePosts();
   const [content, setContent] = useState('');
   const [isPosting, setIsPosting] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   
-  // Early return if not showing
   if (!showComposer) return null;
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // HANDLERS
-  // ─────────────────────────────────────────────────────────────────────────
   const handlePost = async () => {
-    // TODO: Return early if empty or isPosting
-    // TODO: Map composerType to post type ('thought'->'thoughts', 'media'->'media', 'milestone'->'milestones')
-    // TODO: Call createPost with { content, type }
-    // TODO: On success, clear content and close modal
-    // TODO: On error, show alert
+    if (!content.trim() || isPosting) return;
+    
+    setIsPosting(true);
+    
+    // Map composerType to post type
+    const postType = composerType === 'thought' ? 'thoughts' : 
+                     composerType === 'media' ? 'media' : 'milestones';
+    
+    const result = await createPost({ content: content.trim(), type: postType });
+    
+    setIsPosting(false);
+    
+    if (result.success) {
+      setContent('');
+      setShowComposer(false);
+    } else {
+      alert(result.error || 'Failed to create post');
+    }
   };
 
   const handleKeyDown = (e) => {
-    // TODO: If Cmd/Ctrl + Enter, call handlePost()
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault();
+      handlePost();
+    }
   };
 
   const getButtonText = () => {
-    // TODO: Return "Posting..." if isPosting
-    // TODO: Return "Post Thought" / "Post Media" / "Post Milestone" based on composerType
+    if (isPosting) return 'Posting...';
+    if (composerType === 'thought') return 'Post Thought';
+    if (composerType === 'media') return 'Post Media';
+    return 'Post Milestone';
   };
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // RENDER
-  // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="composer-modal-overlay" onClick={() => setShowComposer(false)}>
-      <div 
-        className={`composer-modal-content ${isFullscreen ? 'fullscreen' : ''}`} 
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* ═══════════════════════════════════════════════════════════════════ */}
-        {/* HEADER                                                              */}
-        {/* ═══════════════════════════════════════════════════════════════════ */}
+      <div className={`composer-modal-content ${isFullscreen ? 'fullscreen' : ''}`} onClick={(e) => e.stopPropagation()}>
         <div className="composer-modal-header">
           <h3 className="composer-modal-title">
-            {composerType === 'thought' ? 'Share Your Thoughts' : 
-             composerType === 'media' ? 'Post Media' : 'Add Milestone'}
+            {composerType === 'thought' ? 'Share Your Thoughts' : composerType === 'media' ? 'Post Media' : 'Add Milestone'}
           </h3>
           <div className="modal-header-actions">
             <button 
@@ -107,11 +86,7 @@ function ComposerModal({ showComposer, setShowComposer, composerType, setCompose
           </div>
         </div>
 
-        {/* ═══════════════════════════════════════════════════════════════════ */}
-        {/* BODY                                                                */}
-        {/* ═══════════════════════════════════════════════════════════════════ */}
         <div className="composer-modal-body">
-          {/* User Info */}
           <div className="composer-avatar-section">
             <div className="composer-avatar-small">
               <UserIcon size={40} />
@@ -125,14 +100,9 @@ function ComposerModal({ showComposer, setShowComposer, composerType, setCompose
             </div>
           </div>
 
-          {/* Textarea */}
           <textarea 
             className={`composer-textarea ${composerType === 'media' ? 'media-mode' : ''}`}
-            placeholder={
-              composerType === 'thought' ? "What's on your mind?" : 
-              composerType === 'media' ? "Add a caption to your media..." : 
-              "Describe your milestone..."
-            }
+            placeholder={composerType === 'thought' ? "What's on your mind?" : composerType === 'media' ? "Add a caption to your media..." : "Describe your milestone..."}
             rows={composerType === 'media' ? 2 : 6}
             value={content}
             onChange={(e) => setContent(e.target.value)}
@@ -141,7 +111,6 @@ function ComposerModal({ showComposer, setShowComposer, composerType, setCompose
             disabled={isPosting}
           />
 
-          {/* Media Upload Area (media type only) */}
           {composerType === 'media' && (
             <div className="media-upload-area">
               <div className="media-upload-placeholder">
@@ -152,7 +121,6 @@ function ComposerModal({ showComposer, setShowComposer, composerType, setCompose
             </div>
           )}
 
-          {/* Milestone Options (milestone type only) */}
           {composerType === 'milestone' && (
             <div className="milestone-options">
               <input 
@@ -172,7 +140,6 @@ function ComposerModal({ showComposer, setShowComposer, composerType, setCompose
             </div>
           )}
 
-          {/* Type Toggle Buttons */}
           <div className="composer-type-toggle">
             <button 
               className={`type-toggle-btn type-toggle-thought ${composerType === 'thought' ? 'active' : ''}`}
@@ -198,9 +165,6 @@ function ComposerModal({ showComposer, setShowComposer, composerType, setCompose
           </div>
         </div>
 
-        {/* ═══════════════════════════════════════════════════════════════════ */}
-        {/* FOOTER                                                              */}
-        {/* ═══════════════════════════════════════════════════════════════════ */}
         <div className="composer-modal-footer">
           <div className="composer-actions-left">
             <button className="composer-icon-btn" aria-label="Add emoji">
@@ -215,8 +179,7 @@ function ComposerModal({ showComposer, setShowComposer, composerType, setCompose
             onClick={handlePost}
             disabled={!content.trim() || isPosting}
           >
-            {/* TODO: getButtonText() */}
-            Post
+            {getButtonText()}
           </button>
         </div>
       </div>

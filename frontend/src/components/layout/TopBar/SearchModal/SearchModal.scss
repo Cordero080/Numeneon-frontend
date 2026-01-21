@@ -701,7 +701,8 @@
 
 @media (max-width: 768px) {
   .search-modal-overlay {
-    padding-left: 50px;
+    padding-left: 70px; /* Account for 56px side nav + some margin */
+    padding-right: 15px;
     padding-top: 5vh;
   }
 
