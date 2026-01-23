@@ -93,8 +93,10 @@ export const AuthProvider = ({ children }) => {
   // HINT: POST /api/auth/login/ → store tokens → GET /api/auth/me/
   const login = async (email, password) => {
     try {
-      // call service to handle API call and token storage
-      await authService.login(email, password);
+      const response = await apiClient.post('/auth/login/', { email, password });
+      const { access, refresh } = response.data;
+      localStorage.setItem('accessToken', access);
+      localStorage.setItem('refreshToken', refresh);
       // call service to get the full user object
       const userData = await authService.getCurrentUser();
       setUser(userData);
@@ -112,7 +114,7 @@ export const AuthProvider = ({ children }) => {
   // HINT: POST /api/auth/signup/ → then call login()
   const signup = async (username, email, password) => {
     try {
-      await authService.signup(username, email, password);
+      await authService.signup({ username, email, password });
       // user signed up successfully, now use the login function to log them in
       return await login(email, password);
     } catch (error) {
