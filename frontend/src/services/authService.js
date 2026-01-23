@@ -60,7 +60,7 @@ const authService = {
     return responce.data; // return data from response
   },
 
-  getMe: async () => {
+  getCurrentUser: async () => {
     // TODO: Use apiClient.get() to /auth/me/
     const responce = await apiClient.get("/auth/me/"); // fetch user specific data
     return responce.data; // return data from response
