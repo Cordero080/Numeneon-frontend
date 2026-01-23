@@ -89,17 +89,17 @@
 /* Type-specific tab colors - using CSS vars for consistency */
 .deck-tab--thoughts {
   border-color: rgba(79, 255, 255, 0.4);
-  .smart-deck-icon-svg, .deck-tab__label, .deck-tab__count { color: var(--cyan); }
+  .smart-deck-icon-svg, .deck-tab__label, .deck-tab__count, .deck-tab__collapse { color: var(--cyan); }
 }
 
 .deck-tab--media {
   border-color: rgba(167, 131, 255, 0.4);
-  .smart-deck-icon-svg, .deck-tab__label, .deck-tab__count { color: var(--post-media-badge); }
+  .smart-deck-icon-svg, .deck-tab__label, .deck-tab__count, .deck-tab__collapse { color: var(--post-media-badge); }
 }
 
 .deck-tab--milestones {
   border-color: rgba(26, 231, 132, 0.4);
-  .smart-deck-icon-svg, .deck-tab__label, .deck-tab__count { color: var(--accent); }
+  .smart-deck-icon-svg, .deck-tab__label, .deck-tab__count, .deck-tab__collapse { color: var(--accent); }
 }
 
 /* Content row */

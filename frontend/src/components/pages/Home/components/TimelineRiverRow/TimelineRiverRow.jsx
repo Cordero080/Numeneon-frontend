@@ -19,9 +19,26 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
   // 🔵 Extract data from props
   const { user } = rowData;
   const { user: currentUser } = useAuth();
-  const { posts, fetchReplies, createReply, deletePost, updatePost, likePost, sharePost, collapsedDecks, collapseDeck, expandDeck } = usePosts();
+  const { posts, fetchReplies, createReply, deletePost, updatePost, likePost, sharePost } = usePosts();
   const { openMessages } = useMessages();
   const navigate = useNavigate();
+  
+  // Per-row collapsed state (NOT global - each user row manages its own)
+  const [rowCollapsedDecks, setRowCollapsedDecks] = useState(new Set());
+  
+  // Collapse a category for THIS row only
+  const collapseRowDeck = (type) => {
+    setRowCollapsedDecks(prev => new Set([...prev, type]));
+  };
+  
+  // Expand a category for THIS row only
+  const expandRowDeck = (type) => {
+    setRowCollapsedDecks(prev => {
+      const next = new Set(prev);
+      next.delete(type);
+      return next;
+    });
+  };
   
   // Navigate to user's profile when clicking their name/avatar
   const handleUserClick = (e, userId, username) => {
@@ -100,9 +117,6 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
     media: 0,
     milestones: 0
   });
-  
-  // Collapsed decks state - now from context (shared across pages)
-  // Handlers: collapseDeck, expandDeck from usePosts()
   
   // Deck navigation
   const nextCard = (type, totalCards) => {
@@ -398,16 +412,16 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
 
   // Calculate how many decks are currently expanded
   const expandedCount = [
-    hasThoughts && !collapsedDecks.has('thoughts'),
-    hasMedia && !collapsedDecks.has('media'),
-    hasMilestones && !collapsedDecks.has('milestones')
+    hasThoughts && !rowCollapsedDecks.has('thoughts'),
+    hasMedia && !rowCollapsedDecks.has('media'),
+    hasMilestones && !rowCollapsedDecks.has('milestones')
   ].filter(Boolean).length;
   
-  // Collapse all decks
+  // Collapse all decks for this row
   const handleCollapseAll = () => {
-    if (hasThoughts) collapseDeck('thoughts');
-    if (hasMedia) collapseDeck('media');
-    if (hasMilestones) collapseDeck('milestones');
+    if (hasThoughts) collapseRowDeck('thoughts');
+    if (hasMedia) collapseRowDeck('media');
+    if (hasMilestones) collapseRowDeck('milestones');
   };
 
   // 🟢 DESKTOP: Tabs in header row, content below - like mobile tabs
@@ -437,42 +451,42 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
       <div className="timeline-river-row__tabs">
         {hasThoughts && (
           <button 
-            className={`deck-tab deck-tab--thoughts${collapsedDecks.has('thoughts') ? ' deck-tab--collapsed' : ''}${mostRecentType && mostRecentType !== 'thoughts' ? ' deck-tab--not-recent' : ''}`}
-            onClick={() => collapsedDecks.has('thoughts') ? expandDeck('thoughts') : collapseDeck('thoughts')}
+            className={`deck-tab deck-tab--thoughts${rowCollapsedDecks.has('thoughts') ? ' deck-tab--collapsed' : ''}${mostRecentType && mostRecentType !== 'thoughts' ? ' deck-tab--not-recent' : ''}`}
+            onClick={() => rowCollapsedDecks.has('thoughts') ? expandRowDeck('thoughts') : collapseRowDeck('thoughts')}
           >
             <span className="deck-tab__icon"><ThoughtBubbleIcon className="smart-deck-icon-svg" /></span>
             <span className="deck-tab__label">Thoughts</span>
             <span className="deck-tab__count">{thoughts.length}</span>
-            <span className="deck-tab__collapse">{collapsedDecks.has('thoughts') ? '+' : '−'}</span>
+            <span className="deck-tab__collapse">{rowCollapsedDecks.has('thoughts') ? '+' : '−'}</span>
           </button>
         )}
         {hasMedia && (
           <button 
-            className={`deck-tab deck-tab--media${collapsedDecks.has('media') ? ' deck-tab--collapsed' : ''}${mostRecentType && mostRecentType !== 'media' ? ' deck-tab--not-recent' : ''}`}
-            onClick={() => collapsedDecks.has('media') ? expandDeck('media') : collapseDeck('media')}
+            className={`deck-tab deck-tab--media${rowCollapsedDecks.has('media') ? ' deck-tab--collapsed' : ''}${mostRecentType && mostRecentType !== 'media' ? ' deck-tab--not-recent' : ''}`}
+            onClick={() => rowCollapsedDecks.has('media') ? expandRowDeck('media') : collapseRowDeck('media')}
           >
             <span className="deck-tab__icon"><ImageIcon className="smart-deck-icon-svg" /></span>
             <span className="deck-tab__label">Media</span>
             <span className="deck-tab__count">{media.length}</span>
-            <span className="deck-tab__collapse">{collapsedDecks.has('media') ? '+' : '−'}</span>
+            <span className="deck-tab__collapse">{rowCollapsedDecks.has('media') ? '+' : '−'}</span>
           </button>
         )}
         {hasMilestones && (
           <button 
-            className={`deck-tab deck-tab--milestones${collapsedDecks.has('milestones') ? ' deck-tab--collapsed' : ''}${mostRecentType && mostRecentType !== 'milestones' ? ' deck-tab--not-recent' : ''}`}
-            onClick={() => collapsedDecks.has('milestones') ? expandDeck('milestones') : collapseDeck('milestones')}
+            className={`deck-tab deck-tab--milestones${rowCollapsedDecks.has('milestones') ? ' deck-tab--collapsed' : ''}${mostRecentType && mostRecentType !== 'milestones' ? ' deck-tab--not-recent' : ''}`}
+            onClick={() => rowCollapsedDecks.has('milestones') ? expandRowDeck('milestones') : collapseRowDeck('milestones')}
           >
             <span className="deck-tab__icon"><StarIcon className="smart-deck-icon-svg" /></span>
             <span className="deck-tab__label">Milestones</span>
             <span className="deck-tab__count">{milestones.length}</span>
-            <span className="deck-tab__collapse">{collapsedDecks.has('milestones') ? '+' : '−'}</span>
+            <span className="deck-tab__collapse">{rowCollapsedDecks.has('milestones') ? '+' : '−'}</span>
           </button>
         )}
       </div>
       
       {/* Content row - only expanded decks */}
       <div className="timeline-river-row__content">
-        {hasThoughts && !collapsedDecks.has('thoughts') && (
+        {hasThoughts && !rowCollapsedDecks.has('thoughts') && (
           <SmartDeckContent
             posts={thoughts}
             type="thoughts"
@@ -483,7 +497,7 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
             renderPostCard={renderPostCard}
           />
         )}
-        {hasMedia && !collapsedDecks.has('media') && (
+        {hasMedia && !rowCollapsedDecks.has('media') && (
           <SmartDeckContent
             posts={media}
             type="media"
@@ -494,7 +508,7 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
             renderPostCard={renderPostCard}
           />
         )}
-        {hasMilestones && !collapsedDecks.has('milestones') && (
+        {hasMilestones && !rowCollapsedDecks.has('milestones') && (
           <SmartDeckContent
             posts={milestones}
             type="milestones"

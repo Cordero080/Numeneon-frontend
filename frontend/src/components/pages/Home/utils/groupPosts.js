@@ -46,7 +46,7 @@ const getPostTime = (post) =>
  * @param {Array} posts - Flat array of posts from backend
  * @returns {Object} { orderId: { user, thoughts[], media[], milestones[], mostRecentTimestamp } }
  */
-export const groupPostsByUserAndDay = (posts) => {
+export const groupPostsByUser = (posts) => {
   const grouped = {};
 
   posts.forEach((post) => {
@@ -94,7 +94,7 @@ export const groupPostsByUserAndDay = (posts) => {
  * Converts grouped posts into sorted array for rendering.
  * Sorts by most recent post timestamp (newest first).
  *
- * @param {Object} grouped - Result from groupPostsByUserAndDay
+ * @param {Object} grouped - Result from groupPostsByUser
  * @returns {Array} [{ date, orderId, data }] sorted newest first
  */
 export const sortGroupedPosts = (grouped) => {
