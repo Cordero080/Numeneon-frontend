@@ -1,7 +1,7 @@
 // 🔵 PABLO - UI/Styling | 🟣 CRYSTAL - API Logic  
 // Friends.jsx - Friends list and requests page
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFriends, useMessages } from '@contexts';
 import DeleteConfirmModal from '@Home/components/DeleteConfirmModal/DeleteConfirmModal';
@@ -13,6 +13,16 @@ const getColorVariant = (id) => {
   const variants = ['card-cyan', 'card-magenta', 'card-green', 'card-purple', 'card-orange'];
   return variants[id % variants.length];
 };
+
+// Theme colors for icons (dimmed versions)
+const themeColors = [
+  'rgba(79, 255, 255, 0.6)',  // cyan
+  'rgba(168, 85, 247, 0.6)',  // purple  
+  'rgba(255, 215, 0, 0.6)',   // gold
+  'rgba(255, 107, 157, 0.6)', // magenta/pink
+  'rgba(0, 255, 136, 0.6)',   // green
+  'rgba(255, 140, 66, 0.6)',  // orange
+];
 
 // Helper to get initials from name
 const getInitials = (firstName, lastName, username) => {
@@ -54,11 +64,12 @@ function Friends() {
   console.log('Friends page - friends:', friends, 'pending:', pendingRequests, 'loading:', isLoading, 'error:', error);
 
   // Suggestions are still mock for now (would need a different API)
-  const suggestions = [
+  // Each suggestion gets a theme color based on their id
+  const suggestions = useMemo(() => [
     { id: 201, name: 'Maya Patel', username: 'mayap', avatar: 'MP', mutualFriends: 5 },
     { id: 202, name: 'Jake Thompson', username: 'jaket', avatar: 'JT', mutualFriends: 2 },
     { id: 203, name: 'Emma Wilson', username: 'emmaw', avatar: 'EW', mutualFriends: 8 },
-  ];
+  ], []);
 
   // Handle accept friend request
   const handleAccept = async (requestId) => {
@@ -173,7 +184,7 @@ function Friends() {
       <div className="friends-content">
         {activeTab === 'all' && (
           <div className="friends-grid">
-            {friends.map(friend => (
+            {friends.map((friend, index) => (
               <div 
                 key={friend.id} 
                 className={`friend-card card card-interactive ${getColorVariant(friend.id)}`}
@@ -194,7 +205,7 @@ function Friends() {
                   onClick={(e) => handleMessageFriend(e, friend)} 
                   title="Message friend"
                 >
-                  <MessageBubbleIcon size={20} />
+                  <MessageBubbleIcon size={20} color={themeColors[index % themeColors.length]} />
                 </button>
                 <button 
                   className="friend-remove-btn" 
@@ -236,7 +247,7 @@ function Friends() {
 
         {activeTab === 'suggestions' && (
           <div className="friends-grid">
-            {suggestions.map(suggestion => (
+            {suggestions.map((suggestion, index) => (
               <div key={suggestion.id} className="friend-card card suggestion-card">
                 <div className="scan-line"></div>
                 <div className="friend-avatar">
@@ -247,9 +258,8 @@ function Friends() {
                   <span className="friend-username">{suggestion.username}</span>
                   <span className="friend-mutual">{suggestion.mutualFriends} mutual friends</span>
                 </div>
-                <button className="btn-add-friend">
-                  <PlusIcon size={16} />
-                  Add
+                <button className="btn-add-friend" title="Add Friend">
+                  <PlusIcon size={22} color={themeColors[index % themeColors.length]} />
                 </button>
               </div>
             ))}

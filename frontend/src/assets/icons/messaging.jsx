@@ -4,15 +4,16 @@
  */
 
 /** Chat bubble - used for Messages */
-export const MessageBubbleIcon = ({ size = 20, className = '', ...props }) => (
+export const MessageBubbleIcon = ({ size = 20, className = '', color, ...props }) => (
   <svg
     width={size}
     height={size}
     viewBox="0 0 24 24"
     fill="none"
-    stroke="currentColor"
+    stroke={color || "currentColor"}
     strokeWidth="2"
     className={className}
+    style={{ color: color }}
     {...props}
   >
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
