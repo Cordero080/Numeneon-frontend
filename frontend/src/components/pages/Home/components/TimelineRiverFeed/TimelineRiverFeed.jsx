@@ -4,7 +4,7 @@
 // ROW-CHUNKING: Posts are chunked into rows of max 12 per category.
 // When a user posts 15 thoughts in a day, they get 2 rows: [3 newest] then [12 older].
 
-import { groupPostsByUserAndDay, sortGroupedPosts } from '@components/pages/Home/utils/groupPosts';
+import { groupPostsByUser, sortGroupedPosts } from '@components/pages/Home/utils/groupPosts';
 import TimelineRiverRow from '../TimelineRiverRow';
 import { MessageBubbleIcon, ClockIcon } from '@assets/icons';
 import './TimelineRiverFeed.scss';
@@ -66,7 +66,7 @@ const splitGroupIntoRows = (groupData) => {
 
 function TimelineRiverFeed({ posts, activeCommentPostId, setActiveCommentPostId, commentText, setCommentText, onDeletePost, onUpdatePost }) {
   // Transform flat posts array into grouped structure (no memoization - always fresh)
-  const grouped = groupPostsByUserAndDay(posts);
+  const grouped = groupPostsByUser(posts);
   const groupedAndSortedPosts = sortGroupedPosts(grouped);
 
   // 🔵 Handle comment toggle (open/close comment box)

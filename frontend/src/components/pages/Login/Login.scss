@@ -474,7 +474,8 @@
   text-decoration: underline;
 }
 
-.btn-submit {
+.btn-submit,
+.submit-button {
   width: 100%;
   max-width: 380px;
   margin-left: auto;
@@ -497,23 +498,27 @@
   overflow: hidden;
 }
 
-.btn-submit:hover:not(:disabled) {
+.btn-submit:hover:not(:disabled),
+.submit-button:hover:not(:disabled) {
   background: rgba(0, 0, 0, 1) !important;
   border-color: rgba(255, 255, 255, 1);
   transform: translateY(-2px);
   box-shadow: none;
 }
 
-.btn-submit:active:not(:disabled) {
+.btn-submit:active:not(:disabled),
+.submit-button:active:not(:disabled) {
   transform: translateY(-2px) scale(0.98);
 }
 
-.btn-submit:disabled {
+.btn-submit:disabled,
+.submit-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.btn-submit.loading {
+.btn-submit.loading,
+.submit-button.loading {
   display: flex;
   align-items: center;
   justify-content: center;

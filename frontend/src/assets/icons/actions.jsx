@@ -57,15 +57,16 @@ export const CloseIcon = ({ size = 18, className = '', ...props }) => (
 );
 
 /** Plus - used for Add/Create */
-export const PlusIcon = ({ size = 18, className = '', ...props }) => (
+export const PlusIcon = ({ size = 18, className = '', color, style, ...props }) => (
   <svg
     width={size}
     height={size}
     viewBox="0 0 24 24"
     fill="none"
-    stroke="currentColor"
+    stroke={color || "currentColor"}
     strokeWidth="2"
     className={className}
+    style={{ ...style, color: color }}
     {...props}
   >
     <line x1="12" y1="5" x2="12" y2="19"/>
