@@ -35,7 +35,7 @@ export const SignalIcon = ({ size = 24, className = '', ...props }) => (
     <circle cx="12" cy="18" r="3"/>
     <path d="M7 13a7 7 0 0 1 10 0"/>
     <path d="M4 9a12 12 0 0 1 16 0"/>
-  </svg>  git push origin dev --force
+  </svg>
 );
 
 /** Two cyber figures with circuit halos */
