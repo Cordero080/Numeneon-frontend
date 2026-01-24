@@ -30,6 +30,7 @@ export {
   LockIcon,
   HexProfileIcon,
   VisibilityIcon,
+  AddFriendIcon,
 } from "./user";
 
 // Engagement
