@@ -83,5 +83,11 @@ const authService = {
     });
     return responce.data; // return data from response
   },
+
+  logout: () => {
+    // Clear tokens from localStorage
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+  },
 };
 export default authService;

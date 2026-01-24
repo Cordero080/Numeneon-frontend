@@ -12,8 +12,13 @@ import {
   ShareIcon,
   CheckIcon,
   MoreHorizontalIcon,
-  ActivityIcon
+  ActivityIcon,
+  AddFriendIcon,
+  FriendsIcon,
+  ClockIcon,
+  MessageLineIcon
 } from '@assets/icons';
+import { useFriends, useMessages } from '@contexts';
 
 // Color variants for interactive letters
 const colorVariants = ['magenta', 'cyan', 'aqua', 'purple', 'blue'];
@@ -24,6 +29,32 @@ function ProfileCardFront({ setIsFlipped, posts, user, isOwnProfile = true }) {
   const isAnimatingRef = useRef(false);
   const [replayGlitch, setReplayGlitch] = useState(false);
   const [showShareToast, setShowShareToast] = useState(false);
+  const [friendRequestPending, setFriendRequestPending] = useState(false);
+  
+  const { friends, pendingRequests, sendRequest } = useFriends();
+  const { openMessages } = useMessages();
+  
+  // Check friendship status
+  const isFriend = friends?.some(f => f.id === user?.id || f.username === user?.username);
+  const hasPendingRequest = pendingRequests?.some(r => r.from_user?.id === user?.id || r.to_user?.id === user?.id);
+  
+  // Handle sending friend request
+  const handleAddFriend = async () => {
+    if (!user?.id) return;
+    setFriendRequestPending(true);
+    const result = await sendRequest(user.id);
+    if (!result.success) {
+      console.error('Failed to send friend request:', result.error);
+    }
+    // Keep pending state to show "Request Sent"
+  };
+  
+  // Handle opening messages with this user
+  const handleMessage = () => {
+    if (user?.id) {
+      openMessages(user);
+    }
+  };
   
   // Build display name from first + last name, fallback to username
   const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(' ');
@@ -201,15 +232,35 @@ function ProfileCardFront({ setIsFlipped, posts, user, isOwnProfile = true }) {
 
       {/* Action Icons - Right Side */}
       <div className="profile-actions-pill">
-        {/* Save button - only on other users' profiles */}
+        {/* Friend actions - only on other users' profiles */}
         {!isOwnProfile && (
-          <button className="action-icon-btn save-btn" title="Save Profile">
-            <BookmarkIcon size={18} />
-          </button>
+          <>
+            {isFriend ? (
+              <>
+                <button className="action-icon-btn friend-btn is-friend" title="Friends">
+                  <FriendsIcon size={18} />
+                </button>
+                <button className="action-icon-btn message-btn" title="Message" onClick={handleMessage}>
+                  <MessageLineIcon size={18} />
+                </button>
+                <button className="action-icon-btn save-btn" title="Save Profile">
+                  <BookmarkIcon size={18} />
+                </button>
+                <button className="action-icon-btn share-btn" title="Share Profile" onClick={handleShareProfile}>
+                  <ShareIcon size={18} />
+                </button>
+              </>
+            ) : hasPendingRequest || friendRequestPending ? (
+              <button className="action-icon-btn pending-btn" title="Request Pending" disabled>
+                <ClockIcon size={18} />
+              </button>
+            ) : (
+              <button className="action-icon-btn add-friend-btn" title="Add Friend" onClick={handleAddFriend}>
+                <AddFriendIcon size={20} />
+              </button>
+            )}
+          </>
         )}
-        <button className="action-icon-btn share-btn" title="Share Profile" onClick={handleShareProfile}>
-          <ShareIcon size={18} />
-        </button>
 
         {/* Share toast notification */}
         {showShareToast && (
@@ -221,6 +272,9 @@ function ProfileCardFront({ setIsFlipped, posts, user, isOwnProfile = true }) {
         {/* More options & Analytics - only on own profile */}
         {isOwnProfile && (
           <>
+            <button className="action-icon-btn share-btn" title="Share Profile" onClick={handleShareProfile}>
+              <ShareIcon size={18} />
+            </button>
             <button className="action-icon-btn more-btn" title="More Options">
               <MoreHorizontalIcon size={18} />
             </button>
