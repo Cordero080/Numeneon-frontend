@@ -58,7 +58,13 @@ export {
 } from "./actions";
 
 // Media
-export { ImageIcon, ExpandIcon, MaximizeIcon, MinimizeIcon } from "./media";
+export {
+  ImageIcon,
+  ExpandIcon,
+  MaximizeIcon,
+  MinimizeIcon,
+  CameraLensIcon,
+} from "./media";
 
 // UI
 export {

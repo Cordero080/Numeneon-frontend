@@ -73,7 +73,8 @@
   position: absolute;
   width: 130px;
   height: 130px;
-  z-index: 3;
+  z-index: 1;
+  pointer-events: none;
   
   svg {
     display: block;
@@ -133,9 +134,53 @@
   z-index: 2;
 }
 
-.profile-card-front .profile-avatar svg {
+.profile-card-front .profile-avatar > svg {
   color: rgba(255, 255, 255, 0.9);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Camera badge for photo upload */
+.profile-card-front .avatar-camera-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  z-index: 5;
+}
+
+.profile-card-front .avatar-camera-badge svg {
+  transition: all 0.3s ease;
+}
+
+.profile-card-front .avatar-camera-badge:hover {
+  background: rgba(0, 0, 0, 0.75);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.5),
+    0 0 16px rgba(100, 180, 255, 0.5);
+}
+
+.profile-card-front .avatar-camera-badge:hover svg {
+  transform: scale(1.15);
+  filter: brightness(1.4) drop-shadow(0 0 4px rgba(100, 180, 255, 0.8));
+}
+
+.profile-card-front .avatar-camera-badge:active {
+  transform: scale(0.95);
 }
 
 .profile-card-front .profile-avatar .avatar-initials {

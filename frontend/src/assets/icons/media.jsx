@@ -56,6 +56,31 @@ export const MaximizeIcon = ({ size = 18, className = '', ...props }) => (
   </svg>
 );
 
+/** Camera Lens - used for Photo upload on avatars */
+export const CameraLensIcon = ({ size = 18, className = '', ...props }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    className={className}
+    {...props}
+  >
+    {/* Dark border ring */}
+    <circle cx="12" cy="12" r="11" fill="none" stroke="#0a0a0a" strokeWidth="1.5"/>
+    {/* Blue lens base */}
+    <circle cx="12" cy="12" r="8" fill="#082d5c"/>
+    {/* Inner blue */}
+    <circle cx="12" cy="12" r="5.5" fill="#0d3d75"/>
+    {/* Center - lighter depth */}
+    <circle cx="12" cy="12" r="2.5" fill="#1a4d8a"/>
+    {/* Dark glass overlay */}
+    <circle cx="12" cy="12" r="11" fill="rgba(0,0,0,0.35)"/>
+    {/* Lens reflection */}
+    <ellipse cx="9" cy="8" rx="3" ry="2" fill="rgba(255,255,255,0.22)" transform="rotate(-30 9 8)"/>
+  </svg>
+);
+
 /** Minimize/Exit fullscreen */
 export const MinimizeIcon = ({ size = 18, className = '', ...props }) => (
   <svg
