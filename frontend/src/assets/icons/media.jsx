@@ -67,17 +67,17 @@ export const CameraLensIcon = ({ size = 18, className = '', ...props }) => (
     {...props}
   >
     {/* Dark border ring */}
-    <circle cx="12" cy="12" r="11" fill="none" stroke="#0a0a0a" strokeWidth="1.5"/>
+    <circle cx="12" cy="12" r="11" fill="none" stroke="#3c30a1ee" strokeWidth="2.5"/>
     {/* Blue lens base */}
-    <circle cx="12" cy="12" r="8" fill="#082d5c"/>
+    <circle cx="12" cy="12" r="8" fill="#0b4a9d"/>
     {/* Inner blue */}
-    <circle cx="12" cy="12" r="5.5" fill="#0d3d75"/>
+    <circle cx="12" cy="12" r="5.5" fill="#0e5bb3"/>
     {/* Center - lighter depth */}
-    <circle cx="12" cy="12" r="2.5" fill="#1a4d8a"/>
+    <circle cx="12" cy="12" r="2.5" fill="#1e74dd"/>
     {/* Dark glass overlay */}
-    <circle cx="12" cy="12" r="11" fill="rgba(0,0,0,0.35)"/>
+    <circle cx="12" cy="12" r="11" fill="rgba(83, 82, 128, 0.53)"/>
     {/* Lens reflection */}
-    <ellipse cx="9" cy="8" rx="3" ry="2" fill="rgba(255,255,255,0.22)" transform="rotate(-30 9 8)"/>
+    <ellipse cx="9" cy="8" rx="3" ry="2" fill="rgba(150, 255, 131, 0.67)" transform="rotate(-30 9 8)"/>
   </svg>
 );
 
