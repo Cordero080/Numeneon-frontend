@@ -932,17 +932,10 @@ textarea.composer-input {
     z-index: -1 !important;
   }
 
-  /* Avatar icon color variants for light mode */
-  .story-avatar.avatar-color-0 svg {
-    color: #5ef0a8 !important;
-  }
-
-  .story-avatar.avatar-color-1 svg {
+  /* Single consistent avatar icon color for light mode */
+  .story-avatar svg {
     color: #5a9ff0 !important;
-  }
-
-  .story-avatar.avatar-color-2 svg {
-    color: #f05ad8 !important;
+    filter: drop-shadow(0 1px 2px rgba(26, 115, 231, 0.2)) !important;
   }
 
   @keyframes spinRing {
