@@ -75,6 +75,7 @@ export {
   MoreHorizontalIcon,
   CircleIcon,
   GridIcon,
+  CarouselIcon,
   ClockIcon,
 } from "./ui";
 
