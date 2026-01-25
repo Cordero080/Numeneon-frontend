@@ -347,6 +347,145 @@
   -webkit-font-smoothing: subpixel-antialiased;
 }
 
+/* Truncated content in grid view */
+.river-post-content--truncated {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
+
+/* See more link for grid view */
+.see-more-link {
+  font-size: var(--font-size-xs);
+  color: var(--cyan);
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+  margin-bottom: var(--space-sm);
+  display: inline-block;
+  
+  &:hover {
+    opacity: 1;
+    text-decoration: underline;
+  }
+}
+
+/* Grid view card adjustments */
+.post--grid-view {
+  padding: var(--space-md);
+  
+  .river-post-header {
+    margin-bottom: var(--space-sm);
+  }
+  
+  .river-post-content {
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--space-sm);
+  }
+  
+  .river-post-media {
+    width: 100%;
+    
+    .river-media-image {
+      width: 100%;
+      height: auto;
+      max-height: none;
+      object-fit: unset;
+    }
+  }
+  
+  .river-post-actions {
+    gap: var(--space-sm);
+  }
+}
+
+/* Grid view responsive - smaller screens */
+@media (max-width: 650px) {
+  .post--grid-view {
+    padding: var(--space-sm);
+    
+    .river-post-header {
+      margin-bottom: var(--space-xs);
+      
+      .river-avatar {
+        width: 24px;
+        height: 24px;
+      }
+      
+      .river-author {
+        font-size: 11px;
+      }
+      
+      .river-post-time {
+        font-size: 9px;
+      }
+    }
+    
+    .river-post-content {
+      font-size: 11px;
+      line-height: 1.3;
+      margin-bottom: var(--space-xs);
+      -webkit-line-clamp: 3;
+    }
+    
+    .river-post-media .river-media-image {
+      max-height: 150px;
+      object-fit: cover;
+    }
+    
+    .river-post-actions {
+      gap: var(--space-xs);
+      flex-wrap: wrap;
+      
+      button, .river-post-likes {
+        font-size: 10px;
+        padding: 2px 4px;
+        
+        svg {
+          width: 12px;
+          height: 12px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 400px) {
+  .post--grid-view {
+    padding: var(--space-xs);
+    
+    .river-post-header {
+      .river-avatar {
+        width: 20px;
+        height: 20px;
+      }
+    }
+    
+    .river-post-content {
+      font-size: 10px;
+      -webkit-line-clamp: 2;
+    }
+    
+    .river-post-media .river-media-image {
+      max-height: 120px;
+    }
+    
+    .river-post-actions {
+      button, .river-post-likes {
+        font-size: 9px;
+        
+        svg {
+          width: 10px;
+          height: 10px;
+        }
+      }
+    }
+  }
+}
+
 /* Thought posts: larger text */
 .river-column:nth-child(1) .river-post-card {
   padding: 16px 18px;

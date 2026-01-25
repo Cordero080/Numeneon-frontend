@@ -139,3 +139,21 @@ export const ClockIcon = ({ size = 16, className = '', ...props }) => (
     <polyline points="12 6 12 12 16 14"/>
   </svg>
 );
+
+/** Single card / Carousel view icon */
+export const CarouselIcon = ({ size = 18, className = '', ...props }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    className={className}
+    {...props}
+  >
+    <rect x="2" y="5" width="20" height="14" rx="2" />
+    <line x1="12" y1="9" x2="12" y2="15" strokeOpacity="0.5" />
+    <line x1="9" y1="12" x2="15" y2="12" strokeOpacity="0.5" />
+  </svg>
+);

@@ -8,7 +8,7 @@ import './TimelineRiverRow.scss';
 import MediaLightbox from '../MediaLightbox/MediaLightbox';
 import DeleteConfirmModal from '../DeleteConfirmModal/DeleteConfirmModal';
 import { useAuth, usePosts, useMessages } from '@contexts';
-import { ChevronLeftIcon, ChevronRightIcon, EditIcon, CheckIcon, CloseIcon, ThoughtBubbleIcon, ImageIcon, StarIcon, UserIcon } from '@assets/icons';
+import { ChevronLeftIcon, ChevronRightIcon, EditIcon, CheckIcon, CloseIcon, ThoughtBubbleIcon, ImageIcon, StarIcon, UserIcon, GridIcon, CarouselIcon } from '@assets/icons';
 import { createPortal } from 'react-dom';
 
 // Extracted components
@@ -26,6 +26,52 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
   // Per-row collapsed state (NOT global - each user row manages its own)
   const [rowCollapsedDecks, setRowCollapsedDecks] = useState(new Set());
   
+  // View mode state for each deck (carousel vs grid)
+  const [deckViewModes, setDeckViewModes] = useState({
+    thoughts: 'carousel',
+    media: 'carousel',
+    milestones: 'carousel'
+  });
+
+  // Grid pagination state (which page of 6 cards we're on)
+  const [gridPage, setGridPage] = useState({
+    thoughts: 0,
+    media: 0,
+    milestones: 0
+  });
+
+  const toggleDeckViewMode = (e, type) => {
+    e.stopPropagation(); // prevent collapsing the deck
+    setDeckViewModes(prev => {
+      // If we are turning it ON (currently carousel)
+      if (prev[type] === 'carousel') {
+        // Turn ON this one, Turn OFF all others to ensure exclusive Grid Mode
+        return {
+          thoughts: type === 'thoughts' ? 'grid' : 'carousel',
+          media: type === 'media' ? 'grid' : 'carousel',
+          milestones: type === 'milestones' ? 'grid' : 'carousel'
+        };
+      } else {
+        // Turning OFF (currently grid) -> go back to carousel
+        return {
+          ...prev, // keep others as carousel (which they are)
+          [type]: 'carousel'
+        };
+      }
+    });
+    // Reset grid page when toggling
+    setGridPage(prev => ({ ...prev, [type]: 0 }));
+  };
+
+  const handleGridPageChange = (type, page) => {
+    setGridPage(prev => ({ ...prev, [type]: page }));
+  };
+  
+  // Determine if any deck is in Grid Mode (exclusive focus)
+  const activeGridType = deckViewModes.thoughts === 'grid' ? 'thoughts' : 
+                         deckViewModes.media === 'grid' ? 'media' : 
+                         deckViewModes.milestones === 'grid' ? 'milestones' : null;
+
   // Collapse a category for THIS row only
   const collapseRowDeck = (type) => {
     setRowCollapsedDecks(prev => new Set([...prev, type]));
@@ -246,7 +292,7 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
   };
   
   // Render a post card with all necessary props
-  const renderPostCard = (post, type) => {
+  const renderPostCard = (post, type, isGridView = false) => {
     const contentLength = (post.content || '').length;
     const hasNoMedia = !post.image && !post.media_url;
     const isShortPost = contentLength < 80 && hasNoMedia;
@@ -265,6 +311,7 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
         currentUser={currentUser}
         isSinglePost={isSinglePost}
         isShortPost={isShortPost}
+        isGridView={isGridView}
         // Actions
         onUserClick={handleUserClick}
         onLike={likePost}
@@ -428,7 +475,7 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
   const allCollapsed = expandedCount === 0;
   
   return (
-    <div className={`timeline-river-row timeline-river-row--expanded-${expandedCount}`}>
+    <div className={`timeline-river-row timeline-river-row--expanded-${expandedCount}${activeGridType ? ' timeline-river-row--grid-mode' : ''}`}>
       {/* User info header - only when ALL tabs collapsed */}
       {allCollapsed && (
         <div className="timeline-river-row__user-header">
@@ -450,73 +497,115 @@ function TimelineRiverRow({ rowData, onCommentClick, activeCommentPostId, commen
       {/* Tabs row - all tabs same size, collapsed ones greyed out, non-recent dimmed */}
       <div className="timeline-river-row__tabs">
         {hasThoughts && (
-          <button 
-            className={`deck-tab deck-tab--thoughts${rowCollapsedDecks.has('thoughts') ? ' deck-tab--collapsed' : ''}${mostRecentType && mostRecentType !== 'thoughts' ? ' deck-tab--not-recent' : ''}`}
+          <div 
+            className={`deck-tab deck-tab--thoughts${(rowCollapsedDecks.has('thoughts') || (activeGridType && activeGridType !== 'thoughts')) ? ' deck-tab--collapsed' : ''}${mostRecentType && mostRecentType !== 'thoughts' ? ' deck-tab--not-recent' : ''}`}
             onClick={() => rowCollapsedDecks.has('thoughts') ? expandRowDeck('thoughts') : collapseRowDeck('thoughts')}
+            role="button"
+            tabIndex={0}
           >
+            {(!rowCollapsedDecks.has('thoughts') && (!activeGridType || activeGridType === 'thoughts')) && (
+              <button 
+                className="deck-view-toggle deck-view-toggle--thoughts"
+                onClick={(e) => toggleDeckViewMode(e, 'thoughts')}
+                title={deckViewModes.thoughts === 'grid' ? "Switch to Carousel" : "Switch to Grid"}
+              >
+                {deckViewModes.thoughts === 'grid' ? <CarouselIcon size={14} /> : <GridIcon size={14} />}
+              </button>
+            )}
             <span className="deck-tab__icon"><ThoughtBubbleIcon className="smart-deck-icon-svg" /></span>
             <span className="deck-tab__label">Thoughts</span>
             <span className="deck-tab__count">{thoughts.length}</span>
             <span className="deck-tab__collapse">{rowCollapsedDecks.has('thoughts') ? '+' : '−'}</span>
-          </button>
+          </div>
         )}
         {hasMedia && (
-          <button 
-            className={`deck-tab deck-tab--media${rowCollapsedDecks.has('media') ? ' deck-tab--collapsed' : ''}${mostRecentType && mostRecentType !== 'media' ? ' deck-tab--not-recent' : ''}`}
+          <div 
+            className={`deck-tab deck-tab--media${(rowCollapsedDecks.has('media') || (activeGridType && activeGridType !== 'media')) ? ' deck-tab--collapsed' : ''}${mostRecentType && mostRecentType !== 'media' ? ' deck-tab--not-recent' : ''}`}
             onClick={() => rowCollapsedDecks.has('media') ? expandRowDeck('media') : collapseRowDeck('media')}
+            role="button"
+            tabIndex={0}
           >
+            {(!rowCollapsedDecks.has('media') && (!activeGridType || activeGridType === 'media')) && (
+              <button 
+                className="deck-view-toggle deck-view-toggle--media"
+                onClick={(e) => toggleDeckViewMode(e, 'media')}
+                title={deckViewModes.media === 'grid' ? "Switch to Carousel" : "Switch to Grid"}
+              >
+                {deckViewModes.media === 'grid' ? <CarouselIcon size={14} /> : <GridIcon size={14} />}
+              </button>
+            )}
             <span className="deck-tab__icon"><ImageIcon className="smart-deck-icon-svg" /></span>
             <span className="deck-tab__label">Media</span>
             <span className="deck-tab__count">{media.length}</span>
             <span className="deck-tab__collapse">{rowCollapsedDecks.has('media') ? '+' : '−'}</span>
-          </button>
+          </div>
         )}
         {hasMilestones && (
-          <button 
-            className={`deck-tab deck-tab--milestones${rowCollapsedDecks.has('milestones') ? ' deck-tab--collapsed' : ''}${mostRecentType && mostRecentType !== 'milestones' ? ' deck-tab--not-recent' : ''}`}
+          <div 
+            className={`deck-tab deck-tab--milestones${(rowCollapsedDecks.has('milestones') || (activeGridType && activeGridType !== 'milestones')) ? ' deck-tab--collapsed' : ''}${mostRecentType && mostRecentType !== 'milestones' ? ' deck-tab--not-recent' : ''}`}
             onClick={() => rowCollapsedDecks.has('milestones') ? expandRowDeck('milestones') : collapseRowDeck('milestones')}
+            role="button"
+            tabIndex={0}
           >
+            {(!rowCollapsedDecks.has('milestones') && (!activeGridType || activeGridType === 'milestones')) && (
+              <button 
+                className="deck-view-toggle deck-view-toggle--milestones"
+                onClick={(e) => toggleDeckViewMode(e, 'milestones')}
+                title={deckViewModes.milestones === 'grid' ? "Switch to Carousel" : "Switch to Grid"}
+              >
+                {deckViewModes.milestones === 'grid' ? <CarouselIcon size={14} /> : <GridIcon size={14} />}
+              </button>
+            )}
             <span className="deck-tab__icon"><StarIcon className="smart-deck-icon-svg" /></span>
             <span className="deck-tab__label">Milestones</span>
             <span className="deck-tab__count">{milestones.length}</span>
             <span className="deck-tab__collapse">{rowCollapsedDecks.has('milestones') ? '+' : '−'}</span>
-          </button>
+          </div>
         )}
       </div>
       
       {/* Content row - only expanded decks */}
       <div className="timeline-river-row__content">
-        {hasThoughts && !rowCollapsedDecks.has('thoughts') && (
+        {hasThoughts && (!activeGridType || activeGridType === 'thoughts') && !rowCollapsedDecks.has('thoughts') && (
           <SmartDeckContent
             posts={thoughts}
             type="thoughts"
+            viewMode={deckViewModes.thoughts}
             currentIndex={deckIndex.thoughts}
             onNextCard={nextCard}
             onPrevCard={prevCard}
             onSelectCard={selectCard}
             renderPostCard={renderPostCard}
+            gridPage={gridPage.thoughts}
+            onGridPageChange={(page) => handleGridPageChange('thoughts', page)}
           />
         )}
-        {hasMedia && !rowCollapsedDecks.has('media') && (
+        {hasMedia && (!activeGridType || activeGridType === 'media') && !rowCollapsedDecks.has('media') && (
           <SmartDeckContent
             posts={media}
             type="media"
+            viewMode={deckViewModes.media}
             currentIndex={deckIndex.media}
             onNextCard={nextCard}
             onPrevCard={prevCard}
             onSelectCard={selectCard}
             renderPostCard={renderPostCard}
+            gridPage={gridPage.media}
+            onGridPageChange={(page) => handleGridPageChange('media', page)}
           />
         )}
-        {hasMilestones && !rowCollapsedDecks.has('milestones') && (
+        {hasMilestones && (!activeGridType || activeGridType === 'milestones') && !rowCollapsedDecks.has('milestones') && (
           <SmartDeckContent
             posts={milestones}
             type="milestones"
+            viewMode={deckViewModes.milestones}
             currentIndex={deckIndex.milestones}
             onNextCard={nextCard}
             onPrevCard={prevCard}
             onSelectCard={selectCard}
             renderPostCard={renderPostCard}
+            gridPage={gridPage.milestones}
+            onGridPageChange={(page) => handleGridPageChange('milestones', page)}
           />
         )}
       </div>
