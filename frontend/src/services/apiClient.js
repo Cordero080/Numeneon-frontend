@@ -4,8 +4,8 @@
 import axios from "axios";
 
 // Production: Render backend | Local: localhost
-const API_BASE_URL = 
-  window.location.hostname === "localhost" 
+const API_BASE_URL =
+  window.location.hostname === "localhost"
     ? "http://localhost:8000/api"
     : "https://numeneon-backend.onrender.com/api";
 

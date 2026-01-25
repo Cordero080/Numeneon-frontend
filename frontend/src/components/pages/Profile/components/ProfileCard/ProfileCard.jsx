@@ -81,9 +81,9 @@ function ProfileCard({ isFlipped, setIsFlipped, posts, user, isOwnProfile = true
     if (!posts || posts.length === 0) {
   
       return [
-      { type: 'Thoughts', percentage: 33, color: 'rgba(30, 234, 76, 0.8)' },
-      { type: 'Media', percentage: 33, color: 'rgba(26, 115, 231, 0.8)' },
-      { type: 'Milestones', percentage: 34, color: 'rgba(234, 30, 162, 0.8)' }
+      { type: 'Thoughts', percentage: 33, color: 'url(#gradient-thoughts)' },
+      { type: 'Media', percentage: 33, color: 'url(#gradient-media)' },
+      { type: 'Milestones', percentage: 34, color: 'url(#gradient-milestones)' }
     ];
   }
 
@@ -100,9 +100,9 @@ function ProfileCard({ isFlipped, setIsFlipped, posts, user, isOwnProfile = true
  const milestonesPercent = 100 - thoughtsPercent - mediaPercent;
  
  return [
-    { type: 'Thoughts', percentage: thoughtsPercent, color: 'rgba(30, 234, 76, 0.8)' },
-    { type: 'Media', percentage: mediaPercent, color: 'rgba(26, 115, 231, 0.8)' },
-    { type: 'Milestones', percentage: milestonesPercent, color: 'rgba(234, 30, 162, 0.8)' }
+    { type: 'Thoughts', percentage: thoughtsPercent, color: 'url(#gradient-thoughts)' },
+    { type: 'Media', percentage: mediaPercent, color: 'url(#gradient-media)' },
+    { type: 'Milestones', percentage: milestonesPercent, color: 'url(#gradient-milestones)' }
   ];
 }, [posts]);
 

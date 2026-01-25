@@ -831,3 +831,225 @@
     box-shadow: 0 0 8px rgba(26, 231, 132, 0.2);
   }
 }
+
+/* Grid View Mode */
+.smart-deck-grid-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100% !important;
+  max-width: 100% !important;
+  flex: 1 1 100%;
+}
+
+.smart-deck-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-lg);
+  width: 100% !important;
+}
+
+/* Grid items stretch to fill */
+.smart-deck-grid-item {
+  width: 100%;
+}
+
+.smart-deck-grid-item .river-post-card {
+  width: 100% !important;
+}
+
+/* Responsive grid columns */
+@media (max-width: 1200px) {
+  .smart-deck-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-md);
+  }
+}
+
+@media (max-width: 1000px) {
+  .smart-deck-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+  }
+}
+
+@media (max-width: 650px) {
+  .smart-deck-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+  }
+  
+  .smart-deck-grid-item {
+    transform: scale(1);
+    
+    &:hover {
+      transform: scale(1);
+    }
+  }
+}
+
+@media (max-width: 500px) {
+  .smart-deck-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-xs);
+  }
+}
+
+@media (max-width: 400px) {
+  .smart-deck-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+  }
+}
+
+/* Grid cards are scaled down */
+.smart-deck-grid-item {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  position: relative;
+  transform: scale(0.92);
+  transform-origin: center;
+  
+  &:hover {
+    transform: scale(0.95);
+    z-index: 2;
+  }
+}
+
+.smart-deck-grid-item--active .post-card {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* Grid pagination nav - uses same .smart-deck-nav as carousel */
+.smart-deck-nav--grid {
+  margin-top: var(--space-md);
+}
+
+/* Grid nav category colors - Thoughts (Cyan) */
+.smart-deck-grid-wrapper--thoughts .smart-deck-nav-btn {
+  color: rgba(79, 255, 255, 0.4);
+  
+  &::before {
+    background: rgba(79, 255, 255, 0.15);
+  }
+  
+  &:hover {
+    opacity: 1;
+    color: rgba(79, 255, 255, 1);
+    
+    &::before {
+      background: rgba(79, 255, 255, 0.6);
+      box-shadow: 0 0 15px rgba(79, 255, 255, 0.5);
+    }
+    
+    svg {
+      filter: drop-shadow(0 0 6px rgba(79, 255, 255, 0.8));
+    }
+  }
+}
+
+.smart-deck-grid-wrapper--thoughts .smart-deck-nav-position {
+  color: rgba(79, 255, 255, 0.8);
+}
+
+.smart-deck-grid-wrapper--thoughts .smart-deck-dot {
+  border-color: rgba(79, 255, 255, 0.3);
+  
+  &:hover {
+    border-color: rgba(79, 255, 255, 0.6);
+    box-shadow: 0 0 8px rgba(79, 255, 255, 0.4);
+  }
+}
+
+.smart-deck-grid-wrapper--thoughts .smart-deck-dot--active {
+  background: linear-gradient(90deg, rgba(79, 255, 255, 0.9), rgba(77, 171, 247, 0.9));
+  border-color: rgba(79, 255, 255, 0.6);
+  box-shadow: 0 0 12px rgba(79, 255, 255, 0.6),
+              0 0 25px rgba(79, 255, 255, 0.3);
+}
+
+/* Grid nav category colors - Media (Purple) */
+.smart-deck-grid-wrapper--media .smart-deck-nav-btn {
+  color: rgba(201, 168, 255, 0.4);
+  
+  &::before {
+    background: rgba(201, 168, 255, 0.15);
+  }
+  
+  &:hover {
+    opacity: 1;
+    color: rgba(201, 168, 255, 1);
+    
+    &::before {
+      background: rgba(201, 168, 255, 0.6);
+      box-shadow: 0 0 15px rgba(201, 168, 255, 0.5);
+    }
+    
+    svg {
+      filter: drop-shadow(0 0 6px rgba(201, 168, 255, 0.8));
+    }
+  }
+}
+
+.smart-deck-grid-wrapper--media .smart-deck-nav-position {
+  color: rgba(201, 168, 255, 0.8);
+}
+
+.smart-deck-grid-wrapper--media .smart-deck-dot {
+  border-color: rgba(201, 168, 255, 0.3);
+  
+  &:hover {
+    border-color: rgba(201, 168, 255, 0.6);
+    box-shadow: 0 0 8px rgba(201, 168, 255, 0.4);
+  }
+}
+
+.smart-deck-grid-wrapper--media .smart-deck-dot--active {
+  background: linear-gradient(90deg, rgba(201, 168, 255, 0.9), rgba(168, 85, 247, 0.9));
+  border-color: rgba(201, 168, 255, 0.6);
+  box-shadow: 0 0 12px rgba(201, 168, 255, 0.6),
+              0 0 25px rgba(201, 168, 255, 0.3);
+}
+
+/* Grid nav category colors - Milestones (Green) */
+.smart-deck-grid-wrapper--milestones .smart-deck-nav-btn {
+  color: rgba(26, 231, 132, 0.4);
+  
+  &::before {
+    background: rgba(26, 231, 132, 0.15);
+  }
+  
+  &:hover {
+    opacity: 1;
+    color: rgba(26, 231, 132, 1);
+    
+    &::before {
+      background: rgba(26, 231, 132, 0.6);
+      box-shadow: 0 0 15px rgba(26, 231, 132, 0.5);
+    }
+    
+    svg {
+      filter: drop-shadow(0 0 6px rgba(26, 231, 132, 0.8));
+    }
+  }
+}
+
+.smart-deck-grid-wrapper--milestones .smart-deck-nav-position {
+  color: rgba(26, 231, 132, 0.8);
+}
+
+.smart-deck-grid-wrapper--milestones .smart-deck-dot {
+  border-color: rgba(26, 231, 132, 0.3);
+  
+  &:hover {
+    border-color: rgba(26, 231, 132, 0.6);
+    box-shadow: 0 0 8px rgba(26, 231, 132, 0.4);
+  }
+}
+
+.smart-deck-grid-wrapper--milestones .smart-deck-dot--active {
+  background: linear-gradient(90deg, rgba(26, 231, 132, 0.9), rgba(16, 185, 129, 0.9));
+  border-color: rgba(26, 231, 132, 0.6);
+  box-shadow: 0 0 12px rgba(26, 231, 132, 0.6),
+              0 0 25px rgba(26, 231, 132, 0.3);
+}

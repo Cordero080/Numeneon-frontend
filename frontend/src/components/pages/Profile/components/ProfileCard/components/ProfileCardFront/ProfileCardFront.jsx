@@ -16,7 +16,8 @@ import {
   AddFriendIcon,
   FriendsIcon,
   ClockIcon,
-  MessageLineIcon
+  MessageLineIcon,
+  CameraLensIcon
 } from '@assets/icons';
 import { useFriends, useMessages } from '@contexts';
 
@@ -177,6 +178,11 @@ function ProfileCardFront({ setIsFlipped, posts, user, isOwnProfile = true }) {
           </div>
           <div className="profile-avatar">
             <UserIcon size={80} />
+            {isOwnProfile && (
+              <button className="avatar-camera-badge" title="Upload photo">
+                <CameraLensIcon size={18} />
+              </button>
+            )}
           </div>
         </div>
       </div>

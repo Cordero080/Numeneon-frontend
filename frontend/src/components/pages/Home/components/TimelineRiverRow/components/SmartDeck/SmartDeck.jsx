@@ -6,7 +6,9 @@ import {
   ChevronRightIcon,
   ThoughtBubbleIcon,
   ImageIcon,
-  StarIcon
+  StarIcon,
+  GridIcon,
+  CarouselIcon
 } from '@assets/icons';
 import './SmartDeck.scss';
 
@@ -50,6 +52,8 @@ export function SmartDeckHeader({
   );
 }
 
+const GRID_PAGE_SIZE = 6;
+
 /**
  * SmartDeckContent - The card content with navigation
  * Used in the flexible content row (only when expanded)
@@ -61,10 +65,83 @@ export function SmartDeckContent({
   onNextCard,
   onPrevCard,
   onSelectCard,
-  renderPostCard
+  renderPostCard,
+  viewMode = 'carousel',
+  gridPage = 0,
+  onGridPageChange
 }) {
   if (posts.length === 0) return null;
 
+  // Grid View - paginated, max 6 per page
+  if (viewMode === 'grid') {
+    const totalPages = Math.ceil(posts.length / GRID_PAGE_SIZE);
+    const startIdx = gridPage * GRID_PAGE_SIZE;
+    const visiblePosts = posts.slice(startIdx, startIdx + GRID_PAGE_SIZE);
+    
+    return (
+      <div className={`smart-deck-grid-wrapper smart-deck-grid-wrapper--${type}`}>
+        <div className={`smart-deck-grid smart-deck-grid--${type}`}>
+          {visiblePosts.map((post, idx) => (
+            <div 
+              key={post.id || idx} 
+              className={`smart-deck-grid-item ${currentIndex === (startIdx + idx) ? 'smart-deck-grid-item--active' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectCard(type, startIdx + idx);
+              }}
+            >
+              {renderPostCard(post, type, true)}
+            </div>
+          ))}
+        </div>
+        
+        {/* Grid pagination nav - same style as carousel with dots */}
+        {totalPages > 1 && (
+          <div className={`smart-deck-nav smart-deck-nav--grid`}>
+            <span className="smart-deck-nav-position">
+              {gridPage + 1}/{totalPages}
+            </span>
+            <button 
+              className="smart-deck-nav-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                onGridPageChange?.(gridPage === 0 ? totalPages - 1 : gridPage - 1);
+              }}
+              aria-label="Previous page"
+            >
+              <ChevronLeftIcon size={16} />
+            </button>
+            
+            <div className="smart-deck-dots">
+              {Array.from({ length: totalPages }, (_, idx) => (
+                <span 
+                  key={idx} 
+                  className={`smart-deck-dot ${idx === gridPage ? 'smart-deck-dot--active' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onGridPageChange?.(idx);
+                  }}
+                />
+              ))}
+            </div>
+            
+            <button 
+              className="smart-deck-nav-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                onGridPageChange?.((gridPage + 1) % totalPages);
+              }}
+              aria-label="Next page"
+            >
+              <ChevronRightIcon size={16} />
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Carousel View
   const currentPost = posts[currentIndex];
   const totalCards = posts.length;
 

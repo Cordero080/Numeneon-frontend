@@ -28,20 +28,31 @@ NUMENEON's signature feature is the **River Timeline** — a feed that flows lik
 └───────────────┴───────────────┴─────────────────────────┘
 ```
 
+**Digital Congestion vs. Traffic Management**
+
+Modern social feeds suffer from "Information Congestion"—everything fights for the same narrow vertical space. The River Timeline treats UI as a traffic management system:
+
+1.  **Horizontal Currents:** Instead of a congested single lane, we created parallel flows for **Thoughts**, **Media**, and **Milestones**.
+2.  **The "Sluice Gate" (The Split):** By limiting each row to 12 items, we curate the flood. The code stops the scroll before it becomes overwhelming.
+3.  **Congestion Control:** Grouping data enables a "3-lane highway" of visibility vs. a single-lane jam.
+
 **How it works:**
 
-1. **One row = one user + one epoch** — A user's posts are grouped into a single row
-2. **Three columns = three content types** — Thoughts (text), Media (images), Milestones (achievements)
-3. **Carousel navigation** — Click arrows to browse posts without scrolling
-4. **Max 12 per category** — When any column fills up, a new "epoch" (row) is created
-5. **Pure recency sorting** — Newest activity rises to the top, no algorithmic manipulation
+- **One User, One Row:** Posts are grouped by category (Thoughts, Media, Milestones).
+- **Smart Overflow:** If a category has more than 12 posts, it creates a separate row for the overflow.
+- **Persistent Control:** A user can collapse any category they don't want to see. This preference saves to `localStorage`.
+  - _Auto-Expand:_ If a new post arrives in a collapsed category, it automatically re-opens so you never miss new context.
 
-**Why this design?**
+**Architectural Logic: "The Chain"**
 
-- **Scan 10 users at a glance** instead of scrolling through 30+ individual posts
-- **Context stays grouped** — see all of someone's recent content together
-- **Discover content types** — quickly see if someone posts thoughts vs media vs achievements
-- **No "rich get richer"** — engagement doesn't boost visibility, only recency matters
+The frontend transforms raw data into the River flow in 4 explicit steps:
+
+`PostsContext` (holds posts) → `Home.jsx` (passes posts) → `TimelineRiverFeed`:
+
+1.  **GROUP** — `groupPostsByUser()` puts posts into buckets by user
+2.  **SORT** — `sortGroupedPosts()` orders users by most recent activity
+3.  **SPLIT** — `splitGroupIntoRows()` enforces the max-12 limit
+4.  **RENDER** — `TimelineRiverRow` displays the organized rows
 
 See [docs/features/RiverTimeline.md](./docs/features/RiverTimeline.md) for the full technical specification.
 

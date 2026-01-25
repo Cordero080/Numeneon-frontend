@@ -35,6 +35,7 @@ function PostCard({
   currentUser,
   isSinglePost,
   isShortPost,
+  isGridView = false,
   // Actions
   onUserClick,
   onLike,
@@ -152,7 +153,7 @@ function PostCard({
   return (
     <>
     <div 
-      className={`river-post-card post--${type} ${isSinglePost ? 'post--single' : ''} ${isShortPost ? 'post--compact' : ''} fade-in`}
+      className={`river-post-card post--${type} ${isSinglePost ? 'post--single' : ''} ${isShortPost ? 'post--compact' : ''} ${isGridView ? 'post--grid-view' : ''} fade-in`}
       onClick={handleCardClick}
       style={{ cursor: 'pointer' }}
     >
@@ -194,8 +195,15 @@ function PostCard({
         </div>
       )}
       
-      {/* Post Content */}
-      <p className="river-post-content">{post.content}</p>
+      {/* Post Content - truncated in grid view */}
+      <p className={`river-post-content ${isGridView ? 'river-post-content--truncated' : ''}`}>
+        {post.content}
+      </p>
+      {isGridView && post.content && post.content.length > 80 && (
+        <span className="see-more-link" onClick={(e) => { e.stopPropagation(); onCardClick?.(post); }}>
+          See more
+        </span>
+      )}
 
       {/* Post Actions */} 
       <div className={`river-post-actions ${showReactionPicker ? 'picker-open' : ''}`}>
@@ -306,50 +314,61 @@ function PostCard({
 
       {/* Inline Comment Composer */}
       {activeCommentPostId === post.id && !isComposerFullPage && (
-        <div className="inline-comment-composer">
-          <div className="comment-input-wrapper">
-            <textarea
-              className="comment-input"
-              placeholder="Comment..."
-              value={commentText}
-              onChange={(e) => {
-                setCommentText(e.target.value);
-                e.target.style.height = 'auto';
-                e.target.style.height = e.target.scrollHeight + 'px';
-              }}
-              rows={1}
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  if (commentText.trim()) {
-                    onReplySubmit(post.id, commentText);
+        <div className="inline-comment-composer-wrapper">
+          <div className="inline-comment-composer">
+            <div className="comment-input-wrapper">
+              <textarea
+                className="comment-input"
+                placeholder="Comment..."
+                value={commentText}
+                onChange={(e) => {
+                  setCommentText(e.target.value);
+                  e.target.style.height = 'auto';
+                  e.target.style.height = e.target.scrollHeight + 'px';
+                }}
+                rows={1}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (commentText.trim()) {
+                      onReplySubmit(post.id, commentText);
+                    }
                   }
-                }
-                if (e.key === 'Escape') {
-                  setActiveCommentPostId(null);
-                  setCommentText('');
+                  if (e.key === 'Escape') {
+                    setActiveCommentPostId(null);
+                    setCommentText('');
+                  }
+                }}
+              />
+              <button 
+                className="expand-composer-btn"
+                onClick={() => setIsComposerFullPage(true)}
+                title="Expand to full page"
+              >
+                <MaximizeIcon size={12} strokeWidth="2.5" />
+              </button>
+            </div>
+            <button 
+              className="comment-submit-btn"
+              disabled={!commentText.trim()}
+              onClick={async () => {
+                if (commentText.trim()) {
+                  await onReplySubmit(post.id, commentText);
                 }
               }}
-            />
-            <button 
-              className="expand-composer-btn"
-              onClick={() => setIsComposerFullPage(true)}
-              title="Expand to full page"
             >
-              <MaximizeIcon size={12} strokeWidth="2.5" />
+              <ChevronRightIcon size={22} strokeWidth="2.5" />
             </button>
           </div>
           <button 
-            className="comment-submit-btn"
-            disabled={!commentText.trim()}
-            onClick={async () => {
-              if (commentText.trim()) {
-                await onReplySubmit(post.id, commentText);
-              }
+            className={`inline-composer-cancel inline-composer-cancel--${type}`}
+            onClick={() => {
+              setActiveCommentPostId(null);
+              setCommentText('');
             }}
           >
-            <ChevronRightIcon size={22} strokeWidth="2.5" />
+            Cancel
           </button>
         </div>
       )}

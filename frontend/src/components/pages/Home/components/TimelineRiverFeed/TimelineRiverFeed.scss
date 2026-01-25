@@ -133,6 +133,13 @@
   }
 }
 
+@media (max-width: 480px) {
+  .timeline-river-feed {
+    perspective: none;
+    transform-style: flat;
+  }
+}
+
 /* ============================================
    LIGHT MODE OVERRIDES
    ============================================ */
