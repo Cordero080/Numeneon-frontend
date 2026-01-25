@@ -154,10 +154,12 @@
 /* Search icon - pink */
 .icon-search {
   color: var(--pink);
+  opacity: 0.75;
 }
 
 .icon-search:hover {
   color: var(--pink);
+  opacity: 1;
   background: rgba(255, 107, 157, 0.15);
   box-shadow: 0 0 15px rgba(255, 107, 157, 0.4);
   transform: scale(1.1);
@@ -166,10 +168,12 @@
 /* Messages icon - accent green */
 .icon-messages {
   color: var(--accent, #1ae784);
+  opacity: 0.75;
 }
 
 .icon-messages:hover {
   color: var(--accent);
+  opacity: 1;
   background: rgba(26, 231, 132, 0.15);
   box-shadow: 0 0 15px rgba(26, 231, 132, 0.4);
   transform: scale(1.1);
@@ -178,10 +182,12 @@
 /* Notifications icon - amber/gold radar pulse */
 .icon-notifications {
   color: var(--amber);
+  opacity: 0.75;
 }
 
 .icon-notifications:hover {
   color: var(--amber);
+  opacity: 1;
   background: rgba(251, 191, 36, 0.15);
   box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
   transform: scale(1.1);
@@ -189,6 +195,7 @@
 
 /* Logout icon - arrow orange, door cyan */
 .icon-logout {
+  opacity: 0.75;
   svg {
     path {
       stroke: var(--cyan); /* Door - cyan */
@@ -203,6 +210,7 @@
 }
 
 .icon-logout:hover {
+  opacity: 1;
   background: rgba(255, 140, 0, 0.15);
   box-shadow: 0 0 15px rgba(255, 140, 0, 0.4);
   transform: scale(1.1);
@@ -211,9 +219,11 @@
 /* Login icon - cyan */
 .icon-login {
   color: var(--cyan);
+  opacity: 0.75;
 }
 
 .icon-login:hover {
+  opacity: 1;
   background: rgba(124, 201, 255, 0.15);
   box-shadow: 0 0 15px rgba(124, 201, 255, 0.4);
   transform: scale(1.1);
@@ -242,6 +252,15 @@
   }
 }
 
+/* Tablet adjustments */
+@media (max-width: 1024px) {
+  .top-bar-logo {
+    font-size: 0.85rem;
+    letter-spacing: 1.5px;
+    top: 0;
+  }
+}
+
 /* Mobile adjustments */
 @media (max-width: 768px) {
   .hamburger-btn {
@@ -257,6 +276,9 @@
     flex: 1;
     margin-left: 0;
     text-align: left;
+    font-size: 0.75rem;
+    letter-spacing: 1.25px;
+    top: 0;
   }
 }
 
