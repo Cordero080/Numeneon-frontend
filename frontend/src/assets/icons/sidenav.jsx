@@ -38,8 +38,8 @@ export const SignalIcon = ({ size = 24, className = '', ...props }) => (
   </svg>
 );
 
-/** Connected nodes network for friends */
-export const NetworkIcon = ({ size = 24, className = '', ...props }) => (
+/** Two cyber figures with circuit halos */
+export const FriendsIcon = ({ size = 24, className = '', ...props }) => (
   <svg
     width={size}
     height={size}
@@ -50,12 +50,16 @@ export const NetworkIcon = ({ size = 24, className = '', ...props }) => (
     className={className}
     {...props}
   >
-    <circle cx="6" cy="6" r="3"/>
-    <circle cx="18" cy="6" r="3"/>
-    <circle cx="12" cy="18" r="3"/>
-    <line x1="8.5" y1="7.5" x2="10" y2="15.5"/>
-    <line x1="15.5" y1="7.5" x2="14" y2="15.5"/>
-    <line x1="9" y1="6" x2="15" y2="6"/>
+    {/* Left figure */}
+    <circle cx="7" cy="7" r="2.5"/>
+    <path d="M7 10.5v2l-3 4h6l-3-4"/>
+    {/* Right figure */}
+    <circle cx="17" cy="7" r="2.5"/>
+    <path d="M17 10.5v2l-3 4h6l-3-4"/>
+    {/* Circuit link between them */}
+    <path d="M9.5 7h5" strokeDasharray="1.5 1"/>
+    {/* Glow dots */}
+    <circle cx="12" cy="7" r="0.8" fill="currentColor" stroke="none"/>
   </svg>
 );
 

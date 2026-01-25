@@ -28,9 +28,9 @@ export {
   UserIcon,
   GlobeIcon,
   LockIcon,
-  FriendsIcon,
   HexProfileIcon,
   VisibilityIcon,
+  AddFriendIcon,
 } from "./user";
 
 // Engagement
@@ -76,7 +76,7 @@ export {
 export {
   HexHomeIcon,
   SignalIcon,
-  NetworkIcon,
+  FriendsIcon,
   CircuitInfoIcon,
 } from "./sidenav";
 

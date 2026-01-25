@@ -9,7 +9,7 @@ import {
   TargetReticleIcon,
   MessageBubbleIcon,
   SignalIcon,
-  NetworkIcon,
+  FriendsIcon,
   HexProfileIcon,
   CircuitInfoIcon
 } from '@assets/icons';
@@ -84,7 +84,7 @@ function SideNav() {
           disabled={isMessageModalOpen}
         >
           <div className="nav-icon">
-            <NetworkIcon size={24} />
+            <FriendsIcon size={38} />
           </div>
         </button>
       )}

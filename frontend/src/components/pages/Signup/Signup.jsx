@@ -49,11 +49,13 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@contexts/AuthContext";
 import "./Signup.scss";
 import { BackArrowGradientIcon, EyeIcon, EyeOffIcon } from "@assets/icons";
 
 function Signup() {
   const navigate = useNavigate();
+  const { signup } = useAuth();
 
   // TODO: Add form state
   const [formData, setFormData] = useState({
@@ -118,24 +120,17 @@ function Signup() {
 
     setIsLoading(true);
     try {
-      // POST to the backend signup endpoint
-      const response = await fetch("http://localhost:8000/api/auth/signup/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
-      if (response.ok) {
-        // success signup
-        navigate("/login");
+      // Use AuthContext signup which also auto-logs in the user
+      const result = await signup(formData.username, formData.email, formData.password);
+      if (result.success) {
+        // Signup + auto-login succeeded, navigate to home
+        navigate("/home");
       } else {
-        // signup failed
-        setErrors({ submit: "Signup failed. Please try again." });
+        // Signup or login failed
+        const errorMsg = typeof result.error === 'string' 
+          ? result.error 
+          : result.error?.detail || result.error?.email?.[0] || result.error?.username?.[0] || "Signup failed. Please try again.";
+        setErrors({ submit: errorMsg });
       }
     } catch (error) {
       setErrors({ submit: "Network error. Is the backend running?" });
