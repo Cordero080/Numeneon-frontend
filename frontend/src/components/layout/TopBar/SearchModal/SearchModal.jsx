@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePosts, useFriends, useMessages } from '@contexts';
 import { TargetReticleIcon, CloseIcon, MessageBubbleIcon } from '@assets/icons';
+import { searchUsers } from '@services/usersService';
 import './SearchModal.scss';
 
 // Helper to get initials from name
@@ -20,6 +21,8 @@ const getInitials = (name) => {
 function SearchModal({ isOpen, onClose }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all'); // 'all', 'users', 'posts'
+  const [apiUsers, setApiUsers] = useState([]); // Users from backend search
+  const [isSearching, setIsSearching] = useState(false);
   const inputRef = useRef(null);
   const navigate = useNavigate();
   
@@ -38,8 +41,32 @@ function SearchModal({ isOpen, onClose }) {
   const handleClose = () => {
     setSearchQuery('');
     setActiveTab('all');
+    setApiUsers([]);
     onClose();
   };
+
+  // Search backend for users when query changes (with debounce)
+  useEffect(() => {
+    const query = searchQuery.trim();
+    if (query.length < 2) {
+      setApiUsers([]);
+      return;
+    }
+
+    const debounceTimer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const results = await searchUsers(query);
+        setApiUsers(results);
+      } catch (error) {
+        console.error('Search error:', error);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery]);
 
   // Handle escape key
   useEffect(() => {
@@ -74,8 +101,8 @@ function SearchModal({ isOpen, onClose }) {
     return acc;
   }, []);
 
-  // Combine friends and post authors for searchable users
-  const allUsers = [...friends, ...postAuthors].reduce((acc, user) => {
+  // Combine API results, friends, and post authors (API results first, deduped)
+  const allUsers = [...apiUsers, ...friends, ...postAuthors].reduce((acc, user) => {
     if (!acc.find(u => u.username === user.username)) {
       acc.push(user);
     }
@@ -85,11 +112,15 @@ function SearchModal({ isOpen, onClose }) {
   // Filter based on search query
   const query = searchQuery.toLowerCase().trim();
   
-  const filteredUsers = query ? allUsers.filter(user => 
-    user.username?.toLowerCase().includes(query) ||
-    user.first_name?.toLowerCase().includes(query) ||
-    user.last_name?.toLowerCase().includes(query) ||
-    user.displayName?.toLowerCase().includes(query)
+  // If we have API results, show them; otherwise filter local users
+  const filteredUsers = query ? (apiUsers.length > 0 
+    ? allUsers // API results + local (already combined and deduped)
+    : allUsers.filter(user => 
+        user.username?.toLowerCase().includes(query) ||
+        user.first_name?.toLowerCase().includes(query) ||
+        user.last_name?.toLowerCase().includes(query) ||
+        user.displayName?.toLowerCase().includes(query)
+      )
   ) : [];
 
   const filteredPosts = query ? posts.filter(post =>
@@ -188,10 +219,16 @@ function SearchModal({ isOpen, onClose }) {
             </div>
           )}
 
-          {query && !hasResults && (
+          {query && !hasResults && !isSearching && (
             <div className="search-empty">
               <p>No results for "{searchQuery}"</p>
               <p className="search-hint">Try a different search term</p>
+            </div>
+          )}
+
+          {query && isSearching && (
+            <div className="search-empty">
+              <p>Searching...</p>
             </div>
           )}
 
