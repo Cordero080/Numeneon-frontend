@@ -95,9 +95,12 @@ export function SmartDeckContent({
           ))}
         </div>
         
-        {/* Grid pagination nav */}
+        {/* Grid pagination nav - same style as carousel with dots */}
         {totalPages > 1 && (
-          <div className="smart-deck-grid-nav">
+          <div className={`smart-deck-nav smart-deck-nav--grid`}>
+            <span className="smart-deck-nav-position">
+              {gridPage + 1}/{totalPages}
+            </span>
             <button 
               className="smart-deck-nav-btn"
               onClick={(e) => {
@@ -108,9 +111,20 @@ export function SmartDeckContent({
             >
               <ChevronLeftIcon size={16} />
             </button>
-            <span className="smart-deck-nav-position">
-              {gridPage + 1}/{totalPages}
-            </span>
+            
+            <div className="smart-deck-dots">
+              {Array.from({ length: totalPages }, (_, idx) => (
+                <span 
+                  key={idx} 
+                  className={`smart-deck-dot ${idx === gridPage ? 'smart-deck-dot--active' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onGridPageChange?.(idx);
+                  }}
+                />
+              ))}
+            </div>
+            
             <button 
               className="smart-deck-nav-btn"
               onClick={(e) => {

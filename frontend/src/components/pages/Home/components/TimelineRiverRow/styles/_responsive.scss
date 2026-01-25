@@ -394,6 +394,23 @@
   .timeline-river-row--grid-mode .river-post-card {
     padding: var(--space-sm);
   }
+  
+  /* Grid nav on mobile - larger touch targets */
+  .smart-deck-nav--grid {
+    padding: var(--space-md) 0;
+    gap: var(--space-lg);
+  }
+  
+  .smart-deck-nav--grid .smart-deck-nav-btn {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+  }
+  
+  .smart-deck-nav--grid .smart-deck-nav-position {
+    font-size: 14px;
+    min-width: 50px;
+  }
 }
 
 /* ============================================
