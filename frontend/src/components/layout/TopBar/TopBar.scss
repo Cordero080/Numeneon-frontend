@@ -121,8 +121,14 @@
   margin-left: 2.5rem;
   letter-spacing: 2px;
   position: relative;
-  top: 0;
+  top: -6px;
   align-self: center;
+  cursor: pointer;
+  transition: text-shadow 0.2s ease;
+  
+  &:hover {
+    animation: logoGlitch 0.3s ease-in-out;
+  }
 }
 
 .top-bar-icons {
@@ -275,6 +281,7 @@
     font-size: 0.6rem;
     letter-spacing: 1.5px;
     margin-left: 0;
+    top: 0;
   }
   
   .top-bar-icons {
