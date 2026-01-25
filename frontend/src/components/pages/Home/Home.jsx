@@ -100,6 +100,10 @@ function Home() {
   // Build stories from friends (real data) - always use username
   const stories = [
     { id: 0, name: "Your Story", avatar: "YS", hasStory: false, isYours: true },
+    // Test cards to demo hasStory animation
+    { id: 'test1', name: "Alex", avatar: "A", hasStory: true },
+    { id: 'test2', name: "Jordan", avatar: "J", hasStory: false },
+    { id: 'test3', name: "Sam", avatar: "S", hasStory: true },
     ...friends.map(friend => ({
       id: friend.id,
       name: friend.username,
@@ -148,14 +152,14 @@ function Home() {
        {/* 🟢 Section 2: Stories carousel */}
       <div className="stories-section">
         <div className="stories-scroll">
-          {stories.map(story => ( // 🔵 Loop through stories array
+          {stories.map((story, index) => ( // 🔵 Loop through stories array
             <div 
               key={story.id} 
               className={`story-card ${story.isYours ? 'your-story' : ''}`}
               onMouseMove={handleStoryMouseMove}
               onMouseLeave={handleStoryMouseLeave}
             >
-              <div className={`story-avatar ${story.hasStory ? 'has-story' : ''}`}>
+              <div className={`story-avatar ${story.hasStory ? 'has-story' : ''} avatar-color-${index % 3}`}>
                 {story.isYours ? (
                   // Your Story - show + icon
                   <div className="add-story-icon">+</div>
