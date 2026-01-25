@@ -3,7 +3,15 @@
 
 import axios from "axios";
 
-const API_BASE_URL = "https://numeneon-backend.onrender.com/api";
+// Toggle between local and production:
+// - Local dev: "http://localhost:8000/api"
+// - Production: "https://numeneon-backend.onrender.com/api"
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+
+// For quick local testing, uncomment the line you need:
+// const API_BASE_URL = "http://localhost:8000/api";
+// const API_BASE_URL = "https://numeneon-backend.onrender.com/api";
 
 // Create axios instance
 const apiClient = axios.create({
