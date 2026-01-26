@@ -43,6 +43,18 @@ export const FriendsProvider = ({ children }) => {
     }
   }, [user, authLoading]);
 
+  // POLLING: Refresh friends data every 30 seconds to catch accepted requests
+  useEffect(() => {
+    if (!user) return;
+    
+    const pollInterval = setInterval(() => {
+      console.log('Polling friends data...');
+      fetchFriends();
+    }, 30000); // 30 seconds
+    
+    return () => clearInterval(pollInterval);
+  }, [user]);
+
   // FETCH FRIENDS LIST
   const fetchFriends = async () => {
     console.log('fetchFriends called');
