@@ -8,8 +8,9 @@
 // 4. Shows real messages from context state
 
 import { useState, useRef, useEffect } from 'react';
-import { MinimizeIcon, MaximizeIcon, CloseIcon, ChevronLeftIcon, ChevronRightIcon, MessageBubbleIcon } from '@assets/icons';
+import { MinimizeIcon, MaximizeIcon, CloseIcon, ChevronLeftIcon, ChevronRightIcon, MessageBubbleIcon, PlusIcon } from '@assets/icons';
 import { useMessages } from '@contexts/MessageContext';
+import usersService from '@services/usersService';
 import './MessageModal.scss';
 
 // 🔵 Helper: Format relative time (e.g., "2m", "1h", "3d")
@@ -66,6 +67,12 @@ function MessageModal({ onClose }) {
   // 🔵 Local state for search filtering
   const [searchQuery, setSearchQuery] = useState('');
   
+  // 🔵 New message mode - search for any user to message
+  const [isNewMessageMode, setIsNewMessageMode] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userSearchResults, setUserSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  
   // 🔵 Mobile view state - 'list' shows conversations, 'chat' shows the chat
   const [mobileView, setMobileView] = useState('list');
   
@@ -79,6 +86,38 @@ function MessageModal({ onClose }) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [selectedMessages]);
+  
+  // 🔵 Search for users when typing in new message mode
+  useEffect(() => {
+    if (!isNewMessageMode || !userSearchQuery.trim()) {
+      setUserSearchResults([]);
+      return;
+    }
+    
+    const searchTimeout = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const results = await usersService.searchUsers(userSearchQuery);
+        setUserSearchResults(results);
+      } catch (err) {
+        console.error('User search failed:', err);
+        setUserSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300); // Debounce search
+    
+    return () => clearTimeout(searchTimeout);
+  }, [userSearchQuery, isNewMessageMode]);
+  
+  // 🔵 Handle selecting a user from search results
+  const handleSelectUser = (user) => {
+    selectConversation(user.id);
+    setIsNewMessageMode(false);
+    setUserSearchQuery('');
+    setUserSearchResults([]);
+    setMobileView('chat');
+  };
   
   // 🔵 Calculate charge level (0-4) based on message length
   // This creates the "charging up" visual effect on the send button
@@ -158,17 +197,55 @@ function MessageModal({ onClose }) {
           {/* Left: Conversations List */}
           <div className={`message-conversations ${mobileView === 'list' ? 'show' : ''}`}>
             <div className="conversations-header">
-              <div className="conversations-search-wrapper">
-                <input 
-                  type="text" 
-                  placeholder="Search conversations..." 
-                  className="conversations-search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') setSearchQuery('');
-                  }}
-                />
+              {/* New Message Button */}
+              <button 
+                className={`new-message-btn ${isNewMessageMode ? 'active' : ''}`}
+                onClick={() => setIsNewMessageMode(!isNewMessageMode)}
+                title="New message"
+              >
+                <PlusIcon size={16} />
+                <span>New</span>
+              </button>
+              
+              {/* User Search (when in new message mode) */}
+              {isNewMessageMode ? (
+                <div className="conversations-search-wrapper">
+                  <input 
+                    type="text" 
+                    placeholder="Search users to message..." 
+                    className="conversations-search"
+                    value={userSearchQuery}
+                    onChange={(e) => setUserSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        setIsNewMessageMode(false);
+                        setUserSearchQuery('');
+                      }
+                    }}
+                    autoFocus
+                  />
+                  {userSearchQuery && (
+                    <button 
+                      className="conversations-search-clear"
+                      onClick={() => setUserSearchQuery('')}
+                      title="Clear search"
+                    >
+                      <CloseIcon size={14} />
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="conversations-search-wrapper">
+                  <input 
+                    type="text" 
+                    placeholder="Search conversations..." 
+                    className="conversations-search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') setSearchQuery('');
+                    }}
+                  />
                 {searchQuery && (
                   <button 
                     className="conversations-search-clear"
@@ -179,7 +256,55 @@ function MessageModal({ onClose }) {
                   </button>
                 )}
               </div>
+              )}
             </div>
+            
+            {/* User Search Results (new message mode) */}
+            {isNewMessageMode ? (
+              <div className="conversations-list">
+                {isSearching && (
+                  <div className="conversations-empty">
+                    <p>Searching...</p>
+                  </div>
+                )}
+                
+                {!isSearching && userSearchResults.length > 0 && userSearchResults.map((user) => {
+                  const displayName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username;
+                  return (
+                    <div 
+                      key={user.id}
+                      className="conversation-item"
+                      onClick={() => handleSelectUser(user)}
+                    >
+                      <div className="conversation-avatar">
+                        <span className="initial-1">{getInitials(displayName)[0]}</span>
+                        {getInitials(displayName).length > 1 && (
+                          <span className="initial-2">{getInitials(displayName)[1]}</span>
+                        )}
+                      </div>
+                      <div className="conversation-info">
+                        <span className="conversation-name">{displayName}</span>
+                        <span className="conversation-preview">@{user.username}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {!isSearching && userSearchQuery.trim() && userSearchResults.length === 0 && (
+                  <div className="conversations-empty">
+                    <p>No users found</p>
+                    <p className="empty-hint">Try a different search</p>
+                  </div>
+                )}
+                
+                {!isSearching && !userSearchQuery.trim() && (
+                  <div className="conversations-empty">
+                    <p>Search for users</p>
+                    <p className="empty-hint">Type a name or username</p>
+                  </div>
+                )}
+              </div>
+            ) : (
             <div className="conversations-list">
               {/* 🔵 Map through filtered conversations from context */}
               {filteredConversations.map((conv) => {
@@ -230,10 +355,11 @@ function MessageModal({ onClose }) {
               {conversations.length === 0 && (
                 <div className="conversations-empty">
                   <p>No conversations yet</p>
-                  <p className="empty-hint">Message someone from their post!</p>
+                  <p className="empty-hint">Click "New" to message someone!</p>
                 </div>
               )}
             </div>
+            )}
           </div>
 
           {/* Right: Chat View */}

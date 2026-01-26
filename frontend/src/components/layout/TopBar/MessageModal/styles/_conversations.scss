@@ -29,6 +29,43 @@
 .conversations-header {
   padding: 0.75rem;
   border-bottom: 1px solid var(--glass-bg-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* New Message Button */
+.new-message-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(167, 131, 255, 0.1));
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: 6px;
+  color: var(--accent-cyan);
+  font-family: var(--font-title);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: fit-content;
+  
+  &:hover {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.25), rgba(167, 131, 255, 0.2));
+    border-color: rgba(0, 212, 255, 0.5);
+    box-shadow: 0 0 12px rgba(0, 212, 255, 0.3);
+  }
+  
+  &.active {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.3), rgba(167, 131, 255, 0.25));
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+  }
+  
+  svg {
+    opacity: 0.9;
+  }
 }
 
 .conversations-search {
