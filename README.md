@@ -72,6 +72,16 @@ See [docs/features/RiverTimeline.md](./docs/features/RiverTimeline.md) for the f
 | **Search Modal**         | Search users and posts globally                                      |
 | **Theme Toggle**         | Dark mode (cyberpunk) / Light mode (clean)                           |
 
+### 🔌 Stretch Feature: WebSockets
+
+Beyond the MVP, we implemented **real-time notifications** using Django Channels + WebSockets:
+
+- **Friend request accepted** — Toast notification appears instantly
+- **New friend request** — Badge updates in real-time
+- **Live messaging** — Messages arrive without polling
+
+See [docs/features/WebSocketsStretchGoal.md](./docs/features/WebSocketsStretchGoal.md) for implementation details.
+
 ---
 
 ## 🚀 Quick Start

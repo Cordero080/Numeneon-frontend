@@ -15,5 +15,16 @@ __pycache__/
 
 # OS
 .DS_Store
-backend/venv/
+
+# Internal docs (not for instructor review)
+docs/study/
+docs/team-plan/
+docs/dev-sessions/
+docs/added_1-23/
+docs/features/RiverTimelinePitches.md
+docs/features/PresentationTalkingPoints.md
+docs/features/activity-visualization/
+docs/collapsible-cards-files.md
+docs/DeploymentChanges.md
+docs/deployment/
 

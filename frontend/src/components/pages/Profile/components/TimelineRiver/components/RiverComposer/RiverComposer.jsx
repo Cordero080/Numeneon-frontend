@@ -230,7 +230,7 @@ const RiverComposer = ({
                 <button
                   className="comment-media-btn"
                   title="Add media"
-                  onClick={() => console.log('Media upload clicked')}
+                  onClick={() => {}}
                 >
                   <ImageIcon size={18} stroke="rgba(220, 8, 188, 0.5)" strokeWidth="1.5" />
                 </button>

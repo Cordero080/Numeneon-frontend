@@ -22,8 +22,7 @@ import {
   MessageLineIcon,
   GridIcon,
   PostTriangleIcon,
-  ImageIcon,
-  CheckIcon
+  ImageIcon
 } from '@assets/icons';
 import ProfileCard from './components/ProfileCard';
 import ComposerModal from './components/ComposerModal';
@@ -74,19 +73,16 @@ function Profile() {
     // Try to find from post authors first (they have the most complete data)
     const postMatch = posts.find(p => p.author?.username === profileUsername)?.author;
     if (postMatch) {
-      console.log('Found user from post author:', postMatch);
       return postMatch;
     }
     
     // Find the user from friends list
     const friendMatch = friends?.find(f => f.username === profileUsername);
     if (friendMatch) {
-      console.log('Found user from friends:', friendMatch);
       return friendMatch;
     }
     
     // Fallback - at minimum show the username from URL
-    console.log('Using fallback for:', profileUsername);
     return { 
       username: profileUsername, 
       first_name: profileUsername, // Use username as display if we can't find real name
@@ -179,19 +175,6 @@ function Profile() {
   const feedTextPosts = friendsPosts.filter(p => p.type === 'thoughts');
   const feedMediaPosts = friendsPosts.filter(p => p.type === 'media');
   const feedAchievementPosts = friendsPosts.filter(p => p.type === 'milestones');
-
-  // Debug: log friends posts counts
-  console.log('Profile Debug:', {
-    isOwnProfile,
-    profileUser: profileUser?.username,
-    currentUser: currentUser?.username,
-    totalPosts: posts.length,
-    profilePostsCount: profilePosts.length,
-    textPostsCount: textPosts.length,
-    mediaPostsCount: mediaPosts.length,
-    achievementPostsCount: achievementPosts.length,
-    allPostAuthors: [...new Set(posts.map(p => p.author?.username))],
-  });
 
   return (
     <div className="user-profile-page river-profile">
@@ -575,7 +558,7 @@ function Profile() {
                                 <button 
                                   className="comment-media-btn"
                                   title="Add media"
-                                  onClick={() => console.log('Media upload clicked')}
+                                  onClick={() => {}}
                                 >
                                   <ImageIcon size={18} stroke="rgba(220, 8, 188, 0.5)" strokeWidth="1.5" />
                                 </button>

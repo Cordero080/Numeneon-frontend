@@ -17,7 +17,6 @@ import {
   LoginIcon,
   HamburgerIcon,
   CloseIcon,
-  CheckIcon,
   FriendsIcon
 } from '@assets/icons';
 

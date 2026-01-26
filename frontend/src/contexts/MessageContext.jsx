@@ -1,35 +1,34 @@
 // 🔵 PABLO - UI Architect
 // MessageContext.jsx - Shared state for messaging system (API-connected)
 //
-// This context manages:
-// - Modal open/close state
-// - List of conversations (fetched from /api/messages/conversations/)
-// - Currently selected conversation and its messages
-// - Functions to send messages and mark as read
-// - Loading and error states for async operations
+// UPDATED WITH WEBSOCKETS 
+// Now receives real-time message notifications instead of polling
 
 import { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
+import { useWebSocket } from "./WebSocketContext";
 import messagesService from "@services/messagesService";
 
 const MessageContext = createContext();
 
 export function MessageProvider({ children }) {
-  // Get current user to determine authentication status
   const { user, isAuthenticated } = useAuth();
+  const { subscribe } = useWebSocket();
 
   // Modal visibility
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
 
-  // Conversations list from API (each has: user, last_message, unread_count)
+  // Conversations list from API
   const [conversations, setConversations] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Currently selected conversation - tracked by user ID, not conversation ID
-  // Messages are fetched separately when a conversation is selected
+  // Currently selected conversation
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [selectedMessages, setSelectedMessages] = useState([]);
+
+  // NEW: Notification state for new messages
+  const [newMessageNotification, setNewMessageNotification] = useState(null);
 
   // Fetch conversations when user logs in, clear on logout
   useEffect(() => {
@@ -41,6 +40,47 @@ export function MessageProvider({ children }) {
       setSelectedMessages([]);
     }
   }, [isAuthenticated, user]);
+
+  // ✨ WEBSOCKET: Listen for new message events
+  useEffect(() => {
+    if (!user) return;
+
+    const unsubscribe = subscribe('new_message', (data) => {
+      console.log('📩 New message from:', data.sender.username);
+      
+      const senderId = data.sender.id;
+
+      // If this is the currently open conversation, add message immediately
+      if (selectedUserId === senderId) {
+        setSelectedMessages(prev => [...prev, {
+          id: data.id,
+          sender: data.sender,
+          content: data.content,
+          created_at: data.created_at,
+          is_read: false,
+        }]);
+      }
+
+      // Refresh conversations to update last_message and unread count
+      fetchConversations();
+
+      // Show notification (unless it's the currently open conversation)
+      if (selectedUserId !== senderId) {
+        setNewMessageNotification({
+          senderId: senderId,
+          senderUsername: data.sender.username,
+          content: data.content,
+        });
+
+        // Clear notification after 5 seconds
+        setTimeout(() => {
+          setNewMessageNotification(null);
+        }, 5000);
+      }
+    });
+
+    return unsubscribe;
+  }, [user, subscribe, selectedUserId]);
 
   // GET /api/messages/conversations/ - Load all conversations
   const fetchConversations = async () => {
@@ -68,14 +108,13 @@ export function MessageProvider({ children }) {
     }
   };
 
-  // Open the messages modal, optionally selecting a specific user's conversation
+  // Open the messages modal
   const openMessages = async (targetUser = null) => {
     setIsMessageModalOpen(true);
 
     if (targetUser) {
       await fetchConversation(targetUser.id);
     } else if (conversations.length > 0 && !selectedUserId) {
-      // Default to first conversation if none selected
       await fetchConversation(conversations[0].user.id);
     }
   };
@@ -84,18 +123,18 @@ export function MessageProvider({ children }) {
     setIsMessageModalOpen(false);
   };
 
-  // Select a conversation and mark its messages as read
+  // Select a conversation and mark as read
   const selectConversation = async (userId) => {
     await fetchConversation(userId);
     try {
       await messagesService.markAllAsRead(userId);
-      fetchConversations(); // Refresh to update unread counts
+      fetchConversations();
     } catch (err) {
       console.error("Failed to mark as read:", err);
     }
   };
 
-  // POST /api/messages/ - Send a message to the selected user
+  // POST /api/messages/ - Send a message
   const sendMessage = async (text) => {
     if (!text.trim() || !selectedUserId) return { success: false };
 
@@ -155,6 +194,7 @@ export function MessageProvider({ children }) {
         selectedUserId,
         selectedMessages,
         selectedConversation: getSelectedConversation(),
+        newMessageNotification,
 
         // Actions
         openMessages,

@@ -355,16 +355,6 @@ function RiverFeedView({
                 friend.milestoneRows[rowIndex]
               );
               
-              // Debug logging
-              console.log('RiverFeedView mostRecentType:', {
-                friend: friend.username,
-                rowIndex,
-                thoughtsInRow,
-                mediaInRow,
-                milestonesInRow,
-                mostRecentType,
-              });
-              
               return (
                 <div key={`${friend.username}-row-${rowIndex}`} className="friend-row">
                   {/* River Column Labels - all same size, collapsed greyed out, non-recent dimmed */}

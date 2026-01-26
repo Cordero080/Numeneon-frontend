@@ -123,18 +123,6 @@ function TimelineRiver({
     return Object.values(grouped);
   }, [viewMode, feedTextPosts, feedMediaPosts, feedAchievementPosts]);
 
-  // Debug log
-  console.log('TimelineRiver Debug:', {
-    viewMode,
-    isOwnProfile,
-    textPosts: textPosts?.length,
-    mediaPosts: mediaPosts?.length,
-    achievementPosts: achievementPosts?.length,
-    feedTextPosts: feedTextPosts?.length,
-    feedMediaPosts: feedMediaPosts?.length,
-    feedAchievementPosts: feedAchievementPosts?.length,
-  });
-
   // State for inline comment composer
   const [activeCommentPostId, setActiveCommentPostId] = useState(null);
   const [commentText, setCommentText] = useState('');

@@ -50,8 +50,7 @@ function Friends() {
   const { 
     friends, 
     pendingRequests, 
-    isLoading, 
-    error,
+    isLoading,
     acceptRequest, 
     declineRequest, 
     removeFriend 
@@ -59,9 +58,6 @@ function Friends() {
   
   // Get message context for opening DMs
   const { openMessages } = useMessages();
-
-  // Debug logging
-  console.log('Friends page - friends:', friends, 'pending:', pendingRequests, 'loading:', isLoading, 'error:', error);
 
   // Suggestions are still mock for now (would need a different API)
   // Each suggestion gets a theme color based on their id

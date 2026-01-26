@@ -137,7 +137,7 @@ function Signup() {
           : result.error?.detail || result.error?.email?.[0] || result.error?.username?.[0] || "Signup failed. Please try again.";
         setErrors({ submit: errorMsg });
       }
-    } catch (error) {
+    } catch {
       setErrors({ submit: "Network error. Is the backend running?" });
     } finally {
       setIsLoading(false);

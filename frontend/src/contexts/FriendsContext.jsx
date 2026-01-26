@@ -1,72 +1,104 @@
 /**
- * =============================================================================
- * FRIENDS CONTEXT
- * =============================================================================
+                FRIENDS CONTEXT
+ ====================================================
  * 
  * File: frontend/src/contexts/FriendsContext.jsx
  * Assigned to: CRYSTAL
  * Responsibility: Global friends state management
  * 
- * Status: IMPLEMENTED ✅
- * =============================================================================
+ * Status: UPDATED WITH WEBSOCKETS 
+ 
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import friendsService from '@services/friendsService';
 import { useAuth } from './AuthContext';
+import { useWebSocket } from './WebSocketContext';
 
 const FriendsContext = createContext(null);
 
 export const FriendsProvider = ({ children }) => {
-  const { user, isLoading: authLoading } = useAuth(); // Get auth state
+  const { user, isLoading: authLoading } = useAuth();
+  const { subscribe } = useWebSocket();
   
   // STATE
-  const [friends, setFriends] = useState([]);           // Confirmed friends
-  const [pendingRequests, setPendingRequests] = useState([]); // Incoming requests waiting for response
+  const [friends, setFriends] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // NEW: State for toast notifications
+  const [friendAcceptedToast, setFriendAcceptedToast] = useState(null);
 
-  // FETCH WHEN USER LOGS IN (and auth is done loading)
+  // FETCH WHEN USER LOGS IN
   useEffect(() => {
-    console.log('FriendsContext useEffect - user:', user, 'authLoading:', authLoading);
     if (authLoading) {
-      console.log('Auth still loading, waiting...');
-      return; // Wait for auth to finish
+      return;
     }
     if (user) {
-      console.log('User exists, fetching friends...');
       fetchFriends();
     } else {
-      // Clear data when logged out
       setFriends([]);
       setPendingRequests([]);
     }
   }, [user, authLoading]);
 
-  // POLLING: Refresh friends data every 30 seconds to catch accepted requests
+  // ✨ WEBSOCKET: Listen for friend request events
   useEffect(() => {
     if (!user) return;
-    
-    const pollInterval = setInterval(() => {
-      console.log('Polling friends data...');
-      fetchFriends();
-    }, 30000); // 30 seconds
-    
-    return () => clearInterval(pollInterval);
-  }, [user]);
+
+    const unsubscribe = subscribe('friend_request', (data) => {
+      console.log('📩 New friend request from:', data.from_user.username);
+      
+      // Add the new request to pending list
+      setPendingRequests(prev => [
+        {
+          id: data.request_id,
+          from_user: data.from_user,
+          created_at: new Date().toISOString(),
+        },
+        ...prev
+      ]);
+    });
+
+    return unsubscribe;
+  }, [user, subscribe]);
+
+  // ✨ WEBSOCKET: Listen for friend accepted events
+  useEffect(() => {
+    if (!user) return;
+
+    const unsubscribe = subscribe('friend_accepted', (data) => {
+      console.log('📩 Friend request accepted by:', data.friend.username);
+      
+      // Add the new friend to friends list
+      setFriends(prev => [...prev, data.friend]);
+      
+      // Trigger toast notification
+      setFriendAcceptedToast({
+        username: data.friend.username,
+        firstName: data.friend.first_name,
+        lastName: data.friend.last_name,
+      });
+      
+      // Clear toast after 5 seconds
+      setTimeout(() => {
+        setFriendAcceptedToast(null);
+      }, 5000);
+    });
+
+    return unsubscribe;
+  }, [user, subscribe]);
 
   // FETCH FRIENDS LIST
   const fetchFriends = async () => {
-    console.log('fetchFriends called');
     setIsLoading(true);
     setError(null);
     try {
-      // Fetch friends and pending requests in parallel
       const [friendsData, pendingData] = await Promise.all([
         friendsService.getAll(),
         friendsService.getPendingRequests(),
       ]);
-      console.log('API Response - friends:', friendsData, 'pending:', pendingData);
       setFriends(friendsData);
       setPendingRequests(pendingData);
     } catch (err) {
@@ -107,8 +139,8 @@ export const FriendsProvider = ({ children }) => {
   const acceptRequest = async (requestId) => {
     try {
       const newFriend = await friendsService.acceptRequest(requestId);
-      setFriends(prev => [...prev, newFriend]); // Add to friends list
-      setPendingRequests(prev => prev.filter(req => req.id !== requestId)); // Remove from pending
+      setFriends(prev => [...prev, newFriend]);
+      setPendingRequests(prev => prev.filter(req => req.id !== requestId));
       return { success: true };
     } catch (err) {
       return { 
@@ -122,7 +154,7 @@ export const FriendsProvider = ({ children }) => {
   const declineRequest = async (requestId) => {
     try {
       await friendsService.declineRequest(requestId);
-      setPendingRequests(prev => prev.filter(req => req.id !== requestId)); // Remove from pending
+      setPendingRequests(prev => prev.filter(req => req.id !== requestId));
       return { success: true };
     } catch (err) {
       return { 
@@ -136,7 +168,7 @@ export const FriendsProvider = ({ children }) => {
   const removeFriend = async (userId) => {
     try {
       await friendsService.remove(userId);
-      setFriends(prev => prev.filter(friend => friend.id !== userId)); // Remove from list
+      setFriends(prev => prev.filter(friend => friend.id !== userId));
       return { success: true };
     } catch (err) {
       return { 
@@ -154,6 +186,7 @@ export const FriendsProvider = ({ children }) => {
         pendingRequests,
         isLoading,
         error,
+        friendAcceptedToast,
         // Actions
         fetchFriends,
         sendRequest,

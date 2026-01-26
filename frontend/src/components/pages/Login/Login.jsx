@@ -134,7 +134,7 @@ function Login() {
         // fail = set the backend error message
         setErrors({ submit: result.error || "Invalid credentials" });
       }
-    } catch (error) {
+    } catch {
       setErrors({ submit: "An error occurred. Please try again." });
     } finally {
       setIsLoading(false); // reset loading state

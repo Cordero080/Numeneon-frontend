@@ -1,5 +1,6 @@
 // 🔵 PABLO - UI Architect
 // App.jsx - Main routing and layout structure
+// UPDATED WITH WEBSOCKETS ✅
 
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
@@ -18,35 +19,32 @@ import NotFound from './components/pages/NotFound';
 // Protected Route
 import ProtectedRoute from './components/ui/ProtectedRoute';
 // Contexts
-import { MessageProvider, SideNavProvider } from './contexts';
+import { WebSocketProvider, MessageProvider, SideNavProvider } from './contexts';
 // Global styles now imported via main.scss in main.jsx
 
 function AppContent() {
-  const location = useLocation();// 🔵 Gets current URL path
+  const location = useLocation();
 
-  // 🔵 Initialize theme from localStorage on mount
+  // Initialize theme from localStorage on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.dataset.theme = savedTheme;
   }, []);
 
-  // 🔵 Logic: Should we show nav bars?
-  const isAuthPage = location.pathname === '/login' ||
-  // "Is this a login or signup page?"
-   location.pathname === '/signup';
+  // Logic: Should we show nav bars?
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
   const isLandingPage = location.pathname === '/';
-  // "Is this the landing page?"
 
   return (
     <div className="App">
-    {/* 🔵 TopBar shows UNLESS on landing or auth pages */}
+      {/* TopBar shows UNLESS on landing or auth pages */}
       {!isLandingPage && !isAuthPage && <TopBar />}
 
-       {/* 🎨 Background decoration (always visible) */}
+      {/* Background decoration */}
       <div className="blob-left"></div>
       <div className="blob-right"></div>
 
-       {/* 🟡 Main Content - Router decides which page to show */}
+      {/* Main Content - Router decides which page to show */}
       <div className="main-content">
         <Routes>
           <Route path="/" element={<Landing/>}/>
@@ -63,7 +61,7 @@ function AppContent() {
         </Routes>
       </div>
 
-       {/* 🔵 SideNav shows UNLESS on landing or auth pages */}
+      {/* SideNav shows UNLESS on landing or auth pages */}
       {!isAuthPage && !isLandingPage && <SideNav />}
     </div>
   );
@@ -71,12 +69,15 @@ function AppContent() {
 
 function App() {
   return (
-    <BrowserRouter>{/* 🟡 Enables routing (URL matching) */}
-      <SideNavProvider>
-        <MessageProvider>
-          <AppContent />
-        </MessageProvider>
-      </SideNavProvider>
+    <BrowserRouter>
+      {/* ✨ WebSocketProvider wraps everything that needs real-time updates */}
+      <WebSocketProvider>
+        <SideNavProvider>
+          <MessageProvider>
+            <AppContent />
+          </MessageProvider>
+        </SideNavProvider>
+      </WebSocketProvider>
     </BrowserRouter>
   );
 }

@@ -20,7 +20,6 @@ import {
   TrashIcon,
   MaximizeIcon,
   ChevronRightIcon,
-  CheckIcon,
   CloseIcon,
   ImageIcon,
   VisibilityIcon
@@ -129,7 +128,6 @@ function PostCard({
       await onLike(post.id);
     }
     // TODO: When backend supports reaction types, pass selectedReaction to API
-    console.log('Reaction:', selectedReaction, 'on post:', post.id);
   };
   
   // Determine current reaction state
@@ -521,7 +519,7 @@ function PostCard({
                   <button 
                     className="comment-media-btn"
                     title="Add media"
-                    onClick={() => console.log('Media upload clicked')}
+                    onClick={() => {}}
                   >
                     <ImageIcon size={18} stroke="rgba(220, 8, 188, 0.5)" strokeWidth="1.5" />
                   </button>

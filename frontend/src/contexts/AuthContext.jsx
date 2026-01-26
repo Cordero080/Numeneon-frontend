@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }) => {
           const userData = await authService.getCurrentUser();
           setUser(userData);
           setIsAuthenticated(true);
-        } catch (error) {
+        } catch {
           // if the token is invalid/expired, clear it out
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");

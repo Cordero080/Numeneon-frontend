@@ -133,16 +133,6 @@ function RiverTimelineView({
   // Determine which category is most recent
   const mostRecentType = getMostRecentType(textPosts, mediaPosts, achievementPosts);
 
-  // Debug logging
-  console.log('RiverTimelineView Debug:', {
-    textPosts: textPosts?.length,
-    textRows: textRows.map(r => r.length),
-    mediaRows: mediaRows.map(r => r.length),
-    achievementRows: achievementRows.map(r => r.length),
-    rowCount,
-    mostRecentType,
-  });
-
   // Helper to render a thoughts column for a specific row
   const renderThoughtsColumn = (rowIndex) => {
     const posts = textRows[rowIndex];
