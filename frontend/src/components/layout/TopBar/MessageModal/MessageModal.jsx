@@ -51,10 +51,13 @@ function MessageModal({ onClose }) {
   // 🔵 Get state and actions from context
   const { 
     conversations, 
-    selectedConversationId, 
+    selectedUserId,
+    selectedMessages,
     selectedConversation,
     selectConversation, 
-    sendMessage 
+    sendMessage,
+    getDisplayName,
+    getInitials: contextGetInitials
   } = useMessages();
   
   // 🔵 Local state for the text input
@@ -108,22 +111,20 @@ function MessageModal({ onClose }) {
   };
   
   // 🔵 Filter conversations based on search query
-  const filteredConversations = conversations.filter((conv) => {
+  const filteredConversations = (conversations || []).filter((conv) => {
     if (!searchQuery.trim()) return true;
     
     const query = searchQuery.toLowerCase();
     
-    // Match by display name
-    if (conv.user.displayName?.toLowerCase().includes(query)) return true;
+    // Match by display name or name
+    const displayName = conv.user?.displayName || conv.user?.first_name || conv.user?.username || '';
+    if (displayName.toLowerCase().includes(query)) return true;
     
     // Match by username
-    if (conv.user.username?.toLowerCase().includes(query)) return true;
+    if (conv.user?.username?.toLowerCase().includes(query)) return true;
     
-    // Match by message content
-    const hasMatchingMessage = conv.messages?.some(msg => 
-      msg.text?.toLowerCase().includes(query)
-    );
-    if (hasMatchingMessage) return true;
+    // Match by last message content
+    if (conv.last_message?.content?.toLowerCase().includes(query)) return true;
     
     return false;
   });
@@ -182,33 +183,36 @@ function MessageModal({ onClose }) {
             <div className="conversations-list">
               {/* 🔵 Map through filtered conversations from context */}
               {filteredConversations.map((conv) => {
-                const lastMessage = conv.messages[conv.messages.length - 1];
-                const isActive = conv.id === selectedConversationId;
+                // Support both API format (last_message) and mock format (messages array)
+                const lastMessage = conv.last_message || (conv.messages && conv.messages[conv.messages.length - 1]);
+                const displayName = conv.user?.displayName || `${conv.user?.first_name || ''} ${conv.user?.last_name || ''}`.trim() || conv.user?.username || 'Unknown';
+                const isActive = conv.user?.id === selectedUserId;
+                const messagePreview = lastMessage?.content || lastMessage?.text || 'No messages yet';
                 
                 return (
                   <div 
-                    key={conv.id}
+                    key={conv.id || conv.user?.id}
                     className={`conversation-item ${isActive ? 'active' : ''}`}
                     onClick={() => {
-                      selectConversation(conv.id);
+                      selectConversation(conv.user?.id);
                       setMobileView('chat'); // Switch to chat view on mobile
                     }}
                   >
                     {/* Avatar - show initials */}
                     <div className="conversation-avatar">
-                      <span className="initial-1">{getInitials(conv.user.displayName)[0]}</span>
-                      {getInitials(conv.user.displayName).length > 1 && (
-                        <span className="initial-2">{getInitials(conv.user.displayName)[1]}</span>
+                      <span className="initial-1">{getInitials(displayName)[0]}</span>
+                      {getInitials(displayName).length > 1 && (
+                        <span className="initial-2">{getInitials(displayName)[1]}</span>
                       )}
                     </div>
                     <div className="conversation-info">
-                      <span className="conversation-name">{conv.user.displayName}</span>
+                      <span className="conversation-name">{displayName}</span>
                       <span className="conversation-preview">
-                        {lastMessage ? lastMessage.text.substring(0, 30) + (lastMessage.text.length > 30 ? '...' : '') : 'No messages yet'}
+                        {messagePreview.substring(0, 30) + (messagePreview.length > 30 ? '...' : '')}
                       </span>
                     </div>
                     <span className="conversation-time">
-                      {formatRelativeTime(conv.lastMessageTime)}
+                      {formatRelativeTime(lastMessage?.created_at || conv.lastMessageTime)}
                     </span>
                   </div>
                 );
@@ -234,7 +238,13 @@ function MessageModal({ onClose }) {
 
           {/* Right: Chat View */}
           <div className={`message-chat ${mobileView === 'list' ? 'hide' : ''}`}>
-            {selectedConversation ? (
+            {selectedConversation ? (() => {
+              // Get display name for the selected conversation user
+              const chatDisplayName = selectedConversation.user?.displayName || 
+                `${selectedConversation.user?.first_name || ''} ${selectedConversation.user?.last_name || ''}`.trim() || 
+                selectedConversation.user?.username || 'Unknown';
+              
+              return (
               <>
                 {/* Chat Header */}
                 <div className="chat-header">
@@ -247,31 +257,38 @@ function MessageModal({ onClose }) {
                   </button>
                   <div className="chat-user-info">
                     <div className="chat-avatar">
-                      <span className="initial-1">{getInitials(selectedConversation.user.displayName)[0]}</span>
-                      {getInitials(selectedConversation.user.displayName).length > 1 && (
-                        <span className="initial-2">{getInitials(selectedConversation.user.displayName)[1]}</span>
+                      <span className="initial-1">{getInitials(chatDisplayName)[0]}</span>
+                      {getInitials(chatDisplayName).length > 1 && (
+                        <span className="initial-2">{getInitials(chatDisplayName)[1]}</span>
                       )}
                     </div>
-                    <span className="chat-username">{selectedConversation.user.displayName}</span>
+                    <span className="chat-username">{chatDisplayName}</span>
                   </div>
                 </div>
                 
                 {/* Messages */}
                 <div className="chat-messages">
-                  {selectedConversation.messages.map((msg) => (
-                    <div 
-                      key={msg.id} 
-                      className={`chat-message ${msg.sender === 'me' ? 'sent' : 'received'}`}
-                    >
-                      <p>{msg.text}</p>
-                      <span className="message-time">{formatMessageTime(msg.timestamp)}</span>
-                    </div>
-                  ))}
+                  {(selectedMessages || []).map((msg) => {
+                    // Determine if message is sent by current user
+                    const isSent = msg.sender === 'me' || msg.sender?.id !== selectedUserId;
+                    const messageContent = msg.content || msg.text || '';
+                    const messageTime = msg.created_at || msg.timestamp;
+                    
+                    return (
+                      <div 
+                        key={msg.id} 
+                        className={`chat-message ${isSent ? 'sent' : 'received'}`}
+                      >
+                        <p>{messageContent}</p>
+                        <span className="message-time">{formatMessageTime(messageTime)}</span>
+                      </div>
+                    );
+                  })}
                   
                   {/* Empty conversation state */}
-                  {selectedConversation.messages.length === 0 && (
+                  {(!selectedMessages || selectedMessages.length === 0) && (
                     <div className="chat-empty">
-                      <p>Start a conversation with {selectedConversation.user.displayName}</p>
+                      <p>Start a conversation with {chatDisplayName}</p>
                     </div>
                   )}
                   
@@ -298,7 +315,8 @@ function MessageModal({ onClose }) {
                   </button>
                 </div>
               </>
-            ) : (
+              );
+            })() : (
               /* No conversation selected state */
               <div className="chat-no-selection">
                 <div className="no-selection-icon">

@@ -26,9 +26,11 @@ const messagesService = {
   },
 
   getConversation: async (userId) => {
-    const response = await apiClient.get(
-      `/messages/conversation/?user_id=${userId}`,
-    );
+    if (!userId) {
+      console.error("getConversation called without userId");
+      return [];
+    }
+    const response = await apiClient.get(`/messages/conversation/${userId}/`);
     return response.data;
   },
 
