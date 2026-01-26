@@ -137,17 +137,18 @@ export function MessageProvider({ children }) {
   const selectConversation = async (userId, userInfo = null) => {
     console.log("selectConversation called:", { userId, userInfo });
     
-    // Guard against undefined userId
+    // Set user info FIRST so name shows immediately in UI
+    // If no userInfo provided, clear it (we'll rely on conversations.find())
+    setSelectedUserInfo(userInfo);
+    
+    // Guard against undefined userId - but still show the UI with user info
     if (!userId) {
-      console.error("selectConversation called without userId!");
+      console.error("selectConversation called without userId! userInfo:", userInfo);
+      // Still set empty state so UI shows
+      setSelectedMessages([]);
       return;
     }
     
-    // Set user info FIRST so it's available immediately
-    if (userInfo) {
-      console.log("Setting selectedUserInfo:", userInfo);
-      setSelectedUserInfo(userInfo);
-    }
     // Set the user ID immediately so UI updates
     console.log("Setting selectedUserId:", userId);
     setSelectedUserId(userId);
@@ -211,9 +212,10 @@ export function MessageProvider({ children }) {
       return existing;
     }
     
-    // If no existing conversation but we have user info, create a fake conversation object
+    // If we have user info, create a fake conversation object
     // This allows the UI to display properly for new conversations
-    if (selectedUserId && selectedUserInfo) {
+    // (even if userId is undefined, we can still show the user's name)
+    if (selectedUserInfo) {
       const fakeConv = {
         user: selectedUserInfo,
         messages: selectedMessages,

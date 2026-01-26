@@ -210,8 +210,7 @@ function MessageModal({ onClose }) {
                 onClick={() => setIsNewMessageMode(!isNewMessageMode)}
                 title="New message"
               >
-                <PlusIcon size={16} />
-                <span>New</span>
+                <PlusIcon size={22} />
               </button>
               
               {/* User Search (when in new message mode) */}
