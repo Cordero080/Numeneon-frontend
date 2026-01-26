@@ -19,7 +19,7 @@ import NotFound from './components/pages/NotFound';
 // Protected Route
 import ProtectedRoute from './components/ui/ProtectedRoute';
 // Contexts
-import { MessageProvider, SideNavProvider } from './contexts';
+import { SideNavProvider } from './contexts';
 // Global styles now imported via main.scss in main.jsx
 
 function AppContent() {
@@ -71,9 +71,7 @@ function App() {
   return (
     <BrowserRouter>
       <SideNavProvider>
-        <MessageProvider>
-          <AppContent />
-        </MessageProvider>
+        <AppContent />
       </SideNavProvider>
     </BrowserRouter>
   );

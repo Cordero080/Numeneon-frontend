@@ -8,6 +8,7 @@ import { PostsProvider } from "./contexts/PostsContext";
 import { FriendsProvider } from "./contexts/FriendsContext";
 import { SearchProvider } from "./contexts/SearchContext";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
+import { MessageProvider } from "./contexts/MessageContext";
 
 createRoot(document.getElementById('root')).render(
    <StrictMode>
@@ -15,9 +16,11 @@ createRoot(document.getElementById('root')).render(
       <WebSocketProvider>    {/* Needs token, provides WS connection */}
         <PostsProvider>
           <FriendsProvider>  {/* Uses WebSocket */}
-            <SearchProvider>
-              <App />
-            </SearchProvider>
+            <MessageProvider> {/* Uses WebSocket */}
+              <SearchProvider>
+                <App />
+              </SearchProvider>
+            </MessageProvider>
           </FriendsProvider>
         </PostsProvider>
       </WebSocketProvider>
