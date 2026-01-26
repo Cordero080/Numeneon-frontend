@@ -47,9 +47,9 @@ const messagesService = {
   //   - created_at = now
   // Backend: MessageViewSet.create() via MessageSerializer
   // ─────────────────────────────────────────────────────────────────────────
-  sendMessage: async (receiverId, content) => {
+  sendMessage: async (recieverId, content) => {
     const response = await apiClient.post("/messages/", {
-      receiver_id: receiverId,
+      recieverId: recieverId,
       content,
     });
     return response.data;

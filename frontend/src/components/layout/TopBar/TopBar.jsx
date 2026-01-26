@@ -21,7 +21,7 @@ import {
 } from '@assets/icons';
 
 function TopBar() {
-  const { isMessageModalOpen, openMessages, closeMessages } = useMessages();
+  const { isMessageModalOpen, openMessages, closeMessages, newMessageNotification } = useMessages();
   const { logout, user } = useAuth();
   const { pendingRequests } = useFriends();
   const { isSearchModalOpen, openSearch, closeSearch } = useSearch();
@@ -149,6 +149,14 @@ function TopBar() {
           <FriendsIcon size={18} />
           <span><strong>{friendToastName}</strong> accepted your friend request!</span>
           <button onClick={handleCloseToast}>✕</button>
+        </div>
+      )}
+      
+      {/* 🔵 New Message Toast */}
+      {newMessageNotification && (
+        <div className="friend-accepted-toast" onClick={() => openMessages()}>
+          <MessageBubbleIcon size={18} />
+          <span><strong>{newMessageNotification.senderUsername}</strong> sent you a message</span>
         </div>
       )}
     </>

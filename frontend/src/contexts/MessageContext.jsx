@@ -26,6 +26,7 @@ export function MessageProvider({ children }) {
   // Currently selected conversation
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [selectedMessages, setSelectedMessages] = useState([]);
+  const [selectedUserInfo, setSelectedUserInfo] = useState(null); // Store user info for new conversations
 
   // NEW: Notification state for new messages
   const [newMessageNotification, setNewMessageNotification] = useState(null);
@@ -101,10 +102,14 @@ export function MessageProvider({ children }) {
   const fetchConversation = async (userId) => {
     try {
       const messages = await messagesService.getConversation(userId);
-      setSelectedMessages(messages);
+      setSelectedMessages(messages || []);
       setSelectedUserId(userId);
     } catch (err) {
-      console.error("Failed to fetch conversation:", err);
+      // If no conversation exists yet, just set empty messages and the user ID
+      // This allows starting a new conversation
+      console.log("No existing conversation, starting fresh");
+      setSelectedMessages([]);
+      setSelectedUserId(userId);
     }
   };
 
@@ -113,6 +118,8 @@ export function MessageProvider({ children }) {
     setIsMessageModalOpen(true);
 
     if (targetUser) {
+      // Store user info for display (useful when no conversation exists yet)
+      setSelectedUserInfo(targetUser);
       await fetchConversation(targetUser.id);
     } else if (conversations.length > 0 && !selectedUserId) {
       await fetchConversation(conversations[0].user.id);
@@ -124,7 +131,10 @@ export function MessageProvider({ children }) {
   };
 
   // Select a conversation and mark as read
-  const selectConversation = async (userId) => {
+  const selectConversation = async (userId, userInfo = null) => {
+    if (userInfo) {
+      setSelectedUserInfo(userInfo);
+    }
     await fetchConversation(userId);
     try {
       await messagesService.markAllAsRead(userId);
@@ -162,7 +172,19 @@ export function MessageProvider({ children }) {
 
   // Find the conversation object for the currently selected user
   const getSelectedConversation = () => {
-    return conversations.find((c) => c.user.id === selectedUserId) || null;
+    const existing = conversations.find((c) => c.user.id === selectedUserId);
+    if (existing) return existing;
+    
+    // If no existing conversation but we have user info, create a fake conversation object
+    // This allows the UI to display properly for new conversations
+    if (selectedUserId && selectedUserInfo) {
+      return {
+        user: selectedUserInfo,
+        messages: selectedMessages,
+        last_message: null,
+      };
+    }
+    return null;
   };
 
   // Helper: Build display name from user object

@@ -112,7 +112,14 @@ function MessageModal({ onClose }) {
   
   // 🔵 Handle selecting a user from search results
   const handleSelectUser = (user) => {
-    selectConversation(user.id);
+    // Pass user info so it can be displayed even without existing conversation
+    selectConversation(user.id, {
+      id: user.id,
+      username: user.username,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      displayName: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username,
+    });
     setIsNewMessageMode(false);
     setUserSearchQuery('');
     setUserSearchResults([]);
@@ -211,7 +218,10 @@ function MessageModal({ onClose }) {
               {isNewMessageMode ? (
                 <div className="conversations-search-wrapper">
                   <input 
-                    type="text" 
+                    type="text"
+                    id="user-search"
+                    name="user-search"
+                    autoComplete="off"
                     placeholder="Search users to message..." 
                     className="conversations-search"
                     value={userSearchQuery}
@@ -237,7 +247,10 @@ function MessageModal({ onClose }) {
               ) : (
                 <div className="conversations-search-wrapper">
                   <input 
-                    type="text" 
+                    type="text"
+                    id="conversations-search"
+                    name="conversations-search"
+                    autoComplete="off"
                     placeholder="Search conversations..." 
                     className="conversations-search"
                     value={searchQuery}
