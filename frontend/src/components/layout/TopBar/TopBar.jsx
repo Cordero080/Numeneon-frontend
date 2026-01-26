@@ -16,7 +16,9 @@ import {
   LogoutIcon, 
   LoginIcon,
   HamburgerIcon,
-  CloseIcon 
+  CloseIcon,
+  CheckIcon,
+  FriendsIcon
 } from '@assets/icons';
 
 function TopBar() {
@@ -29,6 +31,20 @@ function TopBar() {
   
   // 🔵 Local state for notification modal
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  
+  // 🔵 Friend accepted toast
+  const [showFriendToast, setShowFriendToast] = useState(false);
+  const [friendToastName, setFriendToastName] = useState('');
+  const [isToastClosing, setIsToastClosing] = useState(false);
+  
+  // Handle toast close with fade-out
+  const handleCloseToast = () => {
+    setIsToastClosing(true);
+    setTimeout(() => {
+      setShowFriendToast(false);
+      setIsToastClosing(false);
+    }, 300);
+  };
 
   const handleLogout = () => {
     logout();
@@ -127,6 +143,15 @@ function TopBar() {
         isOpen={isNotificationsOpen}
         onClose={() => setIsNotificationsOpen(false)}
       />
+      
+      {/* 🔵 Friend Accepted Toast */}
+      {showFriendToast && (
+        <div className={`friend-accepted-toast ${isToastClosing ? 'closing' : ''}`}>
+          <FriendsIcon size={18} />
+          <span><strong>{friendToastName}</strong> accepted your friend request!</span>
+          <button onClick={handleCloseToast}>✕</button>
+        </div>
+      )}
     </>
   );
 }
