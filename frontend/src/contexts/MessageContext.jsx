@@ -132,6 +132,13 @@ export function MessageProvider({ children }) {
   // Select a conversation and mark as read
   const selectConversation = async (userId, userInfo = null) => {
     console.log("selectConversation called:", { userId, userInfo });
+    
+    // Guard against undefined userId
+    if (!userId) {
+      console.error("selectConversation called without userId!");
+      return;
+    }
+    
     // Set user info FIRST so it's available immediately
     if (userInfo) {
       console.log("Setting selectedUserInfo:", userInfo);
