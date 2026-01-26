@@ -127,8 +127,8 @@ function Signup() {
           // Signup worked but auto-login failed - redirect to login page
           navigate("/login", { state: { message: "Account created! Please log in." } });
         } else {
-          // Signup + auto-login succeeded, navigate to home
-          navigate("/home");
+          // Signup + auto-login succeeded, navigate to welcome landing page
+          navigate("/", { state: { welcome: true } });
         }
       } else {
         // Signup or login failed

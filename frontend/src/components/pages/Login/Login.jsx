@@ -63,7 +63,7 @@ function Login() {
   const { login } = useAuth();
 
   // TODO: Get redirect destination from location.state
-  const from = location.state?.from?.pathname || "/home";
+  const from = location.state?.from?.pathname || "/";
   const redirectMessage = location.state?.message;
 
   // TODO: Add form state

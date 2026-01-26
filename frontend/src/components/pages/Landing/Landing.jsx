@@ -1,7 +1,7 @@
 // 🔵 PABLO - UI Architect
 // Landing.jsx - Welcome/landing page
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useMemo, useState, useRef } from 'react';
 import { useAuth } from '@contexts/AuthContext';
 import './Landing.scss';
@@ -11,7 +11,11 @@ const PHI = (1 + Math.sqrt(5)) / 2; // ≈ 1.618033988749895
 
 function Landing() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, isLoading } = useAuth();
+  
+  // Check if user just signed up (came from signup page with welcome flag)
+  const isWelcome = location.state?.welcome === true;
   
   // Track which letters have been hovered (for "hover all" replay)
   const hoveredRef = useRef(new Set());
@@ -74,6 +78,9 @@ function Landing() {
 
   return (
     <div className="landing-container">
+      {isWelcome && (
+        <p className="landing-welcome">Welcome to</p>
+      )}
       <h1 className={`landing-title ${replayGlitch === 'reset' ? 'landing-title--reset' : ''} ${replayGlitch === 'replay' ? 'landing-title--replay' : ''}`}>
         {'NUMENEON'.split('').map((letter, index) => {
           const isFlipped = index === 0 || index === 7; // First N and last N
