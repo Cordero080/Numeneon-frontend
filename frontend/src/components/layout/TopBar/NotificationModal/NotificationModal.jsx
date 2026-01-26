@@ -20,6 +20,8 @@ function NotificationModal({ isOpen, onClose }) {
 
   const handleAccept = async (requestId) => {
     await acceptRequest(requestId);
+    onClose();
+    navigate('/home');
   };
 
   const handleDecline = async (requestId) => {
