@@ -131,11 +131,14 @@ export function MessageProvider({ children }) {
 
   // Select a conversation and mark as read
   const selectConversation = async (userId, userInfo = null) => {
+    console.log("selectConversation called:", { userId, userInfo });
     // Set user info FIRST so it's available immediately
     if (userInfo) {
+      console.log("Setting selectedUserInfo:", userInfo);
       setSelectedUserInfo(userInfo);
     }
     // Set the user ID immediately so UI updates
+    console.log("Setting selectedUserId:", userId);
     setSelectedUserId(userId);
     setSelectedMessages([]);
     
@@ -186,18 +189,29 @@ export function MessageProvider({ children }) {
   // Find the conversation object for the currently selected user
   // Using useMemo to ensure proper React dependency tracking
   const selectedConversation = useMemo(() => {
+    console.log("useMemo recomputing selectedConversation:", { 
+      selectedUserId, 
+      selectedUserInfo, 
+      conversationsCount: conversations.length 
+    });
     const existing = conversations.find((c) => c.user.id === selectedUserId);
-    if (existing) return existing;
+    if (existing) {
+      console.log("Found existing conversation:", existing);
+      return existing;
+    }
     
     // If no existing conversation but we have user info, create a fake conversation object
     // This allows the UI to display properly for new conversations
     if (selectedUserId && selectedUserInfo) {
-      return {
+      const fakeConv = {
         user: selectedUserInfo,
         messages: selectedMessages,
         last_message: null,
       };
+      console.log("Created fake conversation:", fakeConv);
+      return fakeConv;
     }
+    console.log("No conversation found, returning null");
     return null;
   }, [conversations, selectedUserId, selectedUserInfo, selectedMessages]);
 
