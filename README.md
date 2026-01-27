@@ -178,42 +178,39 @@ numeneon/
 
 ### Core Pages
 
-![Landing Page](./frontend/src/assets/screenshots/landing.png)
-![Sign In](./frontend/src/assets/screenshots/sign-in.png)
-![Sign Up](./frontend/src/assets/screenshots/sign-up.png)
-![Feed Page (River Timeline)](./frontend/src/assets/screenshots/feed.png)
-![Profile Page](./frontend/src/assets/screenshots/profile-page.png)
-![Friends Page](./frontend/src/assets/screenshots/friends-page.png)
+| Landing                                                        | Sign In                                                   | Sign Up                                                   |
+| -------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------- |
+| ![Landing Page](./frontend/src/assets/screenshots/landing.png) | ![Sign In](./frontend/src/assets/screenshots/sign-in.png) | ![Sign Up](./frontend/src/assets/screenshots/sign-up.png) |
+
+| Feed (Dark)                                              | Profile (Dark)                                                      | Friends                                                             |
+| -------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| ![Feed Page](./frontend/src/assets/screenshots/feed.png) | ![Profile Page](./frontend/src/assets/screenshots/profile-page.png) | ![Friends Page](./frontend/src/assets/screenshots/friends-page.png) |
 
 ### Activity Visualizations
 
-![Wave Chart](./frontend/src/assets/screenshots/wave-chart.png)
-![Heat Map](./frontend/src/assets/screenshots/heatmap.png)
+| Wave Chart                                                      | Heat Map                                                   |
+| --------------------------------------------------------------- | ---------------------------------------------------------- |
+| ![Wave Chart](./frontend/src/assets/screenshots/wave-chart.png) | ![Heat Map](./frontend/src/assets/screenshots/heatmap.png) |
 
 ### Mobile Responsive
 
-![Mobile Feed](./frontend/src/assets/screenshots/feed-mobile.png)
-![Mobile Profile](./frontend/src/assets/screenshots/profile-mobile.png)
-![Mobile Friends](./frontend/src/assets/screenshots/friends-mobile.png)
-![Mobile Messages](./frontend/src/assets/screenshots/messages-mobile.png)
-![Mobile Side Nav](./frontend/src/assets/screenshots/side-nav-mobile.png)
+| Feed                                                              | Profile                                                                 | Friends                                                                 |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| ![Mobile Feed](./frontend/src/assets/screenshots/feed-mobile.png) | ![Mobile Profile](./frontend/src/assets/screenshots/profile-mobile.png) | ![Mobile Friends](./frontend/src/assets/screenshots/friends-mobile.png) |
+
+| Messages                                                                  | Side Nav                                                                  |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| ![Mobile Messages](./frontend/src/assets/screenshots/messages-mobile.png) | ![Mobile Side Nav](./frontend/src/assets/screenshots/side-nav-mobile.png) |
 
 ### Light Mode
 
-![Light Mode Feed](./frontend/src/assets/screenshots/feed-lightmode.png)
-![Light Mode Profile](./frontend/src/assets/screenshots/profile-lightmode.png)
-![Light Mode Wave Chart](./frontend/src/assets/screenshots/wave-chart-lightmode.png)
-![Light Mode Heat Map](./frontend/src/assets/screenshots/heatmap-lightmode.png)
+| Feed                                                                     | Profile                                                                        |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| ![Light Mode Feed](./frontend/src/assets/screenshots/feed-lightmode.png) | ![Light Mode Profile](./frontend/src/assets/screenshots/profile-lightmode.png) |
 
-### 📐 Planning & Design
-
-**ERD (Entity Relationship Diagram)**
-
-![NUMENEON ERD](./frontend/src/assets/numeneon-erd.png)
-
-**Wireframe Flow**
-
-![NUMENEON Wireframe](./frontend/src/assets/numeneon-wireframe-v3.png)
+| Wave Chart                                                                           | Heat Map                                                                        |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| ![Light Mode Wave Chart](./frontend/src/assets/screenshots/wave-chart-lightmode.png) | ![Light Mode Heat Map](./frontend/src/assets/screenshots/heatmap-lightmode.png) |
 
 ---
 
