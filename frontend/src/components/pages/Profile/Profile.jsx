@@ -6,6 +6,8 @@ import { useParams } from 'react-router-dom';
 // Supports viewing own profile (/profile) and other users' profiles (/profile/:username)
 
 import './Profile.scss';
+// 🛠️ Import shared helpers instead of duplicating them!
+import { getDisplayName, getInitials, formatRelativeTime } from '@utils/helpers';
 import {
   UserIcon,
   FriendsIcon,
@@ -99,41 +101,7 @@ function Profile() {
     );
   }
   
-  // Helper to get display name (full name if available, otherwise username)
-  const getDisplayName = (user) => {
-    if (!user) return 'User';
-    const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
-    return fullName || user.username || 'User';
-  };
-  
-  // Helper to get initials from user
-  const getInitials = (user) => {
-    if (!user) return '??';
-    const first = user.first_name?.[0] || '';
-    const last = user.last_name?.[0] || '';
-    if (first && last) return `${first}${last}`.toUpperCase();
-    if (first) return first.toUpperCase();
-    if (user.username) return user.username.slice(0, 2).toUpperCase();
-    return '??';
-  };
-
-  // Helper to format relative time
-  const formatRelativeTime = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-    
-    if (diffMins < 1) return 'now';
-    if (diffMins < 60) return `${diffMins}m`;
-    if (diffHours < 24) return `${diffHours}h`;
-    if (diffDays < 7) return `${diffDays}d`;
-    
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
+  // 🛠️ getDisplayName, getInitials, formatRelativeTime are now imported from @/utils/helpers
 
   // HANDLER: Submit from inline composer (Cmd/Ctrl + Enter)
   const handleInlineKeyDown = async (e) => {

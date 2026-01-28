@@ -7,6 +7,8 @@ import TimelineRiverFeed from './components/TimelineRiverFeed';
 import ComposerModal from '@Profile/components/ComposerModal/ComposerModal';
 import { usePosts, useFriends } from '@contexts';
 import { UserIcon, PostTriangleIcon, MaximizeIcon } from '@assets/icons';
+// 🛠️ Import shared helpers instead of duplicating them!
+import { getInitials } from '@utils/helpers';
 
 function Home() {
   // Get real data from contexts
@@ -90,12 +92,7 @@ function Home() {
   
   };
 
-  // Helper to get initials
-  const getInitials = (firstName, lastName, username) => {
-    if (firstName && lastName) return `${firstName[0]}${lastName[0]}`.toUpperCase();
-    if (firstName) return firstName.slice(0, 2).toUpperCase();
-    return username.slice(0, 2).toUpperCase();
-  };
+  // 🛠️ getInitials is now imported from @/utils/helpers
 
   // Build stories from friends (real data) - always use username
   const stories = [
@@ -107,7 +104,7 @@ function Home() {
     ...friends.map(friend => ({
       id: friend.id,
       name: friend.username,
-      avatar: getInitials(friend.first_name, friend.last_name, friend.username),
+      avatar: getInitials(friend), // Now uses shared helper
       hasStory: true,
     }))
   ];

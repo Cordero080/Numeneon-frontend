@@ -1,28 +1,6 @@
 // Utilities for grouping and sorting posts for Timeline River layout
-// Get display name from author
-const getDisplayName = (author) => {
-  if (!author) return "Unknown";
-  if (typeof author === "string") return author;
-  return author.username || "Unknown";
-};
-
-// Get initials from author
-const getInitials = (author) => {
-  if (!author) return "??";
-  if (typeof author === "string") return author.slice(0, 2).toUpperCase();
-  if (author.first_name && author.last_name) {
-    return `${author.first_name[0]}${author.last_name[0]}`.toUpperCase();
-  }
-  if (author.first_name) return author.first_name.slice(0, 2).toUpperCase();
-  return author.username?.slice(0, 2).toUpperCase() || "??";
-};
-
-// Parse post timestamp to milliseconds
-const getPostTime = (post) =>
-  new Date(post.createdAt || post.created_at || 0).getTime();
-// ↑ Try createdAt first, then created_at, then 0 as fallback
-  // ↑ new Date() creates a date object
-  // ↑ .getTime() built-in method to get milliseconds since last epoch(Jan 1, 1970 -when computers started counting time)
+// 🛠️ Import shared helpers instead of duplicating them here!
+import { getDisplayName, getInitials, getPostTime } from '@utils/helpers';
 
 // Group posts by user
 export const groupPostsByUser = (posts) => {

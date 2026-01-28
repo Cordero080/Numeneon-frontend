@@ -6,13 +6,9 @@ import { useNavigate } from 'react-router-dom';
 import { useFriends, useMessages } from '@contexts';
 import DeleteConfirmModal from '@Home/components/DeleteConfirmModal/DeleteConfirmModal';
 import { MessageBubbleIcon, UnlinkIcon, PlusIcon } from '@assets/icons';
+// 🛠️ Import shared helpers instead of duplicating them!
+import { getInitials, getDisplayName, getColorVariant } from '@utils/helpers';
 import './Friends.scss';
-
-// Helper function to assign color variants to cards
-const getColorVariant = (id) => {
-  const variants = ['card-cyan', 'card-magenta', 'card-green', 'card-purple', 'card-orange'];
-  return variants[id % variants.length];
-};
 
 // Theme colors for icons (dimmed versions)
 const themeColors = [
@@ -23,22 +19,6 @@ const themeColors = [
   'rgba(0, 255, 136, 0.6)',   // green
   'rgba(255, 140, 66, 0.6)',  // orange
 ];
-
-// Helper to get initials from name
-const getInitials = (firstName, lastName, username) => {
-  if (firstName && lastName) {
-    return `${firstName[0]}${lastName[0]}`.toUpperCase();
-  }
-  if (firstName) {
-    return firstName.slice(0, 2).toUpperCase();
-  }
-  return username.slice(0, 2).toUpperCase();
-};
-
-// Helper to get display name - always use username
-const getDisplayName = (friend) => {
-  return friend.username || 'Unknown';
-};
 
 function Friends() {
   const [activeTab, setActiveTab] = useState('all'); // 'all', 'requests', 'suggestions'
