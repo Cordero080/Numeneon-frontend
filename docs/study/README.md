@@ -1,49 +1,47 @@
-# 📚 Study Materials Index
+# Study Materials — Priority Order
 
-## Quick Access
-
-| File                                                                 | Purpose                             | Priority    |
-| -------------------------------------------------------------------- | ----------------------------------- | ----------- |
-| [MustKnow.txt](MustKnow.txt)                                         | **22 critical files + 5 key flows** | 🔴 HIGH     |
-| [ReactHooks.md](ReactHooks.md)                                       | **8 React hooks to know**           | 🔴 HIGH     |
-| [14-DAY-STUDY-PLAN.md](14-DAY-STUDY-PLAN.md)                         | Day-by-day schedule                 | 🟡 MEDIUM   |
-| [ActivityVisualizationDeepDive.md](ActivityVisualizationDeepDive.md) | SVG math deep dive                  | 🟢 OPTIONAL |
+Study these in order. Use the Chunk Method. One block at a time.
 
 ---
 
-## Study Order
+## 🔴 PRIORITY 1 — Start Here
 
-1. **Start with MustKnow.txt** - Understand the 22 files and 5 flows
-2. **Learn ReactHooks.md** - Know when to use each hook
-3. **Follow 14-DAY plan** if you have 2 weeks
-4. **Deep dive ActivityVisualization** for SVG interview questions
-
----
-
-## Archived Files
-
-The following files have been merged or are redundant:
-
-- `STUDY-MASTER.md` → Content merged into MustKnow.txt
-- `prompt.md` → Original AI prompt, not needed for study
+| File | What It Is | Why First |
+|---|---|---|
+| [STUDY-MASTER.md](STUDY-MASTER.md) | IKM gap closure plan, 5 priorities, Chunk Method rules | Your roadmap — read this before every session |
+| [ClaudeCode.md](ClaudeCode.md) | IKM test breakdown — exactly what you missed and why | Source of truth for your weak spots |
 
 ---
 
-## Interview Quick Reference
+## 🔴 PRIORITY 2 — IKM Gap Targets (study these actively)
 
-### "Walk me through your app architecture"
+| File | What It Is | IKM Gap It Closes |
+|---|---|---|
+| [ReactHooks.md](ReactHooks.md) | All 8 React hooks with Numeneon examples + interview Q&As | Priority 1 (useEffect lifecycle) + Priority 2 (props/state) |
 
-> See MustKnow.txt → File Organization section
+---
 
-### "How does authentication work?"
+## 🟡 PRIORITY 3 — Session Tools
 
-> See MustKnow.txt → FLOW 2: User Login
+| File | What It Is | When To Use |
+|---|---|---|
+| [SKILL.md](SKILL.md) | Full codebase context + study priority order | Paste into any new Claude chat to start a session |
+| [INTERVIEW-PREP.md](INTERVIEW-PREP.md) | Opening statement, technical decision Q&As, key flows | When practicing out loud or before an interview |
 
-### "Explain Context API"
+---
 
-> See MustKnow.txt → STATE MANAGEMENT section
-> See ReactHooks.md → useContext section
+## 🟢 OPTIONAL — Deep Reference
 
-### "How does a post get created?"
+| File | What It Is | When To Use |
+|---|---|---|
+| [ActivityVisualizationDeepDive.md](ActivityVisualizationDeepDive.md) | SVG math, Bézier curves, seeded random — ProfileCard internals | If asked about the activity visualization specifically |
 
-> See MustKnow.txt → FLOW 1: Creating a Post
+---
+
+## Study Session Workflow
+
+1. Open **STUDY-MASTER.md** — check which priority you're on
+2. If starting a new chat — paste **SKILL.md** as context
+3. Say the start phrase for that priority (listed at bottom of STUDY-MASTER)
+4. One chunk at a time. Confirm. Explain back. Write cold.
+5. After each session — check what you can write cold without notes
