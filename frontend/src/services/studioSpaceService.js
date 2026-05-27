@@ -96,12 +96,3 @@ export const searchSongs = async (query) => {
     throw error;
   }
 };
-
-export default {
-  getStudioSpaceProfile,
-  updateStudioSpaceProfile,
-  addSongToPlaylist,
-  removeSongFromPlaylist,
-  reorderPlaylist,
-  searchSongs,
-};

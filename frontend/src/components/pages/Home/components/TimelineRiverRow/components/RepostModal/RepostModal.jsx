@@ -1,26 +1,19 @@
 // 🔵 PABLO - UI Component
 // RepostModal.jsx - Modal for sharing/reposting a post
 
-import { useState } from 'react';
-import { createPortal } from 'react-dom';
-import { formatRelativeTime } from '@components/pages/Home/utils/timeFormatters';
+import { useState } from "react";
+import { createPortal } from "react-dom";
+import { formatRelativeTime } from "@utils/helpers";
 import {
   UserIcon,
   CloseIcon,
   RepostIcon,
   LinkIcon,
-  CheckIcon
-} from '@assets/icons';
-import './RepostModal.scss';
+  CheckIcon,
+} from "@assets/icons";
+import "./RepostModal.scss";
 
-function RepostModal({
-  post,
-  user,
-  type,
-  onClose,
-  onRepost,
-  onCopyLink
-}) {
+function RepostModal({ post, user, type, onClose, onRepost, onCopyLink }) {
   const [copied, setCopied] = useState(false);
   const [reposted, setReposted] = useState(false);
 
@@ -64,20 +57,21 @@ function RepostModal({
             <div className="repost-preview-info">
               <span className="repost-preview-name">{user.name}</span>
               <span className="repost-preview-meta">
-                @{user.username} · {formatRelativeTime(post.created_at || post.createdAt)}
+                @{user.username} ·{" "}
+                {formatRelativeTime(post.created_at || post.createdAt)}
               </span>
             </div>
           </div>
-          
+
           {/* Media if present */}
-          {type === 'media' && post.media_url && (
+          {type === "media" && post.media_url && (
             <div className="repost-preview-media">
               <img src={post.media_url} alt="Post media" />
             </div>
           )}
-          
+
           <p className="repost-preview-content">{post.content}</p>
-          
+
           {/* Post stats */}
           <div className="repost-preview-stats">
             <span>{post.likes_count || 0} likes</span>
@@ -90,26 +84,26 @@ function RepostModal({
 
         {/* Share Actions - icon only */}
         <div className="repost-actions">
-          <button 
-            className={`repost-action-btn repost-action-btn--repost ${reposted ? 'success' : ''}`}
+          <button
+            className={`repost-action-btn repost-action-btn--repost ${reposted ? "success" : ""}`}
             onClick={handleRepost}
             disabled={reposted}
-            title={reposted ? 'Reposted!' : 'Repost to your timeline'}
+            title={reposted ? "Reposted!" : "Repost to your timeline"}
           >
             {reposted ? <CheckIcon size={22} /> : <RepostIcon size={22} />}
           </button>
-          
-          <button 
-            className={`repost-action-btn repost-action-btn--link ${copied ? 'success' : ''}`}
+
+          <button
+            className={`repost-action-btn repost-action-btn--link ${copied ? "success" : ""}`}
             onClick={handleCopyLink}
-            title={copied ? 'Link copied!' : 'Copy link'}
+            title={copied ? "Link copied!" : "Copy link"}
           >
             {copied ? <CheckIcon size={22} /> : <LinkIcon size={22} />}
           </button>
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
 

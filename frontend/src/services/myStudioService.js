@@ -135,13 +135,3 @@ const formatDuration = (ms) => {
   const secs = totalSeconds % 60;
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 };
-
-export default {
-  getMyProfile,
-  getMyStudioProfile,
-  updateMyStudioProfile,
-  addSongToPlaylist,
-  removeSongFromPlaylist,
-  setProfileSong,
-  searchSongs,
-};

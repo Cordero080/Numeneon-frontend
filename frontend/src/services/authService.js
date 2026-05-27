@@ -48,40 +48,40 @@ import apiClient from "./apiClient";
 const authService = {
   login: async (email, password) => {
     // TODO: Use apiClient.post() to /auth/login/ with { email, password }
-    const responce = await apiClient.post("/auth/login/", { email, password });
+    const response = await apiClient.post("/auth/login/", { email, password });
     // apiClient returns data directly through interceptors or
-    return responce.data; // return data from response
+    return response.data; // return data from response
   },
 
   signup: async (userData) => {
     // TODO: Use apiClient.post() to /auth/signup/ with userData
     // post new user registration data
-    const responce = await apiClient.post("/auth/signup/", userData);
-    return responce.data; // return data from response
+    const response = await apiClient.post("/auth/signup/", userData);
+    return response.data; // return data from response
   },
 
   getCurrentUser: async () => {
     // TODO: Use apiClient.get() to /auth/me/
-    const responce = await apiClient.get("/auth/me/"); // fetch user specific data
-    return responce.data; // return data from response
+    const response = await apiClient.get("/auth/me/"); // fetch user specific data
+    return response.data; // return data from response
   },
 
   updateProfile: async (profileId, profileData) => {
     // TODO: Use apiClient.put() to /auth/profile/${profileId}/ with profileData
-    const responce = await apiClient.put(
+    const response = await apiClient.put(
       `/auth/profile/${profileId}/`,
       profileData,
     );
-    return responce.data; // return data from response
+    return response.data; // return data from response
   },
 
   refreshToken: async (refreshToken) => {
     // TODO: Use apiClient.post() to /auth/token/refresh/ with { refresh: refreshToken }
     // exchange refresh token for new access token
-    const responce = await apiClient.post("/auth/token/refresh/", {
+    const response = await apiClient.post("/auth/token/refresh/", {
       refresh: refreshToken,
     });
-    return responce.data; // return data from response
+    return response.data; // return data from response
   },
 
   logout: () => {

@@ -28,6 +28,7 @@ import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useAuth } from "./AuthContext";
 import { useWebSocket } from "./WebSocketContext";
 import messagesService from "@services/messagesService";
+import { getDisplayName, getInitials } from "@utils/helpers";
 
 const MessageContext = createContext();
 
@@ -46,7 +47,7 @@ export function MessageProvider({ children }) {
   // Currently selected conversation
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [selectedMessages, setSelectedMessages] = useState([]);
-  
+
   // NEW: Store user info for new conversations (before any messages exist)
   const [selectedUserInfo, setSelectedUserInfo] = useState(null);
 
@@ -58,8 +59,8 @@ export function MessageProvider({ children }) {
 
   // Computed: Total unread message count across all conversations
   const unreadMessageCount = conversations.reduce(
-    (total, conv) => total + (conv.unread_count || 0), 
-    0
+    (total, conv) => total + (conv.unread_count || 0),
+    0,
   );
 
   // Fetch conversations when user logs in, clear on logout
@@ -77,7 +78,7 @@ export function MessageProvider({ children }) {
   useEffect(() => {
     if (!user) return;
 
-    const unsubscribe = subscribe('new_message', (data) => {
+    const unsubscribe = subscribe("new_message", (data) => {
       // Only notify if the logged-in user is the recipient, not the sender
       if (user.id === data.sender.id) return;
 
@@ -85,13 +86,16 @@ export function MessageProvider({ children }) {
 
       // If this is the currently open conversation, add message immediately
       if (selectedUserId === senderId) {
-        setSelectedMessages(prev => [...prev, {
-          id: data.id,
-          sender: data.sender,
-          content: data.content,
-          created_at: data.created_at,
-          is_read: false,
-        }]);
+        setSelectedMessages((prev) => [
+          ...prev,
+          {
+            id: data.id,
+            sender: data.sender,
+            content: data.content,
+            created_at: data.created_at,
+            is_read: false,
+          },
+        ]);
       }
 
       // Refresh conversations to update last_message and unread count
@@ -125,20 +129,21 @@ export function MessageProvider({ children }) {
 
     // Only poll when user is authenticated AND WebSocket is NOT connected
     if (isAuthenticated && user && !isConnected) {
-      console.log('📡 WebSocket not connected, starting message polling...');
-      
+      console.log("📡 WebSocket not connected, starting message polling...");
+
       // Poll every 5 seconds for conversations (background)
       pollingIntervalRef.current = setInterval(async () => {
         // Always refresh conversations list for unread badge
         await fetchConversations();
-        
+
         // If modal is open and viewing a conversation, refresh messages too
         if (isMessageModalOpen && selectedUserId) {
           try {
-            const messages = await messagesService.getConversation(selectedUserId);
+            const messages =
+              await messagesService.getConversation(selectedUserId);
             setSelectedMessages(messages || []);
           } catch (err) {
-            console.error('Polling: Failed to fetch messages:', err);
+            console.error("Polling: Failed to fetch messages:", err);
           }
         }
       }, 5000);
@@ -158,23 +163,23 @@ export function MessageProvider({ children }) {
     setError(null);
     try {
       const data = await messagesService.getConversations();
-      
+
       // 🔧 FRONTEND FIX: Recalculate unread count to exclude messages WE sent
       // Backend bug: unread_count includes messages the user sent
-      const fixedData = data.map(conv => {
+      const fixedData = data.map((conv) => {
         // If last message is from US, we shouldn't count it as unread
         const lastMsgFromUs = conv.last_message?.sender?.id === user?.id;
-        
+
         // If the backend says unread but last message is from us, it's wrong
         // Set to 0 (we can't know the true count without all messages)
-        const correctedUnread = lastMsgFromUs ? 0 : (conv.unread_count || 0);
-        
+        const correctedUnread = lastMsgFromUs ? 0 : conv.unread_count || 0;
+
         return {
           ...conv,
           unread_count: correctedUnread,
         };
       });
-      
+
       setConversations(fixedData);
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to fetch conversations");
@@ -205,22 +210,24 @@ export function MessageProvider({ children }) {
         username: targetUser.username,
         first_name: targetUser.first_name,
         last_name: targetUser.last_name,
-        displayName: targetUser.displayName || targetUser.display_name || 
-          (targetUser.first_name && targetUser.last_name 
-            ? `${targetUser.first_name} ${targetUser.last_name}` 
+        displayName:
+          targetUser.displayName ||
+          targetUser.display_name ||
+          (targetUser.first_name && targetUser.last_name
+            ? `${targetUser.first_name} ${targetUser.last_name}`
             : targetUser.username),
       };
-      
-      console.log('📬 Opening messages with user:', userInfo);
-      
+
+      console.log("📬 Opening messages with user:", userInfo);
+
       // Set ALL user state BEFORE opening modal
       setSelectedUserInfo(userInfo);
       setSelectedUserId(targetUser.id);
       setSelectedMessages([]);
-      
+
       // NOW open the modal - user info is already set
       setIsMessageModalOpen(true);
-      
+
       // Try to fetch existing messages (may return empty for new conversations)
       try {
         const messages = await messagesService.getConversation(targetUser.id);
@@ -232,7 +239,7 @@ export function MessageProvider({ children }) {
     } else {
       // No target user - just open modal
       setIsMessageModalOpen(true);
-      
+
       if (conversations.length > 0 && !selectedUserId) {
         await fetchConversation(conversations[0].user.id);
       }
@@ -252,23 +259,26 @@ export function MessageProvider({ children }) {
         username: userObj.username,
         first_name: userObj.first_name,
         last_name: userObj.last_name,
-        displayName: userObj.displayName || userObj.display_name ||
-          (userObj.first_name && userObj.last_name 
-            ? `${userObj.first_name} ${userObj.last_name}` 
+        displayName:
+          userObj.displayName ||
+          userObj.display_name ||
+          (userObj.first_name && userObj.last_name
+            ? `${userObj.first_name} ${userObj.last_name}`
             : userObj.username),
       });
     } else {
       // Try to find user info from conversations list
-      const conv = conversations.find(c => c.user?.id === userId);
+      const conv = conversations.find((c) => c.user?.id === userId);
       if (conv?.user) {
         setSelectedUserInfo({
           id: conv.user.id,
           username: conv.user.username,
           first_name: conv.user.first_name,
           last_name: conv.user.last_name,
-          displayName: conv.user.displayName || 
-            (conv.user.first_name && conv.user.last_name 
-              ? `${conv.user.first_name} ${conv.user.last_name}` 
+          displayName:
+            conv.user.displayName ||
+            (conv.user.first_name && conv.user.last_name
+              ? `${conv.user.first_name} ${conv.user.last_name}`
               : conv.user.username),
         });
       }
@@ -295,8 +305,8 @@ export function MessageProvider({ children }) {
     const tempId = `temp-${Date.now()}`;
     const optimisticMessage = {
       id: tempId,
-      sender: { 
-        id: user.id, 
+      sender: {
+        id: user.id,
         username: user.username,
         first_name: user.first_name,
         last_name: user.last_name,
@@ -316,12 +326,12 @@ export function MessageProvider({ children }) {
       const newMessage = await messagesService.sendMessage(
         selectedUserId,
         text.trim(),
-        replyToStory
+        replyToStory,
       );
 
       // 3. Replace temp message with real one from server
-      setSelectedMessages((prev) => 
-        prev.map((msg) => msg.id === tempId ? newMessage : msg)
+      setSelectedMessages((prev) =>
+        prev.map((msg) => (msg.id === tempId ? newMessage : msg)),
       );
 
       // Refresh conversations to update last_message preview
@@ -330,10 +340,10 @@ export function MessageProvider({ children }) {
       return { success: true };
     } catch (err) {
       console.error("Failed to send message:", err);
-      
+
       // Remove the optimistic message on failure
       setSelectedMessages((prev) => prev.filter((msg) => msg.id !== tempId));
-      
+
       return {
         success: false,
         error: err.response?.data?.detail || "Failed to send",
@@ -346,7 +356,7 @@ export function MessageProvider({ children }) {
     // First check if there's an existing conversation
     const existing = conversations.find((c) => c.user.id === selectedUserId);
     if (existing) return existing;
-    
+
     // If no existing conversation but we have user info, create a fake conversation object
     // This allows the UI to display properly for new conversations
     if (selectedUserId && selectedUserInfo) {
@@ -357,24 +367,6 @@ export function MessageProvider({ children }) {
       };
     }
     return null;
-  };
-
-  // Helper: Build display name from user object
-  const getDisplayName = (userObj) => {
-    if (!userObj) return "Unknown";
-    if (userObj.first_name && userObj.last_name) {
-      return `${userObj.first_name} ${userObj.last_name}`;
-    }
-    return userObj.username;
-  };
-
-  // Helper: Get initials for avatar display
-  const getInitials = (userObj) => {
-    if (!userObj) return "??";
-    if (userObj.first_name && userObj.last_name) {
-      return `${userObj.first_name[0]}${userObj.last_name[0]}`.toUpperCase();
-    }
-    return userObj.username.slice(0, 2).toUpperCase();
   };
 
   return (

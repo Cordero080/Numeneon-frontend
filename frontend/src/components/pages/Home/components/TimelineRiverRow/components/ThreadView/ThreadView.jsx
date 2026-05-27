@@ -1,9 +1,9 @@
 // 🔵 PABLO - UI Component
 // ThreadView.jsx - Twitter-style inline replies thread with reply-to-comment
 
-import { useState } from 'react';
-import { createPortal } from 'react-dom';
-import { formatRelativeTime } from '@components/pages/Home/utils/timeFormatters';
+import { useState } from "react";
+import { createPortal } from "react-dom";
+import { formatRelativeTime } from "@utils/helpers";
 import {
   UserIcon,
   EditIcon,
@@ -12,13 +12,13 @@ import {
   CloseIcon,
   MaximizeIcon,
   MessageBubbleIcon,
-  ChevronRightIcon
-} from '@assets/icons';
-import './ThreadView.scss';
+  ChevronRightIcon,
+} from "@assets/icons";
+import "./ThreadView.scss";
 
 function ThreadView({
   postId,
-  postType = 'thoughts',
+  postType = "thoughts",
   replies,
   isLoading,
   currentUser,
@@ -27,13 +27,13 @@ function ThreadView({
   onUpdateReply,
   onReplyToComment, // New prop for replying to comments
   showAllReplies,
-  onToggleShowAll
+  onToggleShowAll,
 }) {
   // Color based on post type
   const authorColorClass = `reply-author--${postType}`;
   // Local state for inline editing
   const [editingReplyId, setEditingReplyId] = useState(null);
-  const [editContent, setEditContent] = useState('');
+  const [editContent, setEditContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   // State for expanded edit modal
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -41,7 +41,7 @@ function ThreadView({
   // State for replying to a comment
   const [replyingToId, setReplyingToId] = useState(null);
   const [replyingToUser, setReplyingToUser] = useState(null);
-  const [replyContent, setReplyContent] = useState('');
+  const [replyContent, setReplyContent] = useState("");
 
   const allReplies = replies || [];
   const visibleReplies = showAllReplies ? allReplies : allReplies.slice(0, 3);
@@ -51,20 +51,20 @@ function ThreadView({
   const handleStartReply = (reply) => {
     setReplyingToId(reply.id);
     setReplyingToUser(reply.author);
-    setReplyContent(`@${reply.author?.username || 'user'} `);
+    setReplyContent(`@${reply.author?.username || "user"} `);
   };
 
   // Cancel replying
   const handleCancelReply = () => {
     setReplyingToId(null);
     setReplyingToUser(null);
-    setReplyContent('');
+    setReplyContent("");
   };
 
   // Submit reply to comment
   const handleSubmitReply = async () => {
     if (!replyContent.trim() || !replyingToUser) return;
-    
+
     setIsSaving(true);
     try {
       // Call parent's reply handler with mention info
@@ -73,12 +73,12 @@ function ThreadView({
           content: replyContent.trim(),
           mentioned_user_id: replyingToUser.id,
           mentioned_username: replyingToUser.username,
-          parent_comment_id: replyingToId
+          parent_comment_id: replyingToId,
         });
       }
       handleCancelReply();
     } catch (error) {
-      console.error('Failed to submit reply:', error);
+      console.error("Failed to submit reply:", error);
     }
     setIsSaving(false);
   };
@@ -91,19 +91,21 @@ function ThreadView({
 
   const handleCancelEdit = () => {
     setEditingReplyId(null);
-    setEditContent('');
+    setEditContent("");
     setIsEditModalOpen(false);
     setEditingReply(null);
   };
 
   const handleSaveEdit = async (replyId) => {
     if (!editContent.trim()) return;
-    
+
     setIsSaving(true);
-    const success = await onUpdateReply(replyId, { content: editContent.trim() });
+    const success = await onUpdateReply(replyId, {
+      content: editContent.trim(),
+    });
     if (success) {
       setEditingReplyId(null);
-      setEditContent('');
+      setEditContent("");
       setIsEditModalOpen(false);
       setEditingReply(null);
     }
@@ -116,13 +118,10 @@ function ThreadView({
 
   return (
     <div className="thread-view">
-      <button 
-        className="collapse-thread-btn"
-        onClick={onCollapse}
-      >
+      <button className="collapse-thread-btn" onClick={onCollapse}>
         Hide replies
       </button>
-      
+
       {isLoading ? (
         <div className="thread-loading">Loading replies...</div>
       ) : (
@@ -136,23 +135,27 @@ function ThreadView({
                 <div className="reply-header">
                   <div className="reply-avatar">
                     {reply.author?.profile_picture ? (
-                      <img 
-                        src={reply.author.profile_picture} 
-                        alt={reply.author?.username || 'User'} 
+                      <img
+                        src={reply.author.profile_picture}
+                        alt={reply.author?.username || "User"}
                       />
                     ) : (
                       <UserIcon size={14} />
                     )}
                   </div>
-                  <span className={`reply-author ${authorColorClass}`}>{reply.author?.username || 'User'}</span>
-                  <span className="reply-time">{formatRelativeTime(reply.created_at)}</span>
-                  
+                  <span className={`reply-author ${authorColorClass}`}>
+                    {reply.author?.username || "User"}
+                  </span>
+                  <span className="reply-time">
+                    {formatRelativeTime(reply.created_at)}
+                  </span>
+
                   {/* Reply button - available to all users */}
                   <div className="reply-actions">
                     {currentUser && (
-                      <button 
+                      <button
                         className="reply-action-btn reply-action-btn--reply"
-                        title={`Reply to ${reply.author?.username || 'user'}`}
+                        title={`Reply to ${reply.author?.username || "user"}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleStartReply(reply);
@@ -161,11 +164,11 @@ function ThreadView({
                         <MessageBubbleIcon size={14} />
                       </button>
                     )}
-                    
+
                     {/* Edit/Delete for owner */}
                     {currentUser && reply.author?.id === currentUser.id && (
                       <>
-                        <button 
+                        <button
                           className="reply-action-btn"
                           title="Edit"
                           onClick={(e) => {
@@ -175,7 +178,7 @@ function ThreadView({
                         >
                           <EditIcon size={14} />
                         </button>
-                        <button 
+                        <button
                           className="reply-action-btn reply-action-btn--delete"
                           title="Delete"
                           onClick={(e) => {
@@ -189,7 +192,7 @@ function ThreadView({
                     )}
                   </div>
                 </div>
-                
+
                 {/* Reply content - show edit form if editing this reply */}
                 {editingReplyId === reply.id && !isEditModalOpen ? (
                   <div className="reply-edit-form">
@@ -200,16 +203,16 @@ function ThreadView({
                         onChange={(e) => setEditContent(e.target.value)}
                         autoFocus
                         onKeyDown={(e) => {
-                          if (e.key === 'Escape') {
+                          if (e.key === "Escape") {
                             handleCancelEdit();
                           }
-                          if (e.key === 'Enter' && !e.shiftKey) {
+                          if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();
                             handleSaveEdit(reply.id);
                           }
                         }}
                       />
-                      <button 
+                      <button
                         className="expand-edit-btn"
                         onClick={handleExpandEdit}
                         title="Expand editor"
@@ -218,14 +221,14 @@ function ThreadView({
                       </button>
                     </div>
                     <div className="reply-edit-actions">
-                      <button 
+                      <button
                         className="reply-edit-cancel"
                         onClick={handleCancelEdit}
                         title="Cancel"
                       >
                         <CloseIcon size={16} />
                       </button>
-                      <button 
+                      <button
                         className="reply-edit-save"
                         disabled={!editContent.trim() || isSaving}
                         onClick={() => handleSaveEdit(reply.id)}
@@ -243,9 +246,12 @@ function ThreadView({
                   <p className="reply-content">
                     {/* Render @mentions with special styling */}
                     {reply.content.split(/(@\w+)/g).map((part, index) => {
-                      if (part.startsWith('@')) {
+                      if (part.startsWith("@")) {
                         return (
-                          <span key={index} className={`mention-tag mention-tag--${postType}`}>
+                          <span
+                            key={index}
+                            className={`mention-tag mention-tag--${postType}`}
+                          >
                             {part}
                           </span>
                         );
@@ -254,7 +260,7 @@ function ThreadView({
                     })}
                   </p>
                 )}
-                
+
                 {/* Reply to comment input */}
                 {replyingToId === reply.id && (
                   <div className="reply-to-comment-form">
@@ -267,10 +273,10 @@ function ThreadView({
                         autoFocus
                         rows={1}
                         onKeyDown={(e) => {
-                          if (e.key === 'Escape') {
+                          if (e.key === "Escape") {
                             handleCancelReply();
                           }
-                          if (e.key === 'Enter' && !e.shiftKey) {
+                          if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();
                             handleSubmitReply();
                           }
@@ -278,14 +284,14 @@ function ThreadView({
                       />
                     </div>
                     <div className="reply-to-actions">
-                      <button 
+                      <button
                         className="reply-to-cancel"
                         onClick={handleCancelReply}
                         title="Cancel"
                       >
                         <CloseIcon size={14} />
                       </button>
-                      <button 
+                      <button
                         className="reply-to-submit"
                         disabled={!replyContent.trim() || isSaving}
                         onClick={handleSubmitReply}
@@ -303,20 +309,16 @@ function ThreadView({
               </div>
             </div>
           ))}
-          
+
           {/* Show more/less button */}
           {hasMore && (
-            <button 
-              className="show-more-replies-btn"
-              onClick={onToggleShowAll}
-            >
-              {showAllReplies 
-                ? 'Show less' 
-                : `Show ${allReplies.length - 3} more ${allReplies.length - 3 === 1 ? 'reply' : 'replies'}`
-              }
+            <button className="show-more-replies-btn" onClick={onToggleShowAll}>
+              {showAllReplies
+                ? "Show less"
+                : `Show ${allReplies.length - 3} more ${allReplies.length - 3 === 1 ? "reply" : "replies"}`}
             </button>
           )}
-          
+
           {allReplies.length === 0 && (
             <div className="no-replies">No replies yet</div>
           )}
@@ -324,53 +326,55 @@ function ThreadView({
       )}
 
       {/* Expanded Edit Modal */}
-      {isEditModalOpen && editingReply && createPortal(
-        <div className="expanded-composer-overlay" onClick={handleCancelEdit}>
-          <div className="expanded-composer-modal edit-mode" onClick={(e) => e.stopPropagation()}>
-            <div className="expanded-composer-header">
-              <h3>
-                <EditIcon size={20} />
-                Edit Comment
-              </h3>
-              <button 
-                className="close-btn-glow"
-                onClick={handleCancelEdit}
-              >
-                <CloseIcon size={24} />
-              </button>
+      {isEditModalOpen &&
+        editingReply &&
+        createPortal(
+          <div className="expanded-composer-overlay" onClick={handleCancelEdit}>
+            <div
+              className="expanded-composer-modal edit-mode"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="expanded-composer-header">
+                <h3>
+                  <EditIcon size={20} />
+                  Edit Comment
+                </h3>
+                <button className="close-btn-glow" onClick={handleCancelEdit}>
+                  <CloseIcon size={24} />
+                </button>
+              </div>
+              <div className="expanded-composer-body">
+                <textarea
+                  className="composer-textarea"
+                  placeholder="Edit your comment..."
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") {
+                      handleCancelEdit();
+                    }
+                  }}
+                />
+              </div>
+              <div className="expanded-composer-footer">
+                <button
+                  className="submit-btn icon-btn"
+                  disabled={!editContent.trim() || isSaving}
+                  onClick={() => handleSaveEdit(editingReplyId)}
+                  title="Save"
+                >
+                  {isSaving ? (
+                    <span className="saving-dots">...</span>
+                  ) : (
+                    <CheckIcon size={24} strokeWidth="2.5" />
+                  )}
+                </button>
+              </div>
             </div>
-            <div className="expanded-composer-body">
-              <textarea
-                className="composer-textarea"
-                placeholder="Edit your comment..."
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    handleCancelEdit();
-                  }
-                }}
-              />
-            </div>
-            <div className="expanded-composer-footer">
-              <button 
-                className="submit-btn icon-btn"
-                disabled={!editContent.trim() || isSaving}
-                onClick={() => handleSaveEdit(editingReplyId)}
-                title="Save"
-              >
-                {isSaving ? (
-                  <span className="saving-dots">...</span>
-                ) : (
-                  <CheckIcon size={24} strokeWidth="2.5" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
